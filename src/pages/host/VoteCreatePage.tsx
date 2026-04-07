@@ -58,6 +58,13 @@ export function VoteCreatePage() {
     addCandidate,
     removeCandidate,
     updateCandidate,
+    addSection,
+    removeSection,
+    updateSectionName,
+    addCandidateToSection,
+    removeCandidateFromSection,
+    updateSectionCandidate,
+    clearSections,
     nextStep,
     prevStep,
     submit,
@@ -107,9 +114,17 @@ export function VoteCreatePage() {
         {step === 2 && (
           <StepCandidates
             candidates={draft.candidates}
+            sections={draft.sections}
             onAdd={addCandidate}
             onRemove={removeCandidate}
             onUpdate={updateCandidate}
+            onAddSection={addSection}
+            onRemoveSection={removeSection}
+            onUpdateSectionName={updateSectionName}
+            onAddCandidateToSection={addCandidateToSection}
+            onRemoveCandidateFromSection={removeCandidateFromSection}
+            onUpdateSectionCandidate={updateSectionCandidate}
+            onClearSections={clearSections}
           />
         )}
         {step === 3 && <StepSchedule draft={draft} onUpdate={updateField} />}

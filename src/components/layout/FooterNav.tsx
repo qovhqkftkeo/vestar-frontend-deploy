@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: '마이',
-    path: '/profile',
+    path: '/mypage',
     icon: (active) => (
       <svg
         width="22"

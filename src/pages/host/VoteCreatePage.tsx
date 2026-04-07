@@ -30,6 +30,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M20 6 9 17l-5-5" />
               </svg>
@@ -96,6 +97,7 @@ export function VoteCreatePage() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
@@ -154,6 +156,7 @@ export function VoteCreatePage() {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="m9 18 6-6-6-6" />
               </svg>

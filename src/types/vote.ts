@@ -77,5 +77,5 @@ export interface VoteDetailData {
   voteLimit: string
   resultPublic: boolean
   candidates: Candidate[]
-  sections?: VoteSection[]   // present = grouped vote mode
+  sections?: VoteSection[] // present = grouped vote mode
 }

@@ -33,13 +33,14 @@ function ConfirmPhase({
   const totalPrice = isGrouped ? selectedSections.length * 100 : 100
 
   // Resolve candidate objects for grouped mode
-  const resolvedSections = isGrouped && voteSections
-    ? selectedSections.map((sel) => {
-        const section = voteSections.find((s) => s.id === sel.sectionId)
-        const candidate = section?.candidates.find((c) => c.id === sel.candidateId)
-        return { ...sel, candidate }
-      })
-    : []
+  const resolvedSections =
+    isGrouped && voteSections
+      ? selectedSections.map((sel) => {
+          const section = voteSections.find((s) => s.id === sel.sectionId)
+          const candidate = section?.candidates.find((c) => c.id === sel.candidateId)
+          return { ...sel, candidate }
+        })
+      : []
 
   return (
     <div>
@@ -91,12 +92,14 @@ function ConfirmPhase({
       {/* Price summary */}
       <div className="bg-[#F7F8FA] rounded-xl p-4 mb-5">
         {isGrouped ? (
-          <>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[13px] text-[#707070]">₩100 × {selectedSections.length}개 섹션</span>
-              <span className="text-[13px] font-bold text-[#090A0B]">₩{totalPrice.toLocaleString()}</span>
-            </div>
-          </>
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[13px] text-[#707070]">
+              ₩100 × {selectedSections.length}개 섹션
+            </span>
+            <span className="text-[13px] font-bold text-[#090A0B]">
+              ₩{totalPrice.toLocaleString()}
+            </span>
+          </div>
         ) : (
           <div className="flex justify-between items-center">
             <span className="text-[13px] text-[#707070]">투표권</span>
@@ -154,6 +157,7 @@ function SuccessPhase({
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M20 6 9 17l-5-5" />
           </svg>

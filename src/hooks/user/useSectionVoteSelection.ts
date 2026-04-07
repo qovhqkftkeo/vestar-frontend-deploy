@@ -17,9 +17,7 @@ export interface UseSectionVoteSelectionResult {
   reset: () => void
 }
 
-export function useSectionVoteSelection(
-  sections: VoteSection[],
-): UseSectionVoteSelectionResult {
+export function useSectionVoteSelection(sections: VoteSection[]): UseSectionVoteSelectionResult {
   // Map: sectionId → candidateId
   const [selections, setSelections] = useState<Map<string, string>>(new Map())
 
@@ -35,10 +33,7 @@ export function useSectionVoteSelection(
     })
   }, [])
 
-  const getSelected = useCallback(
-    (sectionId: string) => selections.get(sectionId),
-    [selections],
-  )
+  const getSelected = useCallback((sectionId: string) => selections.get(sectionId), [selections])
 
   const isSelected = useCallback(
     (sectionId: string, candidateId: string) => selections.get(sectionId) === candidateId,

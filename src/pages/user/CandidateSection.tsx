@@ -119,6 +119,7 @@ export function CandidateSection({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
+            aria-hidden="true"
           >
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -140,14 +141,7 @@ interface GroupedCandidateSectionProps {
   isEnded: boolean
 }
 
-const SECTION_COLORS = [
-  '#F0EDFF',
-  '#E8FFF0',
-  '#FFF5E8',
-  '#E8F0FF',
-  '#FEF9EC',
-  '#F0FFF4',
-]
+const SECTION_COLORS = ['#F0EDFF', '#E8FFF0', '#FFF5E8', '#E8F0FF', '#FEF9EC', '#F0FFF4']
 
 export function GroupedCandidateSection({
   sections,

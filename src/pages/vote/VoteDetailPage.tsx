@@ -62,7 +62,10 @@ export function VoteDetailPage() {
     if (state === 'success') {
       setHasVoted(true)
       if (isGrouped) {
-        addToast({ type: 'success', message: `${sectionSelection.selectedCount}개 섹션 투표 완료! ⚡` })
+        addToast({
+          type: 'success',
+          message: `${sectionSelection.selectedCount}개 섹션 투표 완료! ⚡`,
+        })
       } else {
         addToast({ type: 'success', message: `"${selectedCandidate?.name}"에 투표 완료! ⚡` })
       }
@@ -148,6 +151,7 @@ export function VoteDetailPage() {
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M20 6 9 17l-5-5" />
             </svg>

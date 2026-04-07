@@ -55,6 +55,7 @@ function CandidateCard({
               stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
+              aria-hidden="true"
             >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -117,7 +118,11 @@ function SectionCard({
   onUpdateSectionName: (name: string) => void
   onAddCandidate: () => void
   onRemoveCandidate: (candidateId: string) => void
-  onUpdateCandidate: (candidateId: string, field: keyof Omit<CandidateDraft, 'id'>, value: string) => void
+  onUpdateCandidate: (
+    candidateId: string,
+    field: keyof Omit<CandidateDraft, 'id'>,
+    value: string,
+  ) => void
 }) {
   return (
     <div className="bg-[#F0EDFF]/40 border-2 border-[#7140FF]/20 rounded-2xl p-4">
@@ -142,6 +147,7 @@ function SectionCard({
               stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
+              aria-hidden="true"
             >
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -195,6 +201,7 @@ function SectionCard({
             stroke="currentColor"
             strokeWidth="2.5"
             strokeLinecap="round"
+            aria-hidden="true"
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -294,6 +301,7 @@ export function StepCandidates({
               stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
+              aria-hidden="true"
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -334,6 +342,7 @@ export function StepCandidates({
                 stroke="currentColor"
                 strokeWidth="2.5"
                 strokeLinecap="round"
+                aria-hidden="true"
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>

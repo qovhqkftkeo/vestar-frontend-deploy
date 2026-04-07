@@ -10,9 +10,7 @@ if (!projectId) {
 
 export const wagmiConfig = createConfig({
   chains: [mainnet, sepolia],
-  connectors: projectId
-    ? [injected(), walletConnect({ projectId })]
-    : [injected()],
+  connectors: projectId ? [injected(), walletConnect({ projectId })] : [injected()],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),

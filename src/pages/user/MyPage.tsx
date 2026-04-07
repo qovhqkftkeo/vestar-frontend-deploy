@@ -24,10 +24,10 @@ const BADGE_LABEL: Record<BadgeVariant, string> = {
 }
 
 const KARMA_TYPE_STYLES: Record<KarmaEventType, { bg: string; text: string }> = {
-  vote:     { bg: '#F0EDFF', text: '#7140FF' },
+  vote: { bg: '#F0EDFF', text: '#7140FF' },
   referral: { bg: '#E8FFF0', text: '#16a34a' },
-  bonus:    { bg: '#FFF5E8', text: '#d97706' },
-  streak:   { bg: '#E8F0FF', text: '#2563eb' },
+  bonus: { bg: '#FFF5E8', text: '#d97706' },
+  streak: { bg: '#E8F0FF', text: '#2563eb' },
 }
 
 function VoteHistoryList({ votes }: { votes: MyVoteItem[] }) {

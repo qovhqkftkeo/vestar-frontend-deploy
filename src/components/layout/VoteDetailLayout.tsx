@@ -1,6 +1,7 @@
 import { createContext, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { useScrollDirection } from '../../hooks/useScrollDirection'
+import type { ScrollState } from '../../hooks/useScrollDirection'
 import { ProfilePanel } from './ProfilePanel'
 import { SearchOverlay } from './SearchOverlay'
 import { DetailHeader } from './DetailHeader'

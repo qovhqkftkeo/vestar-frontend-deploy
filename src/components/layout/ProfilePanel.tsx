@@ -15,7 +15,13 @@ type MenuItem =
 const MENU_ITEMS: MenuItem[] = [
   { kind: 'internal', label: '내 투표 내역', icon: '🗳️', bg: '#F0EDFF', to: '/mypage?tab=votes' },
   { kind: 'internal', label: 'Karma 내역', icon: '⚡', bg: '#E8FFF0', to: '/mypage?tab=karma' },
-  { kind: 'external', label: 'STT 스테이킹', icon: '🪙', bg: '#FFF5E8', href: 'https://hub.status.network/stake' },
+  {
+    kind: 'external',
+    label: 'STT 스테이킹',
+    icon: '🪙',
+    bg: '#FFF5E8',
+    href: 'https://hub.status.network/stake',
+  },
 ]
 
 function truncateAddress(address: string): string {
@@ -37,13 +43,15 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   }
 
   return (
-    <div
-      className={`absolute inset-0 z-[200] transition-[background] duration-[280ms] ease-in-out ${open ? 'bg-[rgba(9,10,11,0.55)] pointer-events-auto' : 'bg-transparent pointer-events-none'}`}
-      onClick={onClose}
-    >
+    <>
+      <button
+        type="button"
+        aria-label="닫기"
+        className={`absolute inset-0 z-[200] transition-[background] duration-[280ms] ease-in-out ${open ? 'bg-[rgba(9,10,11,0.55)] pointer-events-auto' : 'bg-transparent pointer-events-none'}`}
+        onClick={onClose}
+      />
       <div
-        className={`absolute top-0 right-0 bottom-0 w-[82%] bg-white flex flex-col overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${open ? 'translate-x-0 shadow-[-8px_0_40px_rgba(0,0,0,0.14)]' : 'translate-x-full'}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`absolute top-0 right-0 bottom-0 w-[82%] bg-white flex flex-col overflow-hidden z-[201] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${open ? 'translate-x-0 shadow-[-8px_0_40px_rgba(0,0,0,0.14)] pointer-events-auto' : 'translate-x-full pointer-events-none'}`}
       >
         {/* Panel header */}
         <div className="bg-[#13141A] px-5 pt-6 pb-5 flex-shrink-0">
@@ -58,6 +66,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
               className="w-7 h-7 flex items-center justify-center text-white/40 hover:text-white transition-colors"
             >
               <svg
+                aria-hidden="true"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -137,6 +146,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
                   <span className="ml-auto text-[#707070]">
                     {item.kind === 'external' ? (
                       <svg
+                        aria-hidden="true"
                         width="14"
                         height="14"
                         viewBox="0 0 24 24"
@@ -152,6 +162,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
                       </svg>
                     ) : (
                       <svg
+                        aria-hidden="true"
                         width="14"
                         height="14"
                         viewBox="0 0 24 24"
@@ -213,6 +224,6 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

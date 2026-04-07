@@ -9,3 +9,6 @@ export {
   vestarVoting,
 } from './client'
 export * from './types'
+export * from "./actions";
+export * from "./chain";
+export * from "./generated";

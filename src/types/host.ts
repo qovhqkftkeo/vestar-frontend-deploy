@@ -11,12 +11,19 @@ export type VotePolicy = 'ONE_TIME' | 'PERIODIC' | 'UNLIMITED'
 export type VotePayment = 'FREE' | 'PAID'
 export type IntervalUnit = 'days' | 'hours' | 'minutes'
 
+export interface SectionDraft {
+  id: string
+  name: string // "남자 그룹", "여자 그룹", etc.
+  candidates: CandidateDraft[]
+}
+
 export interface VoteCreateDraft {
   title: string
   group: string
   bannerImage: string
   category: string
   candidates: CandidateDraft[]
+  sections: SectionDraft[] // empty = flat mode (default)
   startDate: string
   endDate: string
   revealDate: string

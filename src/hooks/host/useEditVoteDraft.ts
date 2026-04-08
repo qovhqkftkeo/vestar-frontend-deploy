@@ -1,17 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { CandidateDraft, CreateStep, VoteCreateDraft } from '../../types/host'
+import type { CandidateDraft, CreateStep, SectionDraft, VoteCreateDraft } from '../../types/host'
 import { useVoteDetail } from '../user/useVoteDetail'
-
-const EMOJI_COLORS = [
-  '#F0EDFF',
-  '#fef3c7',
-  '#fce7f3',
-  '#ede9fe',
-  '#e0f2fe',
-  '#dcfce7',
-  '#fff1f2',
-  '#e8f0ff',
-]
 
 let _counter = 100
 
@@ -19,23 +8,46 @@ function makeId(): string {
   return String(_counter++)
 }
 
+function makeBlankCandidate(): CandidateDraft {
+  return {
+    id: makeId(),
+    name: '',
+    image: '',
+  }
+}
+
 const INITIAL_DRAFT: VoteCreateDraft = {
   title: '',
-  org: '',
-  emoji: '🎤',
+  group: '',
+  bannerImage: '',
   category: '음악방송',
   candidates: [],
+  sections: [],
   startDate: '',
   endDate: '',
+  revealDate: '',
   maxChoices: 1,
   resultReveal: 'after_end',
+  votePolicy: 'ONE_TIME',
+  resetIntervalValue: 1,
+  resetIntervalUnit: 'days',
+  paymentType: 'FREE',
+  costPerBallot: 0,
 }
 
 function isStep1Valid(draft: VoteCreateDraft): boolean {
-  return draft.title.trim().length > 0 && draft.org.trim().length > 0
+  return draft.title.trim().length > 0
 }
 
 function isStep2Valid(draft: VoteCreateDraft): boolean {
+  if (draft.sections.length > 0) {
+    return draft.sections.every(
+      (s) =>
+        s.name.trim().length > 0 &&
+        s.candidates.length >= 2 &&
+        s.candidates.every((c) => c.name.trim().length > 0),
+    )
+  }
   return draft.candidates.length >= 2 && draft.candidates.every((c) => c.name.trim().length > 0)
 }
 
@@ -56,20 +68,25 @@ export function useEditVoteDraft(id: string) {
     if (vote && !initialDraft) {
       const init: VoteCreateDraft = {
         title: vote.title,
-        org: vote.org,
-        emoji: vote.emoji,
-        category: '음악방송', // Mock data default
+        group: vote.org || '',
+        bannerImage: '', // Mock doesn't have it
+        category: '음악방송',
         candidates: vote.candidates.map(c => ({
           id: c.id,
           name: c.name,
-          group: c.group || '',
-          emoji: c.emoji || '🎵',
-          emojiColor: c.emojiColor || EMOJI_COLORS[0],
+          image: '',
         })),
+        sections: [],
         startDate: vote.startDate || '',
         endDate: vote.endDate || '',
+        revealDate: vote.startDate || '', // Temporary
         maxChoices: vote.maxChoices || 1,
         resultReveal: vote.resultPublic ? 'immediate' : 'after_end',
+        votePolicy: 'ONE_TIME',
+        resetIntervalValue: 1,
+        resetIntervalUnit: 'days',
+        paymentType: 'FREE',
+        costPerBallot: 0,
       }
       setInitialDraft(init)
       setDraft(init)
@@ -87,17 +104,10 @@ export function useEditVoteDraft(id: string) {
   )
 
   const addCandidate = useCallback(() => {
-    setDraft((prev) => {
-      const colorIdx = prev.candidates.length % EMOJI_COLORS.length
-      const newCandidate: CandidateDraft = {
-        id: makeId(),
-        name: '',
-        group: '',
-        emoji: '🎵',
-        emojiColor: EMOJI_COLORS[colorIdx],
-      }
-      return { ...prev, candidates: [...prev.candidates, newCandidate] }
-    })
+    setDraft((prev) => ({
+      ...prev,
+      candidates: [...prev.candidates, makeBlankCandidate()],
+    }))
   }, [])
 
   const removeCandidate = useCallback((id: string) => {
@@ -117,6 +127,80 @@ export function useEditVoteDraft(id: string) {
     [],
   )
 
+  // ── Section actions ───────────────────────────────────────────────────────
+
+  const addSection = useCallback(() => {
+    setDraft((prev) => {
+      const newSection: SectionDraft = {
+        id: makeId(),
+        name: '',
+        candidates: [makeBlankCandidate(), makeBlankCandidate()],
+      }
+      return { ...prev, sections: [...prev.sections, newSection] }
+    })
+  }, [])
+
+  const removeSection = useCallback((sectionId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.filter((s) => s.id !== sectionId),
+    }))
+  }, [])
+
+  const updateSectionName = useCallback((sectionId: string, name: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, name } : s)),
+    }))
+  }, [])
+
+  const addCandidateToSection = useCallback((sectionId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => {
+        if (s.id !== sectionId) return s
+        return { ...s, candidates: [...s.candidates, makeBlankCandidate()] }
+      }),
+    }))
+  }, [])
+
+  const removeCandidateFromSection = useCallback((sectionId: string, candidateId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => {
+        if (s.id !== sectionId) return s
+        return { ...s, candidates: s.candidates.filter((c) => c.id !== candidateId) }
+      }),
+    }))
+  }, [])
+
+  const updateSectionCandidate = useCallback(
+    (
+      sectionId: string,
+      candidateId: string,
+      field: keyof Omit<CandidateDraft, 'id'>,
+      value: string,
+    ) => {
+      setDraft((prev) => ({
+        ...prev,
+        sections: prev.sections.map((s) => {
+          if (s.id !== sectionId) return s
+          return {
+            ...s,
+            candidates: s.candidates.map((c) =>
+              c.id === candidateId ? { ...c, [field]: value } : c,
+            ),
+          }
+        }),
+      }))
+    },
+    [],
+  )
+
+  const clearSections = useCallback(() => {
+    setDraft((prev) => ({ ...prev, sections: [] }))
+  }, [])
+
   const nextStep = useCallback(() => {
     setStep((prev) => {
       if (!validateStep(prev, draft)) return prev
@@ -130,7 +214,6 @@ export function useEditVoteDraft(id: string) {
 
   const submit = useCallback(async () => {
     setIsSubmitting(true)
-    // TODO: 컨트랙트 또는 백엔드와 소통하여 실제 투표 내용을 수정하는 로직 구현
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsSubmitting(false)
   }, [])
@@ -146,6 +229,13 @@ export function useEditVoteDraft(id: string) {
     addCandidate,
     removeCandidate,
     updateCandidate,
+    addSection,
+    removeSection,
+    updateSectionName,
+    addCandidateToSection,
+    removeCandidateFromSection,
+    updateSectionCandidate,
+    clearSections,
     nextStep,
     prevStep,
     submit,

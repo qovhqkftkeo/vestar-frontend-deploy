@@ -28,11 +28,11 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
     <div className="px-5 py-6 flex flex-col gap-6">
       {/* Title */}
       <div>
-        <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
-          <span>투표 제목 <span className="text-[#7140FF]">*</span></span>
-          {isTitleChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
+        <label htmlFor="vote-title" className="block text-[13px] font-semibold text-[#090A0B] mb-2">
+          투표 제목 <span className="text-[#7140FF]">*</span>
         </label>
         <input
+          id="vote-title"
           type="text"
           value={draft.title}
           onChange={(e) => onUpdate('title', e.target.value)}
@@ -45,11 +45,11 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
 
       {/* Group */}
       <div>
-        <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
-          <span>투표 그룹</span>
-          {isGroupChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
+        <label htmlFor="vote-org" className="block text-[13px] font-semibold text-[#090A0B] mb-2">
+          주최 <span className="text-[#7140FF]">*</span>
         </label>
         <input
+          id="vote-org"
           type="text"
           value={draft.group}
           onChange={(e) => onUpdate('group', e.target.value)}
@@ -93,10 +93,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
 
       {/* Category */}
       <div>
-        <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
-          <span>카테고리</span>
-          {isCategoryChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
-        </label>
+        <span className="block text-[13px] font-semibold text-[#090A0B] mb-2">카테고리</span>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button

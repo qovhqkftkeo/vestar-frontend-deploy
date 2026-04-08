@@ -1,10 +1,18 @@
 import { useCallback, useState } from 'react'
-import type { CandidateDraft, CreateStep, VoteCreateDraft } from '../../types/host'
+import type { CandidateDraft, CreateStep, SectionDraft, VoteCreateDraft } from '../../types/host'
 
 let _counter = 3
 
 function makeId(): string {
   return String(_counter++)
+}
+
+function makeBlankCandidate(): CandidateDraft {
+  return {
+    id: makeId(),
+    name: '',
+    image: '',
+  }
 }
 
 const INITIAL_DRAFT: VoteCreateDraft = {
@@ -13,9 +21,10 @@ const INITIAL_DRAFT: VoteCreateDraft = {
   bannerImage: '',
   category: '음악방송',
   candidates: [
-    { id: '1', name: '', image: '' },
-    { id: '2', name: '', image: '' },
+    makeBlankCandidate(),
+    makeBlankCandidate(),
   ],
+  sections: [],
   startDate: '',
   endDate: '',
   revealDate: '',
@@ -33,6 +42,14 @@ function isStep1Valid(draft: VoteCreateDraft): boolean {
 }
 
 function isStep2Valid(draft: VoteCreateDraft): boolean {
+  if (draft.sections.length > 0) {
+    return draft.sections.every(
+      (s) =>
+        s.name.trim().length > 0 &&
+        s.candidates.length >= 2 &&
+        s.candidates.every((c) => c.name.trim().length > 0),
+    )
+  }
   return draft.candidates.length >= 2 && draft.candidates.every((c) => c.name.trim().length > 0)
 }
 
@@ -68,9 +85,23 @@ export interface UseCreateVoteDraftResult {
   step: CreateStep
   isCurrentStepValid: boolean
   updateField: <K extends keyof VoteCreateDraft>(key: K, value: VoteCreateDraft[K]) => void
+  // Flat candidate actions
   addCandidate: () => void
   removeCandidate: (id: string) => void
   updateCandidate: (id: string, field: keyof Omit<CandidateDraft, 'id'>, value: string) => void
+  // Section actions
+  addSection: () => void
+  removeSection: (sectionId: string) => void
+  updateSectionName: (sectionId: string, name: string) => void
+  addCandidateToSection: (sectionId: string) => void
+  removeCandidateFromSection: (sectionId: string, candidateId: string) => void
+  updateSectionCandidate: (
+    sectionId: string,
+    candidateId: string,
+    field: keyof Omit<CandidateDraft, 'id'>,
+    value: string,
+  ) => void
+  clearSections: () => void
   nextStep: () => void
   prevStep: () => void
   submit: () => Promise<void>
@@ -105,14 +136,11 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
     [],
   )
 
+  // ── Flat candidate actions ────────────────────────────────────────────────
+
   const addCandidate = useCallback(() => {
     setDraft((prev) => {
-      const newCandidate: CandidateDraft = {
-        id: makeId(),
-        name: '',
-        image: '',
-      }
-      return { ...prev, candidates: [...prev.candidates, newCandidate] }
+      return { ...prev, candidates: [...prev.candidates, makeBlankCandidate()] }
     })
   }, [])
 
@@ -142,6 +170,82 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
     [],
   )
 
+  // ── Section actions ───────────────────────────────────────────────────────
+
+  const addSection = useCallback(() => {
+    setDraft((prev) => {
+      const newSection: SectionDraft = {
+        id: makeId(),
+        name: '',
+        candidates: [makeBlankCandidate(), makeBlankCandidate()],
+      }
+      return { ...prev, sections: [...prev.sections, newSection] }
+    })
+  }, [])
+
+  const removeSection = useCallback((sectionId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.filter((s) => s.id !== sectionId),
+    }))
+  }, [])
+
+  const updateSectionName = useCallback((sectionId: string, name: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, name } : s)),
+    }))
+  }, [])
+
+  const addCandidateToSection = useCallback((sectionId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => {
+        if (s.id !== sectionId) return s
+        return { ...s, candidates: [...s.candidates, makeBlankCandidate()] }
+      }),
+    }))
+  }, [])
+
+  const removeCandidateFromSection = useCallback((sectionId: string, candidateId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) => {
+        if (s.id !== sectionId) return s
+        return { ...s, candidates: s.candidates.filter((c) => c.id !== candidateId) }
+      }),
+    }))
+  }, [])
+
+  const updateSectionCandidate = useCallback(
+    (
+      sectionId: string,
+      candidateId: string,
+      field: keyof Omit<CandidateDraft, 'id'>,
+      value: string,
+    ) => {
+      setDraft((prev) => ({
+        ...prev,
+        sections: prev.sections.map((s) => {
+          if (s.id !== sectionId) return s
+          return {
+            ...s,
+            candidates: s.candidates.map((c) =>
+              c.id === candidateId ? { ...c, [field]: value } : c,
+            ),
+          }
+        }),
+      }))
+    },
+    [],
+  )
+
+  const clearSections = useCallback(() => {
+    setDraft((prev) => ({ ...prev, sections: [] }))
+  }, [])
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+
   const nextStep = useCallback(() => {
     setStep((prev) => {
       if (!validateStep(prev, draft)) return prev
@@ -167,6 +271,13 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
     addCandidate,
     removeCandidate,
     updateCandidate,
+    addSection,
+    removeSection,
+    updateSectionName,
+    addCandidateToSection,
+    removeCandidateFromSection,
+    updateSectionCandidate,
+    clearSections,
     nextStep,
     prevStep,
     submit,

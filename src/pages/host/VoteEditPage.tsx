@@ -123,9 +123,17 @@ export function VoteEditPage() {
         {step === 2 && (
           <StepCandidates
             candidates={draft.candidates}
+            sections={draft.sections}
             onAdd={addCandidate}
             onRemove={removeCandidate}
             onUpdate={updateCandidate}
+            onAddSection={addSection}
+            onRemoveSection={removeSection}
+            onUpdateSectionName={updateSectionName}
+            onAddCandidateToSection={addCandidateToSection}
+            onRemoveCandidateFromSection={removeCandidateFromSection}
+            onUpdateSectionCandidate={updateSectionCandidate}
+            onClearSections={clearSections}
             initialCandidates={initialDraft?.candidates}
           />
         )}

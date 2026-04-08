@@ -1,17 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { CandidateDraft, CreateStep, VoteCreateDraft } from '../../types/host'
 
-const EMOJI_COLORS = [
-  '#F0EDFF',
-  '#fef3c7',
-  '#fce7f3',
-  '#ede9fe',
-  '#e0f2fe',
-  '#dcfce7',
-  '#fff1f2',
-  '#e8f0ff',
-]
-
 let _counter = 3
 
 function makeId(): string {
@@ -20,21 +9,27 @@ function makeId(): string {
 
 const INITIAL_DRAFT: VoteCreateDraft = {
   title: '',
-  org: '',
-  emoji: '🎤',
+  group: '',
+  bannerImage: '',
   category: '음악방송',
   candidates: [
-    { id: '1', name: '', group: '', emoji: '🎵', emojiColor: EMOJI_COLORS[0] },
-    { id: '2', name: '', group: '', emoji: '🎵', emojiColor: EMOJI_COLORS[1] },
+    { id: '1', name: '', image: '' },
+    { id: '2', name: '', image: '' },
   ],
   startDate: '',
   endDate: '',
+  revealDate: '',
   maxChoices: 1,
   resultReveal: 'after_end',
+  votePolicy: 'ONE_TIME',
+  resetIntervalValue: 1,
+  resetIntervalUnit: 'days',
+  paymentType: 'FREE',
+  costPerBallot: 0,
 }
 
 function isStep1Valid(draft: VoteCreateDraft): boolean {
-  return draft.title.trim().length > 0 && draft.org.trim().length > 0
+  return draft.title.trim().length > 0
 }
 
 function isStep2Valid(draft: VoteCreateDraft): boolean {
@@ -42,13 +37,30 @@ function isStep2Valid(draft: VoteCreateDraft): boolean {
 }
 
 function isStep3Valid(draft: VoteCreateDraft): boolean {
-  return draft.startDate.trim().length > 0 && draft.endDate.trim().length > 0
+  return (
+    draft.startDate.trim().length > 0 &&
+    draft.endDate.trim().length > 0 &&
+    draft.revealDate.trim().length > 0 &&
+    new Date(draft.endDate) > new Date(draft.startDate) &&
+    new Date(draft.revealDate) >= new Date(draft.endDate)
+  )
+}
+
+function isStep4Valid(draft: VoteCreateDraft): boolean {
+  if (draft.paymentType === 'PAID') {
+    if (draft.costPerBallot <= 0 || draft.costPerBallot > 100) return false
+  }
+  if (draft.votePolicy === 'PERIODIC') {
+    if (draft.resetIntervalValue <= 0) return false
+  }
+  return true
 }
 
 function validateStep(step: CreateStep, draft: VoteCreateDraft): boolean {
   if (step === 1) return isStep1Valid(draft)
   if (step === 2) return isStep2Valid(draft)
-  return isStep3Valid(draft)
+  if (step === 3) return isStep3Valid(draft)
+  return isStep4Valid(draft)
 }
 
 export interface UseCreateVoteDraftResult {
@@ -74,30 +86,50 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
 
   const updateField = useCallback(
     <K extends keyof VoteCreateDraft>(key: K, value: VoteCreateDraft[K]) => {
-      setDraft((prev) => ({ ...prev, [key]: value }))
+      setDraft((prev) => {
+        const newDraft = { ...prev, [key]: value } as VoteCreateDraft
+        
+        if (key === 'votePolicy' && value === 'UNLIMITED') {
+          newDraft.paymentType = 'PAID'
+          newDraft.costPerBallot = 100
+        }
+        if (key === 'maxChoices') {
+           const maxAllowed = Math.max(1, newDraft.candidates.length - 1)
+           if (typeof value === 'number' && value > maxAllowed) {
+              newDraft.maxChoices = maxAllowed
+           }
+        }
+        return newDraft
+      })
     },
     [],
   )
 
   const addCandidate = useCallback(() => {
     setDraft((prev) => {
-      const colorIdx = prev.candidates.length % EMOJI_COLORS.length
       const newCandidate: CandidateDraft = {
         id: makeId(),
         name: '',
-        group: '',
-        emoji: '🎵',
-        emojiColor: EMOJI_COLORS[colorIdx],
+        image: '',
       }
       return { ...prev, candidates: [...prev.candidates, newCandidate] }
     })
   }, [])
 
   const removeCandidate = useCallback((id: string) => {
-    setDraft((prev) => ({
-      ...prev,
-      candidates: prev.candidates.filter((c) => c.id !== id),
-    }))
+    setDraft((prev) => {
+      const newCandidates = prev.candidates.filter((c) => c.id !== id)
+      let newMaxChoices = prev.maxChoices
+      const maxAllowed = Math.max(1, newCandidates.length - 1)
+      if (newMaxChoices > maxAllowed) {
+        newMaxChoices = maxAllowed
+      }
+      return {
+        ...prev,
+        candidates: newCandidates,
+        maxChoices: newMaxChoices
+      }
+    })
   }, [])
 
   const updateCandidate = useCallback(
@@ -113,7 +145,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
   const nextStep = useCallback(() => {
     setStep((prev) => {
       if (!validateStep(prev, draft)) return prev
-      return Math.min(prev + 1, 3) as CreateStep
+      return Math.min(prev + 1, 4) as CreateStep
     })
   }, [draft])
 

@@ -1,6 +1,6 @@
 import type { VoteCreateDraft } from '../../../types/host'
+import { useRef } from 'react'
 
-const EMOJI_OPTIONS = ['🎤', '🏆', '💜', '🎧', '🌟', '🎵', '🎶', '💿', '🎪', '🌸', '🔥', '⚡']
 const CATEGORIES = ['음악방송', '시상식', '팬투표', '콘셉트', '기타']
 
 interface StepBasicInfoProps {
@@ -11,9 +11,18 @@ interface StepBasicInfoProps {
 
 export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoProps) {
   const isTitleChanged = initialDraft && initialDraft.title !== draft.title
-  const isOrgChanged = initialDraft && initialDraft.org !== draft.org
-  const isEmojiChanged = initialDraft && initialDraft.emoji !== draft.emoji
+  const isGroupChanged = initialDraft && initialDraft.group !== draft.group
+  const isBannerChanged = initialDraft && initialDraft.bannerImage !== draft.bannerImage
   const isCategoryChanged = initialDraft && initialDraft.category !== draft.category
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const url = URL.createObjectURL(e.target.files[0])
+      onUpdate('bannerImage', url)
+    }
+  }
 
   return (
     <div className="px-5 py-6 flex flex-col gap-6">
@@ -34,43 +43,51 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
       </div>
 
-      {/* Org */}
+      {/* Group */}
       <div>
         <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
-          <span>주최 <span className="text-[#7140FF]">*</span></span>
-          {isOrgChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
+          <span>투표 그룹</span>
+          {isGroupChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
         </label>
         <input
           type="text"
-          value={draft.org}
-          onChange={(e) => onUpdate('org', e.target.value)}
-          placeholder="예: Show! Music Core"
+          value={draft.group}
+          onChange={(e) => onUpdate('group', e.target.value)}
+          placeholder="예: MAMA 2026 (선택사항)"
           maxLength={40}
           className="w-full bg-white border border-[#E7E9ED] rounded-xl px-4 py-3 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:ring-2 focus:ring-[#7140FF]/10 transition-all"
         />
       </div>
 
-      {/* Emoji */}
+      {/* Banner Image */}
       <div>
         <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
-          <span>아이콘</span>
-          {isEmojiChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
+          <span>배너 이미지</span>
+          {isBannerChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
         </label>
-        <div className="grid grid-cols-6 gap-2">
-          {EMOJI_OPTIONS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => onUpdate('emoji', emoji)}
-              className={`h-11 rounded-xl flex items-center justify-center text-xl transition-all ${
-                draft.emoji === emoji
-                  ? 'bg-[#F0EDFF] border-2 border-[#7140FF]'
-                  : 'bg-white border border-[#E7E9ED] hover:border-[#7140FF]/40'
-              }`}
-            >
-              {emoji}
-            </button>
-          ))}
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-[#E7E9ED] bg-[#F7F8FA] hover:border-[#7140FF]/50 transition-colors flex items-center justify-center cursor-pointer overflow-hidden relative"
+        >
+          {draft.bannerImage ? (
+            <img src={draft.bannerImage} alt="배너 이미지" className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-[#C0C4CC]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span className="text-[13px] font-medium">이미지 업로드</span>
+            </div>
+          )}
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleImageUpload} 
+            className="hidden" 
+          />
         </div>
       </div>
 

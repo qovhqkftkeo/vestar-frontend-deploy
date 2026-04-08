@@ -1,6 +1,6 @@
 import type { CandidateDraft, VoteCreateDraft } from '../../../types/host'
+import { useRef } from 'react'
 
-const CANDIDATE_EMOJIS = ['🎵', '👑', '💗', '🌌', '❄️', '🍀', '🔥', '⭐', '🌙', '🎀', '💎', '🦋']
 const MAX_CANDIDATES = 10
 
 interface StepCandidatesProps {
@@ -28,8 +28,7 @@ export function StepCandidates({ candidates, onAdd, onRemove, onUpdate, initialC
           const initialCandidate = initialCandidates?.find(c => c.id === candidate.id)
           const isCandidateChanged = initialCandidate && (
             initialCandidate.name !== candidate.name ||
-            initialCandidate.group !== candidate.group ||
-            initialCandidate.emoji !== candidate.emoji
+            initialCandidate.image !== candidate.image
           )
 
           return (
@@ -68,24 +67,6 @@ export function StepCandidates({ candidates, onAdd, onRemove, onUpdate, initialC
                 )}
               </div>
 
-              {/* Emoji row */}
-              <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 [scrollbar-width:none]">
-                {CANDIDATE_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => onUpdate(candidate.id, 'emoji', emoji)}
-                    className={`w-9 h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-base transition-all ${
-                      candidate.emoji === emoji
-                        ? 'bg-[#F0EDFF] border-2 border-[#7140FF]'
-                        : 'bg-[#F7F8FA] border border-[#E7E9ED] hover:border-[#7140FF]/40'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-
               {/* Name */}
               <input
                 type="text"
@@ -93,18 +74,39 @@ export function StepCandidates({ candidates, onAdd, onRemove, onUpdate, initialC
                 onChange={(e) => onUpdate(candidate.id, 'name', e.target.value)}
                 placeholder="아티스트 이름 *"
                 maxLength={30}
-                className="w-full bg-[#F7F8FA] border border-[#E7E9ED] rounded-xl px-3 py-2.5 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:bg-white transition-all mb-2"
+                className="w-full bg-[#F7F8FA] border border-[#E7E9ED] rounded-xl px-3 py-2.5 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:bg-white transition-all mb-3"
               />
 
-              {/* Group */}
-              <input
-                type="text"
-                value={candidate.group}
-                onChange={(e) => onUpdate(candidate.id, 'group', e.target.value)}
-                placeholder="소속사 / 그룹 (선택)"
-                maxLength={30}
-                className="w-full bg-[#F7F8FA] border border-[#E7E9ED] rounded-xl px-3 py-2.5 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:bg-white transition-all"
-              />
+              {/* Image Upload */}
+              <div 
+                onClick={() => document.getElementById(`file-upload-${candidate.id}`)?.click()}
+                className="w-24 h-24 rounded-xl border-2 border-dashed border-[#E7E9ED] bg-[#F7F8FA] hover:border-[#7140FF]/50 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden relative"
+              >
+                {candidate.image ? (
+                  <img src={candidate.image} alt="후보 이미지" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0C4CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-1">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span className="text-[10px] text-[#C0C4CC] font-medium">사진 업로드</span>
+                  </>
+                )}
+                <input 
+                  id={`file-upload-${candidate.id}`}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const url = URL.createObjectURL(e.target.files[0])
+                      onUpdate(candidate.id, 'image', url)
+                    }
+                  }} 
+                  className="hidden" 
+                />
+              </div>
             </div>
           )
         })}
@@ -134,4 +136,3 @@ export function StepCandidates({ candidates, onAdd, onRemove, onUpdate, initialC
     </div>
   )
 }
-

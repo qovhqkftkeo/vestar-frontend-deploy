@@ -3,8 +3,9 @@ import { useCreateVoteDraft } from '../../hooks/host/useCreateVoteDraft'
 import { StepBasicInfo } from './steps/StepBasicInfo'
 import { StepCandidates } from './steps/StepCandidates'
 import { StepSchedule } from './steps/StepSchedule'
+import { StepPolicy } from './steps/StepPolicy'
 
-const STEP_LABELS = ['기본 정보', '후보 등록', '일정 & 설정']
+const STEP_LABELS = ['기본 정보', '후보 등록', '일정 & 설정', '투표권 정책']
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -98,7 +99,7 @@ export function VoteCreatePage() {
           <div className="text-[11px] text-white/40 font-mono">{STEP_LABELS[step - 1]}</div>
         </div>
 
-        <StepIndicator current={step} total={3} />
+        <StepIndicator current={step} total={4} />
       </header>
 
       {/* Scrollable content */}
@@ -113,6 +114,7 @@ export function VoteCreatePage() {
           />
         )}
         {step === 3 && <StepSchedule draft={draft} onUpdate={updateField} />}
+        {step === 4 && <StepPolicy draft={draft} onUpdate={updateField} />}
       </main>
 
       {/* Bottom action bar */}
@@ -120,12 +122,12 @@ export function VoteCreatePage() {
         <button
           type="button"
           disabled={!isCurrentStepValid || isSubmitting}
-          onClick={step === 3 ? handleSubmit : nextStep}
+          onClick={step === 4 ? handleSubmit : nextStep}
           className="w-full bg-[#7140FF] text-white rounded-2xl py-4 text-[15px] font-bold disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-85 transition-opacity active:enabled:scale-[0.99] flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-          ) : step === 3 ? (
+          ) : step === 4 ? (
             '투표 만들기 완료'
           ) : (
             <>

@@ -54,7 +54,6 @@ export interface OrganizerProfile {
 }
 
 export interface ElectionConfigInput {
-  electionId: Hex;
   visibilityMode: VestarVisibilityMode;
   titleHash: Hex;
   candidateManifestHash: Hex;
@@ -82,6 +81,11 @@ export interface ElectionConfig extends ElectionConfigInput {
   resultRevealAt: bigint;
   resetInterval: bigint;
   costPerBallot: bigint;
+}
+
+export interface CreateElectionInput {
+  config: ElectionConfigInput;
+  initialCandidateHashes: Hex[];
 }
 
 export interface ResultSummaryInput {
@@ -147,6 +151,7 @@ export interface OrganizerSnapshot {
 
 export interface ElectionSnapshot {
   address: Address;
+  electionId: Hex;
   config: ElectionConfig;
   state: VestarElectionState;
   visibilityMode: VestarVisibilityMode;

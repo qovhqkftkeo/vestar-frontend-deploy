@@ -22,8 +22,8 @@ import {
 import type {
   CancellationSummary,
   CandidateGroupBindingInput,
+  CreateElectionInput,
   ElectionConfig,
-  ElectionConfigInput,
   ElectionSnapshot,
   ElectionVoterSnapshot,
   GroupDefinition,
@@ -248,14 +248,14 @@ export async function getOrganizerSnapshot(organizerAddress: Address): Promise<O
 
 export async function createElection(
   walletClient: WalletClient,
-  config: ElectionConfigInput,
+  input: CreateElectionInput,
 ): Promise<Hash> {
   return writeVestarContract({
     walletClient,
     abi: vestarElectionFactoryAbi,
     address: vestarContractAddresses.electionFactory,
     functionName: "createElection",
-    args: [config],
+    args: [input.config, input.initialCandidateHashes],
   });
 }
 
@@ -265,6 +265,14 @@ export async function getElectionAddress(electionId: Hex): Promise<Address> {
     address: vestarContractAddresses.electionFactory,
     functionName: "getElection",
     args: [electionId],
+  });
+}
+
+export async function getElectionId(electionAddress: Address): Promise<Hex> {
+  return readVestarContract<Hex>({
+    abi: vestarElectionAbi,
+    address: electionAddress,
+    functionName: "electionId",
   });
 }
 
@@ -442,6 +450,7 @@ export async function getCandidateGroup(
 
 export async function getElectionSnapshot(electionAddress: Address): Promise<ElectionSnapshot> {
   const [
+    electionId,
     config,
     state,
     visibilityMode,
@@ -452,6 +461,7 @@ export async function getElectionSnapshot(electionAddress: Address): Promise<Ele
     refundSummary,
   ] =
     await Promise.all([
+      getElectionId(electionAddress),
       getElectionConfig(electionAddress),
       getElectionState(electionAddress),
       getElectionVisibilityMode(electionAddress),
@@ -464,6 +474,7 @@ export async function getElectionSnapshot(electionAddress: Address): Promise<Ele
 
   return {
     address: electionAddress,
+    electionId,
     config,
     state,
     visibilityMode,

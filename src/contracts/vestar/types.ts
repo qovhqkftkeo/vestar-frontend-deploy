@@ -83,6 +83,11 @@ export interface ElectionConfig extends ElectionConfigInput {
   costPerBallot: bigint;
 }
 
+export interface CreateElectionInput {
+  config: ElectionConfigInput;
+  initialCandidateHashes: Hex[];
+}
+
 export interface ResultSummaryInput {
   resultManifestHash: Hex;
   resultManifestURI: string;

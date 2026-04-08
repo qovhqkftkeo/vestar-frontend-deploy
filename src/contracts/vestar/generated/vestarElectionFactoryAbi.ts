@@ -188,6 +188,11 @@ export const vestarElectionFactoryAbi = [
             "internalType": "uint16"
           }
         ]
+      },
+      {
+        "name": "initialCandidateHashes",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
     "outputs": [

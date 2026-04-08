@@ -22,8 +22,8 @@ import {
 import type {
   CancellationSummary,
   CandidateGroupBindingInput,
+  CreateElectionInput,
   ElectionConfig,
-  ElectionConfigInput,
   ElectionSnapshot,
   ElectionVoterSnapshot,
   GroupDefinition,
@@ -248,14 +248,14 @@ export async function getOrganizerSnapshot(organizerAddress: Address): Promise<O
 
 export async function createElection(
   walletClient: WalletClient,
-  config: ElectionConfigInput,
+  input: CreateElectionInput,
 ): Promise<Hash> {
   return writeVestarContract({
     walletClient,
     abi: vestarElectionFactoryAbi,
     address: vestarContractAddresses.electionFactory,
     functionName: "createElection",
-    args: [config],
+    args: [input.config, input.initialCandidateHashes],
   });
 }
 

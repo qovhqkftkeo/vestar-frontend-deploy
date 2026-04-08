@@ -654,6 +654,11 @@ export const vestarElectionAbi = [
         ]
       },
       {
+        "name": "initialCandidateHashes",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
         "name": "organizerAddress",
         "type": "address",
         "internalType": "address"

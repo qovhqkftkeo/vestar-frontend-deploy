@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router";
 import { useAccount } from "wagmi";
-import keyboardArrowLeft from "../../assets/keyboard_arrow_left.svg";
+// import keyboardArrowLeft from "../../assets/keyboard_arrow_left.svg";
 import { useLanguage } from "../../providers/LanguageProvider";
 import { useMyKarma } from "../../hooks/user/useMyKarma";
 import { useMyVotes } from "../../hooks/user/useMyVotes";
@@ -187,7 +187,7 @@ function KarmaHistoryList({
 
 export function MyPage() {
   const { address, isConnected } = useAccount();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "karma" ? "karma" : "votes";
   const { t } = useLanguage();
@@ -212,7 +212,6 @@ export function MyPage() {
             : t("pp_not_connected")}
         </div>
         <div className="flex items-center gap-2 mt-[4px]">
-          <span className="text-[18px]">{tier.emoji}</span>
           <span
             className="text-[15px] font-bold font-mono"
             style={{ color: tier.color }}

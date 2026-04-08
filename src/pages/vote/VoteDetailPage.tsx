@@ -279,31 +279,30 @@ export function VoteDetailPage() {
       <VoteHero vote={vote} />
 
       <div className="bg-[#FFFFFF]">
-      <VoteInfoSection vote={vote} />
+        <VoteInfoSection vote={vote} />
 
-      <div className="h-2 bg-[#F7F8FA]" />
+        <div className="h-2 bg-[#F7F8FA] my-3" />
 
-      {isGrouped ? (
-        <GroupedCandidateSection
-          sections={vote.sections!}
-          resultPublic={vote.resultPublic}
-          isSelected={effectiveSectionIsSelected}
-          onToggle={hasVoted || isEnded ? () => {} : sectionSelection.toggle}
-          isEnded={isEnded || hasVoted}
-          votedCandidateIds={votedCandidateIds}
-        />
-      ) : (
-        <CandidateSection
-          candidates={vote.candidates}
-          maxChoices={vote.maxChoices}
-          resultPublic={vote.resultPublic}
-          isSelected={effectiveIsSelected}
-          onToggle={hasVoted || isEnded ? () => {} : toggle}
-          isEnded={isEnded || hasVoted}
-          votedCandidateIds={votedCandidateIds}
-        />
-      )}
-
+        {isGrouped ? (
+          <GroupedCandidateSection
+            sections={vote.sections!}
+            resultPublic={vote.resultPublic}
+            isSelected={effectiveSectionIsSelected}
+            onToggle={hasVoted || isEnded ? () => {} : sectionSelection.toggle}
+            isEnded={isEnded || hasVoted}
+            votedCandidateIds={votedCandidateIds}
+          />
+        ) : (
+          <CandidateSection
+            candidates={vote.candidates}
+            maxChoices={vote.maxChoices}
+            resultPublic={vote.resultPublic}
+            isSelected={effectiveIsSelected}
+            onToggle={hasVoted || isEnded ? () => {} : toggle}
+            isEnded={isEnded || hasVoted}
+            votedCandidateIds={votedCandidateIds}
+          />
+        )}
       </div>
 
       {/* Vote action bar */}

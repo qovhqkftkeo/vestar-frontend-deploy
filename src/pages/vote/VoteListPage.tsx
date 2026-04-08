@@ -64,10 +64,7 @@ function HotVoteCard({
       onClick={() => onNavigate(vote.id)}
       className="flex-shrink-0 w-[200px] bg-white border border-[#E7E9ED] rounded-2xl overflow-hidden cursor-pointer transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(113,64,255,0.10)] hover:border-[rgba(113,64,255,0.25)] active:scale-[0.98] text-left"
     >
-      <div
-        className="h-[100px] relative"
-        style={{ background: vote.gradient }}
-      >
+      <div className="h-[100px] relative" style={{ background: vote.gradient }}>
         <span
           className={`absolute top-2 right-2 text-[9px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[vote.badge]}`}
         >
@@ -193,7 +190,8 @@ export function VoteListPage() {
   return (
     <>
       {/* Hero strip */}
-      <div className="h-60 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
+      {/*내용을 좀 더 풍성하게 작성해주면 좋을듯 */}
+      <div className="h-80 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
         <div className="text-[10px] font-semibold text-violet-600 tracking-[1.2px] uppercase font-mono mb-1.5">
           Live Now
@@ -225,6 +223,8 @@ export function VoteListPage() {
         </div>
 
         {/* HOT section */}
+        {/*컨트랙트 내용 받아와서 리스트 작성하는 것으로 전체 수정*/}
+        {/*DEFAULT IMAGE 생성도 해야됨*/}
         <div className="flex items-center justify-between px-5 pt-4 pb-[10px]">
           <span className="text-[15px] font-semibold text-[#090A0B]">
             {t("vl_hot_section")}
@@ -247,6 +247,7 @@ export function VoteListPage() {
         <div className="border-t border-[#E7E9ED] mt-5" />
 
         {/* Active Votes section */}
+        {/*여기에서 사용되는 EMOJI모두 지우기*/}
         <div className="flex items-center justify-between px-5 pt-[20px] pb-[10px]">
           <span className="text-[15px] font-semibold text-[#090A0B]">
             {t("vl_active_section")}

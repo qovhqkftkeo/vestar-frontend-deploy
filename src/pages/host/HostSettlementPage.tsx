@@ -60,7 +60,9 @@ export function HostSettlementPage() {
   const { data: walletClient } = useWalletClient()
   const { switchChainAsync } = useSwitchChain()
 
-  const [snapshot, setSnapshot] = useState<Awaited<ReturnType<typeof getElectionSnapshot>> | null>(null)
+  const [snapshot, setSnapshot] = useState<Awaited<ReturnType<typeof getElectionSnapshot>> | null>(
+    null,
+  )
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(true)
   const [isSettling, setIsSettling] = useState(false)
 
@@ -128,7 +130,10 @@ export function HostSettlementPage() {
     }
 
     if (!settlement) {
-      addToast({ type: 'info', message: '정산 정보를 아직 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.' })
+      addToast({
+        type: 'info',
+        message: '정산 정보를 아직 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      })
       return
     }
 
@@ -147,7 +152,10 @@ export function HostSettlementPage() {
 
       if (chainId !== vestarStatusTestnetChain.id) {
         await switchChainAsync({ chainId: vestarStatusTestnetChain.id })
-        addToast({ type: 'info', message: '네트워크를 변경했습니다. 다시 한 번 정산을 눌러주세요.' })
+        addToast({
+          type: 'info',
+          message: '네트워크를 변경했습니다. 다시 한 번 정산을 눌러주세요.',
+        })
         return
       }
 
@@ -189,7 +197,9 @@ export function HostSettlementPage() {
       <div className="mx-5 mt-4 grid grid-cols-1 gap-3">
         <div className="rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">
           <div className="text-[12px] text-[#707070]">정산 상태</div>
-          <div className={`mt-2 text-[16px] font-semibold ${isSettled ? 'text-[#16a34a]' : 'text-[#090A0B]'}`}>
+          <div
+            className={`mt-2 text-[16px] font-semibold ${isSettled ? 'text-[#16a34a]' : 'text-[#090A0B]'}`}
+          >
             {isSettled ? '정산 완료' : '정산 대기'}
           </div>
         </div>
@@ -197,7 +207,9 @@ export function HostSettlementPage() {
         {cards.map((card) => (
           <div key={card.label} className="rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">
             <div className="text-[12px] text-[#707070]">{card.label}</div>
-            <div className="mt-2 text-[18px] font-semibold text-[#090A0B] font-mono">{card.value}</div>
+            <div className="mt-2 text-[18px] font-semibold text-[#090A0B] font-mono">
+              {card.value}
+            </div>
           </div>
         ))}
       </div>

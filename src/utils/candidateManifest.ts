@@ -177,8 +177,7 @@ export function parseCandidateManifest(value: unknown): CandidateManifest | null
       ? {
           title: typeof election.title === 'string' ? election.title.trim() : '',
           category: typeof election.category === 'string' ? election.category : null,
-          coverImageUrl:
-            typeof election.coverImageUrl === 'string' ? election.coverImageUrl : null,
+          coverImageUrl: typeof election.coverImageUrl === 'string' ? election.coverImageUrl : null,
           visibilityMode:
             election.visibilityMode === 'OPEN' || election.visibilityMode === 'PRIVATE'
               ? election.visibilityMode

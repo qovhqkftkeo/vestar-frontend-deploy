@@ -714,7 +714,10 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         const localManifestArtifact = createJsonArtifact(manifestFileName, manifest)
         let candidateManifestURI = buildManifestUriFallback(localManifestArtifact.rawJson)
         try {
-          const uploadedManifestArtifact = await uploadJsonArtifactToPinata(manifestFileName, manifest)
+          const uploadedManifestArtifact = await uploadJsonArtifactToPinata(
+            manifestFileName,
+            manifest,
+          )
           if (uploadedManifestArtifact) {
             candidateManifestURI = uploadedManifestArtifact.uri
           }
@@ -803,7 +806,9 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
           electionPublicKey,
           privateKeyCommitmentHash,
           keySchemeVersion:
-            normalizedSettings.visibilityMode === 'PRIVATE' ? PRIVATE_ELECTION_KEY_SCHEME_VERSION : 0,
+            normalizedSettings.visibilityMode === 'PRIVATE'
+              ? PRIVATE_ELECTION_KEY_SCHEME_VERSION
+              : 0,
         }
 
         const txHash = await vestarFactory.createElection(

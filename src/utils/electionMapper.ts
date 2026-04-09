@@ -95,7 +95,9 @@ function toLocalElectionCandidates(local: LocalOpenElectionMetadata) {
   }))
 }
 
-function findLocalMetadata(election: Pick<ApiElection, 'onchainElectionId' | 'onchainElectionAddress'>) {
+function findLocalMetadata(
+  election: Pick<ApiElection, 'onchainElectionId' | 'onchainElectionAddress'>,
+) {
   return findLocalOpenElectionMetadata({
     onchainElectionId: election.onchainElectionId,
     onchainElectionAddress: election.onchainElectionAddress,
@@ -275,6 +277,7 @@ export function mapToVoteDetail(
     voteLimit: election.allowMultipleChoice ? 'Multiple choices' : '1 vote per ballot',
     resultPublic: election.visibilityMode === 'OPEN',
     paymentMode: election.paymentMode,
+    paymentToken: election.paymentToken,
     costPerBallot: election.costPerBallot,
     candidates,
     electionAddress: election.onchainElectionAddress ?? undefined,

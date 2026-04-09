@@ -1,12 +1,8 @@
 import { keccak256, stringToHex, type Hex } from 'viem'
-import {
-  parseCandidateManifest,
-  type CandidateManifest,
-} from '../utils/candidateManifest'
+import { parseCandidateManifest, type CandidateManifest } from '../utils/candidateManifest'
 import { resolveIpfsUrls } from '../utils/ipfs'
 
-const ZERO_HASH =
-  '0x0000000000000000000000000000000000000000000000000000000000000000' as const
+const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000' as const
 
 const manifestRequestCache = new Map<string, Promise<CandidateManifest | null>>()
 

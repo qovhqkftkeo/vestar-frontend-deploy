@@ -9,7 +9,11 @@ import { useVotedVotes } from '../../hooks/useVotedVotes'
 import { VOTE_ITEMS } from '../../data/mockVotes'
 import type { VoteListItem } from '../../types/vote'
 import { applyManifestToElection, mapToVoteListItem } from '../../utils/electionMapper'
-import { buildVoteTargetPath, groupVoteItemsBySeries, type VoteSeriesGroup } from '../../utils/voteSeries'
+import {
+  buildVoteTargetPath,
+  groupVoteItemsBySeries,
+  type VoteSeriesGroup,
+} from '../../utils/voteSeries'
 
 type SeriesLocationState = {
   title?: string
@@ -112,29 +116,29 @@ export function VoteSeriesPage() {
       </div>
 
       <div className="px-5 py-5 flex flex-col gap-3">
-        {isLoading
-          ? Array.from({ length: 4 }, (_, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
-              <VoteCardSkeleton key={index} />
-            ))
-          : seriesGroup
-            ? seriesGroup.items.map((item) => (
-                <VoteListItemCard
-                  key={item.id}
-                  item={item}
-                  onNavigate={(id) => {
-                    const target = seriesGroup.items.find((candidate) => candidate.id === id)
-                    if (!target) return
-                    navigate(buildVoteTargetPath(target))
-                  }}
-                  isVoted={isVoted(item.id)}
-                />
-              ))
-            : (
-                <div className="rounded-2xl border border-[#E7E9ED] bg-white px-4 py-5 text-[14px] text-[#707070]">
-                  이 시리즈에 표시할 투표가 아직 없습니다.
-                </div>
-              )}
+        {isLoading ? (
+          Array.from({ length: 4 }, (_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
+            <VoteCardSkeleton key={index} />
+          ))
+        ) : seriesGroup ? (
+          seriesGroup.items.map((item) => (
+            <VoteListItemCard
+              key={item.id}
+              item={item}
+              onNavigate={(id) => {
+                const target = seriesGroup.items.find((candidate) => candidate.id === id)
+                if (!target) return
+                navigate(buildVoteTargetPath(target))
+              }}
+              isVoted={isVoted(item.id)}
+            />
+          ))
+        ) : (
+          <div className="rounded-2xl border border-[#E7E9ED] bg-white px-4 py-5 text-[14px] text-[#707070]">
+            이 시리즈에 표시할 투표가 아직 없습니다.
+          </div>
+        )}
       </div>
     </div>
   )

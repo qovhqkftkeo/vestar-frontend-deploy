@@ -166,6 +166,12 @@ const STRINGS = {
   mp_total_karma: { en: 'Total Karma', ko: '총 Karma' },
   mp_tab_votes: { en: 'Vote History', ko: '투표 내역' },
   mp_tab_karma: { en: 'Karma History', ko: 'Karma 내역' },
+  mp_verification_title: { en: 'Open the verification portal', ko: '검증 포탈 열기' },
+  mp_verification_sub: {
+    en: 'Review vote receipts, results, and proof details in one place.',
+    ko: '투표 기록, 결과, 검증 근거를 한곳에서 다시 확인할 수 있어요.',
+  },
+  mp_verification_cta: { en: 'Try Verification', ko: '검증해보기' },
   common_loading: { en: 'Loading...', ko: '불러오는 중...' },
   mp_no_votes: { en: 'No votes yet', ko: '아직 참여한 투표가 없어요' },
   mp_no_karma: { en: 'No Karma earned yet', ko: '아직 획득한 Karma가 없어요' },

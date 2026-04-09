@@ -222,7 +222,6 @@ export function VoteDetailPage() {
   const activeCanSubmit =
     (isGrouped ? sectionSelection.canSubmit : canSubmit) && canSubmitByEligibility
 
-
   useEffect(() => {
     let cancelled = false
     const submissionTxHash = txHash

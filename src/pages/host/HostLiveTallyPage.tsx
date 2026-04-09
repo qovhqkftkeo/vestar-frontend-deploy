@@ -49,7 +49,11 @@ export function HostLiveTallyPage() {
         </div>
       </div>
 
-      {rankedCandidates.length > 0 ? <VoteResultRankings rankedCandidates={rankedCandidates} /> : <EmptyState />}
+      {rankedCandidates.length > 0 ? (
+        <VoteResultRankings rankedCandidates={rankedCandidates} />
+      ) : (
+        <EmptyState />
+      )}
 
       <div className="px-5 pb-8">
         <button

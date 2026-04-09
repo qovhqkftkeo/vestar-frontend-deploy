@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Address, Hash, Hex } from 'viem'
 import { decodeEventLog, keccak256, parseUnits, toHex, zeroAddress, zeroHash } from 'viem'
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
+import { preparePrivateElection } from '../../api/elections'
 import { fetchVerifiedOrganizerByWallet } from '../../api/verifiedOrganizers'
-import { apiClient } from '../../config/api'
 import { vestarStatusTestnetChain } from '../../contracts/vestar/chain'
 import { vestarFactory, vestarUtils } from '../../contracts/vestar/client'
 import { vestarContractAddresses } from '../../contracts/vestar/generated'
@@ -23,10 +23,18 @@ import type {
   VoteCreateDraft,
 } from '../../types/host'
 import {
+  buildCandidateManifest,
+  type CandidateManifestCandidate,
+} from '../../utils/candidateManifest'
+import {
   getEffectiveResultRevealAt,
   normalizeElectionSettingsDraft,
 } from '../../utils/hostElectionSettings'
-import { uploadJsonToPinata } from '../../utils/ipfs'
+import {
+  createJsonArtifact,
+  uploadFileToPinata,
+  uploadJsonArtifactToPinata,
+} from '../../utils/ipfs'
 import { getWalletActionErrorMessage } from '../../utils/walletErrors'
 
 type SubmitVoteResult = {
@@ -37,28 +45,6 @@ type SubmitVoteResult = {
     electionAddress: Address
     title: string
   }>
-}
-
-type PreparePrivateElectionResponse = {
-  seriesIdHash: Hex
-  titleHash: Hex
-  candidateManifestHash: Hex
-  keySchemeVersion: number
-  publicKey:
-    | string
-    | {
-        format?: string
-        algorithm?: string
-        value: string
-      }
-  privateKeyCommitmentHash: Hex
-  candidateManifestPreimage: {
-    candidates: Array<{
-      candidateKey: string
-      displayOrder: number
-      imageUrl?: string | null
-    }>
-  }
 }
 
 type FlattenedCandidate = {
@@ -72,6 +58,8 @@ type SubmissionUnit = {
   settings: ElectionSettingsDraft
   candidates: FlattenedCandidate[]
 }
+
+const PRIVATE_ELECTION_KEY_SCHEME_VERSION = 1
 
 let counter = 3
 
@@ -236,15 +224,9 @@ function validateStep(step: CreateStep, draft: VoteCreateDraft): boolean {
   return isStep3Valid(draft)
 }
 
-async function uploadImage(file: File): Promise<string> {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  const response = await apiClient.post<{ url: string }>('/uploads/candidate-image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-
-  return response.data.url
+async function uploadImageToIpfs(file: File): Promise<string | null> {
+  const uploaded = await uploadFileToPinata(file)
+  return uploaded?.uri ?? null
 }
 
 function convertResetIntervalToSeconds(value: string, unit: VoteCreateDraft['resetIntervalUnit']) {
@@ -261,48 +243,81 @@ function convertResetIntervalToSeconds(value: string, unit: VoteCreateDraft['res
       : numericValue * 60
 }
 
-function buildCanonicalManifest(candidates: FlattenedCandidate[]) {
-  return {
-    candidates: candidates.map((candidate, index) => ({
-      candidateKey: candidate.candidateKey,
-      displayOrder: index + 1,
-    })),
-  }
+function buildCandidateManifestCandidates(
+  candidates: FlattenedCandidate[],
+  candidateImageUrls: Map<string, string>,
+): CandidateManifestCandidate[] {
+  return candidates.map((candidate, index) => ({
+    candidateKey: candidate.candidateKey,
+    displayName: candidate.candidateKey,
+    groupLabel: null,
+    displayOrder: index + 1,
+    imageUrl: candidateImageUrls.get(candidate.id) ?? null,
+  }))
 }
 
-function buildManifestMetadata(
+function buildManifestUriFallback(rawJson: string): string {
+  return `data:application/json;charset=utf-8,${encodeURIComponent(rawJson)}`
+}
+
+function buildCandidateManifestFileName(seriesTitle: string, electionTitle: string, order: number) {
+  const parts = [seriesTitle.trim(), electionTitle.trim()]
+    .filter(Boolean)
+    .join('-')
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return `vestar-candidate-manifest-${parts || `election-${order}`}.json`
+}
+
+function extractPublicKeyValue(publicKey: { value: string }): string {
+  return publicKey.value
+}
+
+function buildCandidateHashes(candidates: FlattenedCandidate[]) {
+  return candidates.map((candidate) => keccak256(toHex(candidate.candidateKey)))
+}
+
+function buildManifestPayload(
   draft: VoteCreateDraft,
   electionTitle: string,
+  normalizedSettings: ElectionSettingsDraft,
   candidates: FlattenedCandidate[],
   candidateImageUrls: Map<string, string>,
   bannerImageUrl: string | null,
 ) {
-  return {
-    title: electionTitle,
+  const normalizedAllowMultipleChoice =
+    normalizedSettings.ballotPolicy === 'UNLIMITED_PAID' ? false : normalizedSettings.maxChoices > 1
+  const normalizedMaxSelectionsPerSubmission = normalizedAllowMultipleChoice
+    ? Math.max(2, normalizedSettings.maxChoices)
+    : 1
+
+  return buildCandidateManifest({
     seriesPreimage: draft.title.trim(),
+    seriesCoverImageUrl: bannerImageUrl,
+    electionTitle,
     category: draft.category,
-    coverImageUrl: bannerImageUrl,
+    electionCoverImageUrl: bannerImageUrl,
+    visibilityMode: normalizedSettings.visibilityMode,
+    paymentMode: normalizedSettings.paymentMode,
+    ballotPolicy: normalizedSettings.ballotPolicy,
+    allowMultipleChoice: normalizedAllowMultipleChoice,
+    maxSelectionsPerSubmission: normalizedMaxSelectionsPerSubmission,
+    candidates: buildCandidateManifestCandidates(candidates, candidateImageUrls),
+  })
+}
+
+function buildCandidateManifestPreimage(
+  candidates: FlattenedCandidate[],
+  candidateImageUrls: Map<string, string>,
+) {
+  return {
     candidates: candidates.map((candidate, index) => ({
       candidateKey: candidate.candidateKey,
       displayOrder: index + 1,
       imageUrl: candidateImageUrls.get(candidate.id) ?? null,
     })),
-    sections:
-      draft.sections.length > 0
-        ? draft.sections.map((section) => ({
-            name: section.name.trim(),
-            candidates: section.candidates.map((candidate) => candidate.name.trim()),
-          }))
-        : [],
   }
-}
-
-function buildManifestUriFallback(manifest: unknown): string {
-  return `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(manifest))}`
-}
-
-function extractPublicKeyValue(publicKey: PreparePrivateElectionResponse['publicKey']): string {
-  return typeof publicKey === 'string' ? publicKey : publicKey.value
 }
 
 async function parseElectionAddress(txHash: Hash): Promise<Address> {
@@ -614,12 +629,12 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
 
       const [bannerImageUrl, candidateImageEntries] = await Promise.all([
         draft.bannerImageFile
-          ? uploadImage(draft.bannerImageFile)
+          ? uploadImageToIpfs(draft.bannerImageFile)
           : Promise.resolve<string | null>(null),
         Promise.all(
           allCandidates.map(async (candidate) => [
             candidate.id,
-            candidate.imageFile ? await uploadImage(candidate.imageFile) : null,
+            candidate.imageFile ? await uploadImageToIpfs(candidate.imageFile) : null,
           ]),
         ),
       ])
@@ -677,63 +692,57 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
           throw new Error('후보명은 같은 투표 안에서 중복될 수 없습니다.')
         }
 
-        const canonicalManifest = buildCanonicalManifest(electionDraft.candidates)
-        const manifestMetadata = buildManifestMetadata(
+        const manifest = buildManifestPayload(
           draft,
           electionDraft.title,
+          normalizedSettings,
           electionDraft.candidates,
           candidateImageUrls,
           bannerImageUrl,
         )
-
-        let candidateManifestURI = buildManifestUriFallback(manifestMetadata)
+        const manifestFileName = buildCandidateManifestFileName(
+          draft.title,
+          electionDraft.title,
+          index + 1,
+        )
+        const localManifestArtifact = createJsonArtifact(manifestFileName, manifest)
+        let candidateManifestURI = buildManifestUriFallback(localManifestArtifact.rawJson)
         try {
-          const uploadedManifestUri = await uploadJsonToPinata(manifestMetadata)
-          if (uploadedManifestUri) candidateManifestURI = uploadedManifestUri
+          const uploadedManifestArtifact = await uploadJsonArtifactToPinata(manifestFileName, manifest)
+          if (uploadedManifestArtifact) {
+            candidateManifestURI = uploadedManifestArtifact.uri
+          }
         } catch {
-          candidateManifestURI = buildManifestUriFallback(manifestMetadata)
+          candidateManifestURI = buildManifestUriFallback(localManifestArtifact.rawJson)
         }
 
-        let seriesId: Hex
-        let titleHash: Hex
-        let candidateManifestHash: Hex
+        // sungje : manifest hash는 백엔드 prepare 응답이 아니라 프론트가 실제로 업로드한 json bytes 기준으로 고정한다.
+        const seriesId = keccak256(toHex(draft.title.trim()))
+        const titleHash = keccak256(toHex(electionDraft.title))
+        const candidateManifestHash = localManifestArtifact.hash
+        const initialCandidateHashes = buildCandidateHashes(electionDraft.candidates)
+
         let electionPublicKey: Hex
         let privateKeyCommitmentHash: Hex
-        let keySchemeVersion: number
-        let manifestForChain = canonicalManifest.candidates
 
         if (normalizedSettings.visibilityMode === 'PRIVATE') {
-          const prepareResponse = await apiClient.post<PreparePrivateElectionResponse>(
-            '/private-elections/prepare',
-            {
-              seriesPreimage: draft.title.trim(),
-              seriesCoverImageUrl: bannerImageUrl,
-              title: electionDraft.title,
-              coverImageUrl: bannerImageUrl,
-              candidateManifestPreimage: {
-                candidates: canonicalManifest.candidates.map((candidate, candidateIndex) => ({
-                  ...candidate,
-                  imageUrl:
-                    candidateImageUrls.get(electionDraft.candidates[candidateIndex].id) ?? null,
-                })),
-              },
-            },
-          )
+          // sungje : private prepare는 키 생성만 맡기고, 시리즈/타이틀/manifest 해시는 프론트가 직접 계산한 값을 그대로 쓴다.
+          const prepareResponse = await preparePrivateElection({
+            seriesPreimage: draft.title.trim(),
+            seriesCoverImageUrl: bannerImageUrl,
+            title: electionDraft.title,
+            coverImageUrl: bannerImageUrl,
+            candidateManifestPreimage: buildCandidateManifestPreimage(
+              electionDraft.candidates,
+              candidateImageUrls,
+            ),
+          })
 
-          seriesId = prepareResponse.data.seriesIdHash
-          titleHash = prepareResponse.data.titleHash
-          candidateManifestHash = prepareResponse.data.candidateManifestHash
-          electionPublicKey = toHex(extractPublicKeyValue(prepareResponse.data.publicKey))
-          privateKeyCommitmentHash = prepareResponse.data.privateKeyCommitmentHash
-          keySchemeVersion = Number(prepareResponse.data.keySchemeVersion)
-          manifestForChain = prepareResponse.data.candidateManifestPreimage.candidates
+          electionPublicKey = toHex(extractPublicKeyValue(prepareResponse.publicKey))
+          privateKeyCommitmentHash = prepareResponse.privateKeyCommitmentHash
         } else {
-          seriesId = keccak256(toHex(draft.title.trim()))
-          titleHash = keccak256(toHex(electionDraft.title))
-          candidateManifestHash = keccak256(toHex(JSON.stringify(canonicalManifest)))
           electionPublicKey = '0x'
           privateKeyCommitmentHash = zeroHash
-          keySchemeVersion = 0
         }
 
         const normalizedAllowMultipleChoice =
@@ -789,12 +798,9 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
               : zeroAddress,
           electionPublicKey,
           privateKeyCommitmentHash,
-          keySchemeVersion,
+          keySchemeVersion:
+            normalizedSettings.visibilityMode === 'PRIVATE' ? PRIVATE_ELECTION_KEY_SCHEME_VERSION : 0,
         }
-
-        const initialCandidateHashes = manifestForChain.map((candidate) =>
-          keccak256(toHex(candidate.candidateKey)),
-        )
 
         const txHash = await vestarFactory.createElection(
           walletClient,

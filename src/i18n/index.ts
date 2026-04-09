@@ -128,7 +128,11 @@ const STRINGS = {
   pp_stt_staking: { en: 'STT Staking', ko: 'STT 스테이킹' },
   pp_votes_stat: { en: 'Votes', ko: '투표 수' },
   pp_tier_stat: { en: 'Tier', ko: '등급' },
+  pp_mock_usdt_stat: { en: 'MockUSDT', ko: 'MockUSDT' },
   pp_not_connected: { en: 'Not Connected', ko: '지갑 미연결' },
+  pp_mint_mock_usdt: { en: 'Mint MockUSDT', ko: 'MockUSDT 민트' },
+  pp_mint_mock_usdt_loading: { en: 'Minting…', ko: '민트 중…' },
+  pp_host_page: { en: 'Host Vote', ko: '주최하기' },
   pp_disconnect: { en: 'Disconnect Wallet', ko: '지갑 연결 해제' },
   pp_language: { en: 'Language', ko: '언어' },
 

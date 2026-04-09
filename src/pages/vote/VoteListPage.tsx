@@ -90,13 +90,14 @@ function VoteItem({
   isVoted: boolean
 }) {
   const isEnded = item.badge === 'end'
+  const isOnchainRoute = item.id.startsWith('0x')
   const { t } = useLanguage()
   const badgeLabel = item.badge === 'end' ? t('badge_end') : BADGE_LABEL[item.badge]
 
   return (
     <button
       type="button"
-      onClick={() => onNavigate(isEnded ? `${item.id}/result` : item.id)}
+      onClick={() => onNavigate(isEnded && !isOnchainRoute ? `${item.id}/result` : item.id)}
       className="w-full bg-white border border-[#E7E9ED] rounded-2xl p-4 flex items-center gap-[14px] cursor-pointer transition-[border-color,background] duration-150 hover:border-[rgba(113,64,255,0.25)] hover:bg-[#F0EDFF] active:scale-[0.99] text-left"
     >
       <div

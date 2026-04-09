@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchElectionList } from '../../api/elections'
+import { fetchElectionListResolved } from '../../api/elections'
 import { VOTE_ITEMS } from '../../data/mockVotes'
 import { mapToVoteListItem } from '../../utils/electionMapper'
 import type { ApiElection } from '../../api/types'
@@ -43,8 +43,8 @@ function sortElections(elections: ApiElection[], filter: VoteFilter): ApiElectio
 }
 
 /**
- * Fetches a paginated + filtered list of elections.
- * Falls back to mock data when the API is unavailable.
+ * Fetches a paginated + filtered list of elections from backend indexer first,
+ * then from on-chain fallback when the backend is unavailable or empty.
  */
 export function useInfiniteVotes(filter: VoteFilter = 'all'): UseInfiniteVotesResult {
   const [allItems, setAllItems] = useState<VoteListItem[]>([])
@@ -64,7 +64,7 @@ export function useInfiniteVotes(filter: VoteFilter = 'all'): UseInfiniteVotesRe
     const state = filterToApiState(filter)
 
     setIsLoading(true)
-    fetchElectionList({ state, pageSize: 100 })
+    fetchElectionListResolved({ state, pageSize: 100 })
       .then((res) => {
         if (cancelled) return
         const sorted = sortElections(res.elections, filter)
@@ -72,6 +72,7 @@ export function useInfiniteVotes(filter: VoteFilter = 'all'): UseInfiniteVotesRe
       })
       .catch(() => {
         if (cancelled) return
+        // 목업 : API/온체인 소스 모두 실패했을 때만 리스트 mock fallback 사용
         const mockFiltered = applyMockFilter(VOTE_ITEMS, filter)
         setAllItems(mockFiltered)
       })

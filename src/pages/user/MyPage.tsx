@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { useAccount } from "wagmi";
 // import keyboardArrowLeft from "../../assets/keyboard_arrow_left.svg";
 import { useLanguage } from "../../providers/LanguageProvider";
@@ -187,7 +187,6 @@ function KarmaHistoryList({
 
 export function MyPage() {
   const { address, isConnected } = useAccount();
-  const _navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") === "karma" ? "karma" : "votes";
   const { t } = useLanguage();

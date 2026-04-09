@@ -75,6 +75,22 @@ const STRINGS = {
     en: 'Select a candidate in each section',
     ko: '섹션에서 후보를 선택하세요',
   },
+  vd_connect_wallet: {
+    en: 'Connect wallet to vote',
+    ko: '지갑 연결 후 투표하기',
+  },
+  vd_checking_eligibility: {
+    en: 'Checking ballot availability…',
+    ko: '투표 가능 여부를 확인하는 중…',
+  },
+  vd_ballot_unavailable: {
+    en: 'No ballot available right now',
+    ko: '현재 투표권이 없어요',
+  },
+  vd_onchain_pending: {
+    en: 'On-chain vote is not ready yet',
+    ko: '온체인 투표 준비 중이에요',
+  },
   vd_voting_ended: {
     en: 'Voting has ended · No more votes',
     ko: '투표가 종료되었습니다 · 더 이상 투표할 수 없어요',

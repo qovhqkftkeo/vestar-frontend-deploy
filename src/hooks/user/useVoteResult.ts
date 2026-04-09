@@ -1,5 +1,6 @@
 import type { VoteResultData } from '../../types/vote'
 
+// 목업 : 결과 페이지는 아직 실제 on-chain/result-summary 연동 전이라 샘플 결과 유지
 const MOCK_RESULTS: Record<string, VoteResultData> = {
   '1': {
     id: '1',

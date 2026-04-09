@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { formatUnits } from 'viem'
-import { useAccount, useChainId, useDisconnect, useSwitchChain, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useConnect, useDisconnect, useSwitchChain, useWalletClient } from 'wagmi'
 import accountCircleIcon from '../../assets/account_circle.svg'
+import walletIcon from '../../assets/account_balance_wallet.svg'
 import verifiedIcon from '../../assets/verified.svg'
 import {
   getMockUsdtBalance,
@@ -95,6 +96,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { data: walletClient } = useWalletClient()
+  const { connect, connectors, isPending: isConnectPending } = useConnect()
   const { switchChainAsync } = useSwitchChain()
   const { disconnect } = useDisconnect()
   const navigate = useNavigate()
@@ -134,6 +136,18 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
     disconnect()
     onClose()
   }
+
+  const handleConnect = () => {
+    // sungje : 프로필 패널 하단 버튼은 연결 상태에 따라 connect / disconnect 동작을 같은 자리에서 바꿔준다.
+    const injectedConnector = connectors.find((connector) => connector.id === 'injected')
+    const connector = injectedConnector ?? connectors[0]
+
+    if (connector) {
+      connect({ connector })
+    }
+  }
+
+  const isDisconnectAction = isConnected
 
   const handleMintMockUsdt = async () => {
     if (!isConnected || !address) {
@@ -455,14 +469,40 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
 
             <button
               type="button"
-              onClick={handleDisconnect}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[rgba(220,38,38,0.06)] transition-colors cursor-pointer text-left"
-              style={{ background: 'rgba(220,38,38,0.08)' }}
+              onClick={isConnected ? handleDisconnect : handleConnect}
+              disabled={!isConnected && isConnectPending}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors cursor-pointer text-left disabled:opacity-50 disabled:cursor-default ${isDisconnectAction ? 'hover:bg-[rgba(220,38,38,0.12)]' : 'border border-[#E3D8FF] hover:bg-[#F7F2FF]'}`}
+              style={{
+                background: isDisconnectAction ? 'rgba(220,38,38,0.08)' : '#F8F5FF',
+              }}
             >
-              <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[rgba(220,38,38,0.10)]">
-                🔌
+              <span
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0"
+                style={{
+                  background: isDisconnectAction ? 'rgba(220,38,38,0.10)' : 'rgba(113,64,255,0.14)',
+                }}
+              >
+                {isDisconnectAction ? (
+                  '🔌'
+                ) : (
+                  <img
+                    src={walletIcon}
+                    alt=""
+                    className="w-[18px] h-[18px] brightness-0 saturate-100"
+                    style={{ filter: 'invert(27%) sepia(76%) saturate(3697%) hue-rotate(245deg) brightness(102%) contrast(101%)' }}
+                  />
+                )}
               </span>
-              <span className="text-[14px] font-medium text-[#dc2626]">{t('pp_disconnect')}</span>
+              <span
+                className="text-[14px] font-medium"
+                style={{ color: isDisconnectAction ? '#dc2626' : '#7140FF' }}
+              >
+                {isDisconnectAction
+                  ? t('pp_disconnect')
+                  : isConnectPending
+                    ? t('pp_connect_wallet_loading')
+                    : t('pp_connect_wallet')}
+              </span>
             </button>
           </div>
         </div>

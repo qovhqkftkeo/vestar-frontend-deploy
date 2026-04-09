@@ -149,6 +149,8 @@ const STRINGS = {
   pp_mint_mock_usdt: { en: 'Mint MockUSDT', ko: 'MockUSDT 민트' },
   pp_mint_mock_usdt_loading: { en: 'Minting…', ko: '민트 중…' },
   pp_host_page: { en: 'Hold', ko: '주최하기' },
+  pp_connect_wallet: { en: 'Connect Wallet', ko: '지갑 연결' },
+  pp_connect_wallet_loading: { en: 'Connecting…', ko: '연결 중…' },
   pp_disconnect: { en: 'Disconnect Wallet', ko: '지갑 연결 해제' },
   pp_language: { en: 'Language', ko: '언어' },
 

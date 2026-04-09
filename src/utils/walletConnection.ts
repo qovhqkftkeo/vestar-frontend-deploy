@@ -15,14 +15,14 @@ function isMobileUserAgent() {
 }
 
 function getPreferredConnector(connectors: readonly Connector[]) {
+  const metaMaskConnector = connectors.find((connector) => connector.id === 'metaMaskSDK')
   const injectedConnector = connectors.find((connector) => connector.id === 'injected')
-  const walletConnectConnector = connectors.find((connector) => connector.id === 'walletConnect')
 
   if (isMobileUserAgent()) {
-    return walletConnectConnector ?? injectedConnector ?? connectors[0]
+    return metaMaskConnector ?? injectedConnector ?? connectors[0]
   }
 
-  return injectedConnector ?? walletConnectConnector ?? connectors[0]
+  return metaMaskConnector ?? injectedConnector ?? connectors[0]
 }
 
 export function requestWalletConnection({

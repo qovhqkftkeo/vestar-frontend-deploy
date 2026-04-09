@@ -22,6 +22,10 @@ import type {
   VoteCreateDraft,
 } from '../../types/host'
 import { uploadJsonToPinata } from '../../utils/ipfs'
+import {
+  getEffectiveResultRevealAt,
+  normalizeElectionSettingsDraft,
+} from '../../utils/hostElectionSettings'
 
 type SubmitVoteResult = {
   txHash: Hash
@@ -176,32 +180,39 @@ function isStep2Valid(draft: VoteCreateDraft): boolean {
 
 function isStep3Valid(draft: VoteCreateDraft): boolean {
   const validateSettings = (settings: ElectionSettingsDraft, candidateCount: number) => {
-    if (!settings.startDate.trim() || !settings.endDate.trim() || !settings.resultRevealAt.trim()) {
+    const normalizedSettings = normalizeElectionSettingsDraft(settings)
+    const effectiveResultRevealAt = getEffectiveResultRevealAt(normalizedSettings)
+
+    if (
+      !normalizedSettings.startDate.trim() ||
+      !normalizedSettings.endDate.trim() ||
+      !effectiveResultRevealAt.trim()
+    ) {
       return false
     }
 
-    const startAt = Date.parse(settings.startDate)
-    const endAt = Date.parse(settings.endDate)
-    const resultRevealAt = Date.parse(settings.resultRevealAt)
+    const startAt = Date.parse(normalizedSettings.startDate)
+    const endAt = Date.parse(normalizedSettings.endDate)
+    const resultRevealAt = Date.parse(effectiveResultRevealAt)
 
     if (!Number.isFinite(startAt) || !Number.isFinite(endAt) || !Number.isFinite(resultRevealAt)) {
       return false
     }
 
     if (startAt >= endAt) return false
-    if (settings.visibilityMode === 'PRIVATE' && resultRevealAt < endAt) return false
+    if (resultRevealAt < endAt) return false
 
-    if (settings.ballotPolicy === 'ONE_PER_INTERVAL') {
-      const interval = Number(settings.resetIntervalValue)
+    if (normalizedSettings.ballotPolicy === 'ONE_PER_INTERVAL') {
+      const interval = Number(normalizedSettings.resetIntervalValue)
       if (!Number.isFinite(interval) || interval <= 0) return false
     }
 
-    if (settings.paymentMode === 'PAID') {
-      const price = Number(settings.costPerBallotEth)
+    if (normalizedSettings.paymentMode === 'PAID') {
+      const price = Number(normalizedSettings.costPerBallotEth)
       if (!Number.isFinite(price) || price <= 0) return false
     }
 
-    return settings.maxChoices >= 1 && settings.maxChoices <= Math.max(candidateCount, 1)
+    return normalizedSettings.maxChoices >= 1 && normalizedSettings.maxChoices <= Math.max(candidateCount, 1)
   }
 
   if (draft.sections.length > 0) {
@@ -388,21 +399,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
 
   const updateField = useCallback(
     <K extends keyof VoteCreateDraft>(key: K, value: VoteCreateDraft[K]) => {
-      setDraft((prev) => {
-        if (key === 'visibilityMode') {
-          return {
-            ...prev,
-            visibilityMode: value as VoteCreateDraft['visibilityMode'],
-            resultReveal: value === 'OPEN' ? 'immediate' : 'after_end',
-          }
-        }
-
-        if (key === 'paymentMode' && value === 'FREE') {
-          return { ...prev, paymentMode: 'FREE', costPerBallotEth: '0' }
-        }
-
-        return { ...prev, [key]: value }
-      })
+      setDraft((prev) => normalizeElectionSettingsDraft({ ...prev, [key]: value }))
     },
     [],
   )
@@ -462,7 +459,12 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         resultReveal: prev.resultReveal,
       }
 
-      return { ...prev, sections: [...prev.sections, newSection], electionTitle: '' }
+      // sungje : 새 섹션도 단일 생성과 같은 규칙으로 정규화해서 공개투표/유료투표 값이 바로 맞도록 유지한다.
+      return {
+        ...prev,
+        sections: [...prev.sections, normalizeElectionSettingsDraft(newSection)],
+        electionTitle: '',
+      }
     })
   }, [])
 
@@ -493,19 +495,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         sections: prev.sections.map((section) => {
           if (section.id !== sectionId) return section
 
-          if (key === 'visibilityMode') {
-            return {
-              ...section,
-              visibilityMode: value as ElectionSettingsDraft['visibilityMode'],
-              resultReveal: value === 'OPEN' ? 'immediate' : 'after_end',
-            }
-          }
-
-          if (key === 'paymentMode' && value === 'FREE') {
-            return { ...section, paymentMode: 'FREE', costPerBallotEth: '0' }
-          }
-
-          return { ...section, [key]: value }
+          return normalizeElectionSettingsDraft({ ...section, [key]: value })
         }),
       }))
     },
@@ -656,6 +646,8 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
       })
 
       for (const [index, electionDraft] of electionDrafts.entries()) {
+        const normalizedSettings = normalizeElectionSettingsDraft(electionDraft.settings)
+
         setSubmissionProgress({
           current: index + 1,
           total: electionDrafts.length,
@@ -696,7 +688,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         let keySchemeVersion: number
         let manifestForChain = canonicalManifest.candidates
 
-        if (electionDraft.settings.visibilityMode === 'PRIVATE') {
+        if (normalizedSettings.visibilityMode === 'PRIVATE') {
           const prepareResponse = await apiClient.post<PreparePrivateElectionResponse>(
             '/private-elections/prepare',
             {
@@ -731,52 +723,50 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         }
 
         const normalizedAllowMultipleChoice =
-          electionDraft.settings.ballotPolicy === 'UNLIMITED_PAID'
-            ? false
-            : electionDraft.settings.maxChoices > 1
+          normalizedSettings.ballotPolicy === 'UNLIMITED_PAID' ? false : normalizedSettings.maxChoices > 1
         const normalizedMaxSelectionsPerSubmission = normalizedAllowMultipleChoice
-          ? Math.max(2, electionDraft.settings.maxChoices)
+          ? Math.max(2, normalizedSettings.maxChoices)
           : 1
+        const effectiveResultRevealAt = getEffectiveResultRevealAt(normalizedSettings)
 
         const config: ElectionConfigInput = {
           seriesId,
           visibilityMode:
-            electionDraft.settings.visibilityMode === 'PRIVATE'
+            normalizedSettings.visibilityMode === 'PRIVATE'
               ? VESTAR_VISIBILITY_MODE.PRIVATE
               : VESTAR_VISIBILITY_MODE.OPEN,
           titleHash,
           candidateManifestHash,
           candidateManifestURI,
-          startAt: Math.floor(Date.parse(electionDraft.settings.startDate) / 1000),
-          endAt: Math.floor(Date.parse(electionDraft.settings.endDate) / 1000),
-          resultRevealAt: Math.floor(Date.parse(electionDraft.settings.resultRevealAt) / 1000),
-          minKarmaTier: Number(electionDraft.settings.minKarmaTier),
+          startAt: Math.floor(Date.parse(normalizedSettings.startDate) / 1000),
+          endAt: Math.floor(Date.parse(normalizedSettings.endDate) / 1000),
+          // sungje : 공개 투표는 화면에서 결과 공개 시각을 숨기지만 컨트랙트 검증상 종료 시각 이상 값이 필요해서 endAt으로 맞춘다.
+          resultRevealAt: Math.floor(Date.parse(effectiveResultRevealAt) / 1000),
+          minKarmaTier: Number(normalizedSettings.minKarmaTier),
           ballotPolicy:
-            electionDraft.settings.ballotPolicy === 'ONE_PER_ELECTION'
+            normalizedSettings.ballotPolicy === 'ONE_PER_ELECTION'
               ? VESTAR_BALLOT_POLICY.ONE_PER_ELECTION
-              : electionDraft.settings.ballotPolicy === 'ONE_PER_INTERVAL'
+              : normalizedSettings.ballotPolicy === 'ONE_PER_INTERVAL'
                 ? VESTAR_BALLOT_POLICY.ONE_PER_INTERVAL
                 : VESTAR_BALLOT_POLICY.UNLIMITED_PAID,
           resetInterval:
-            electionDraft.settings.ballotPolicy === 'ONE_PER_INTERVAL'
+            normalizedSettings.ballotPolicy === 'ONE_PER_INTERVAL'
               ? convertResetIntervalToSeconds(
-                  electionDraft.settings.resetIntervalValue,
-                  electionDraft.settings.resetIntervalUnit,
+                  normalizedSettings.resetIntervalValue,
+                  normalizedSettings.resetIntervalUnit,
                 )
               : 0,
           paymentMode:
-            electionDraft.settings.paymentMode === 'PAID'
-              ? VESTAR_PAYMENT_MODE.PAID
-              : VESTAR_PAYMENT_MODE.FREE,
+            normalizedSettings.paymentMode === 'PAID' ? VESTAR_PAYMENT_MODE.PAID : VESTAR_PAYMENT_MODE.FREE,
           costPerBallot:
-            electionDraft.settings.paymentMode === 'PAID'
-              ? parseUnits(electionDraft.settings.costPerBallotEth || '0', 6)
+            normalizedSettings.paymentMode === 'PAID'
+              ? parseUnits(normalizedSettings.costPerBallotEth || '0', 6)
               : 0n,
           allowMultipleChoice: normalizedAllowMultipleChoice,
           maxSelectionsPerSubmission: normalizedMaxSelectionsPerSubmission,
           timezoneWindowOffset: -new Date().getTimezoneOffset() * 60,
           paymentToken:
-            electionDraft.settings.paymentMode === 'PAID'
+            normalizedSettings.paymentMode === 'PAID'
               ? vestarContractAddresses.mockUsdt
               : zeroAddress,
           electionPublicKey,

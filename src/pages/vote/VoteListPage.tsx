@@ -90,7 +90,6 @@ function VoteItem({
   onNavigate: (item: VoteListItem) => void
   isVoted: boolean
 }) {
-  const isEnded = item.badge === 'end'
   const { t } = useLanguage()
   const badgeLabel = item.badge === 'end' ? t('badge_end') : BADGE_LABEL[item.badge]
 

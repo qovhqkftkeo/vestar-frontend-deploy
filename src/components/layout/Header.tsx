@@ -7,6 +7,7 @@ import walletIcon from '../../assets/account_balance_wallet.svg'
 import complete_vote from '../../assets/complete_vote.svg'
 import { useLanguage } from '../../providers/LanguageProvider'
 import type { ScrollState } from '../../hooks/useScrollDirection'
+import { requestWalletConnection } from '../../utils/walletConnection'
 
 interface HeaderProps {
   scrollState: ScrollState
@@ -37,10 +38,7 @@ export function Header({ scrollState, onOpenPanel, onOpenSearch }: HeaderProps) 
   const showLogo = isHomeLike
 
   const handleConnect = () => {
-    const injectedConnector = connectors.find((c) => c.id === 'injected') ?? connectors[0]
-    if (injectedConnector) {
-      connect({ connector: injectedConnector })
-    }
+    requestWalletConnection({ connect, connectors })
   }
 
   return (

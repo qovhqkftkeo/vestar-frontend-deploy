@@ -18,7 +18,7 @@ const SIZE_MAP = {
 
 export function CandidateAvatar({
   imageUrl,
-  emoji,
+  emoji: _emoji,
   emojiColor,
   size = 'md',
   className = '',
@@ -29,7 +29,7 @@ export function CandidateAvatar({
   const base = `${box} ${radius} flex-shrink-0 ${ringClass} ${className}`
 
   if (imageUrl) {
-    return <img src={resolveIpfsUrl(imageUrl)} alt={emoji} className={`${base} object-cover`} />
+    return <img src={resolveIpfsUrl(imageUrl)} alt="" className={`${base} object-cover`} />
   }
 
   return (
@@ -37,7 +37,7 @@ export function CandidateAvatar({
       className={`${base} flex items-center justify-center`}
       style={{ backgroundColor: emojiColor }}
     >
-      {emoji}
+      <div className="w-3 h-3 rounded-full bg-white/80" />
     </div>
   )
 }

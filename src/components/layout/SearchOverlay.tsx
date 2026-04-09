@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
+import searchButtonIcon from '../../assets/search_button.svg'
 import { HOT_VOTES, VOTE_ITEMS } from '../../data/mockVotes'
 import { useLanguage } from '../../providers/LanguageProvider'
 import type { BadgeVariant } from '../../types/vote'
@@ -175,9 +176,7 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                   style={{ backgroundColor: item.emojiColor }}
-                >
-                  {item.emoji}
-                </div>
+                />
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-semibold text-[#090A0B] truncate">
                     {item.name}
@@ -197,7 +196,7 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-            <div className="text-5xl mb-4">🔍</div>
+            <img src={searchButtonIcon} alt="" className="w-12 h-12 mb-4 opacity-60" />
             <div className="text-[16px] font-bold text-[#090A0B] mb-2">
               {t('search_no_results')}
             </div>
@@ -238,9 +237,7 @@ function TrendingSection({
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
             style={{ background: vote.gradient }}
-          >
-            {vote.emoji}
-          </div>
+          />
 
           <div className="flex-1 min-w-0">
             <div className="text-[14px] font-semibold text-[#090A0B] truncate leading-snug">

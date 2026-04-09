@@ -27,7 +27,6 @@ export function VoteResultWinner({ result, winner }: VoteResultWinnerProps) {
       {/* Vote title + org */}
       <div className="text-[11px] font-mono text-white/40 mb-1 flex items-center gap-1">
         {result.org}
-        {result.verified && <span className="text-[#a78bfa]">✦</span>}
       </div>
       <h1 className="text-[20px] font-bold text-white leading-tight mb-6">{result.title}</h1>
 

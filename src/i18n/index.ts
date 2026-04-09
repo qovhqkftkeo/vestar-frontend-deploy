@@ -36,12 +36,18 @@ const STRINGS = {
   vl_hot_section: { en: 'HOT Votes', ko: 'HOT 투표' },
   vl_see_all: { en: 'See all', ko: '전체 보기' },
   vl_active_section: { en: 'Active Votes', ko: '진행 중인 투표' },
+  vl_ended_section: { en: 'Ended Votes', ko: '마감된 투표' },
   vl_sort: { en: 'Sort ▾', ko: '정렬 ▾' },
   vl_sort_latest: { en: 'Newest first', ko: '최신 생성순' },
   vl_participating: { en: 'participating', ko: '참여 중' },
   vl_ended_badge: { en: 'Ended', ko: '종료됨' },
   vl_vote_btn: { en: 'Vote', ko: '투표하기' },
   vl_voted_alt: { en: 'Voted', ko: '투표 완료' },
+  vl_empty_active: {
+    en: 'There are no active vote series yet.',
+    ko: '아직 진행 중인 투표가 없어요',
+  },
+  vl_empty_ended: { en: 'There are no ended vote series yet.', ko: '아직 마감된 투표가 없어요' },
 
   // ── Vote List filter chips ──────────────────────────────────────────────────
   filter_all: { en: 'All', ko: '전체' },
@@ -98,15 +104,15 @@ const STRINGS = {
     ko: '투표가 종료되었습니다 · 더 이상 투표할 수 없어요',
   },
   vd_switch_network: {
-    en: '⚠ Switch to Status Testnet',
-    ko: '⚠ 네트워크 전환 필요 — Status Testnet',
+    en: 'Switch to Status Testnet',
+    ko: '네트워크 전환 필요 — Status Testnet',
   },
 
   // ── Danger Confirm Modal ────────────────────────────────────────────────────
   dm_title: { en: 'Confirm Your Vote', ko: '투표를 확인하세요' },
   dm_irreversible: {
-    en: '⚠ This action is irreversible. Once submitted, your vote cannot be changed or cancelled.',
-    ko: '⚠ 이 투표는 되돌릴 수 없어요. 한 번 제출하면 변경하거나 취소할 수 없습니다.',
+    en: 'This action is irreversible. Once submitted, your vote cannot be changed or cancelled.',
+    ko: '이 투표는 되돌릴 수 없어요. 한 번 제출하면 변경하거나 취소할 수 없습니다.',
   },
   dm_vote_fee: { en: 'Vote fee', ko: '투표권' },
   dm_selected_candidates: { en: 'Selected candidates', ko: '선택한 후보' },
@@ -150,6 +156,8 @@ const STRINGS = {
   pp_mint_mock_usdt: { en: 'Mint MockUSDT', ko: 'MockUSDT 민트' },
   pp_mint_mock_usdt_loading: { en: 'Minting…', ko: '민트 중…' },
   pp_host_page: { en: 'Hold', ko: '주최하기' },
+  pp_connect_wallet: { en: 'Connect Wallet', ko: '지갑 연결' },
+  pp_connect_wallet_loading: { en: 'Connecting…', ko: '연결 중…' },
   pp_disconnect: { en: 'Disconnect Wallet', ko: '지갑 연결 해제' },
   pp_language: { en: 'Language', ko: '언어' },
 
@@ -173,6 +181,12 @@ const STRINGS = {
   mp_total_karma: { en: 'Total Karma', ko: '총 Karma' },
   mp_tab_votes: { en: 'Vote History', ko: '투표 내역' },
   mp_tab_karma: { en: 'Karma History', ko: 'Karma 내역' },
+  mp_verification_title: { en: 'Open the verification portal', ko: '검증 포탈 열기' },
+  mp_verification_sub: {
+    en: 'Review vote receipts, results, and proof details in one place.',
+    ko: '투표 기록, 결과, 검증 근거를 한곳에서 다시 확인할 수 있어요.',
+  },
+  mp_verification_cta: { en: 'Try Verification', ko: '검증해보기' },
   common_loading: { en: 'Loading...', ko: '불러오는 중...' },
   mp_no_votes: { en: 'No votes yet', ko: '아직 참여한 투표가 없어요' },
   mp_no_karma: { en: 'No Karma earned yet', ko: '아직 획득한 Karma가 없어요' },
@@ -203,7 +217,7 @@ const STRINGS = {
   nf_btn: { en: 'Go back home', ko: '홈으로 돌아가기' },
 
   // ── Infinite Scroll ─────────────────────────────────────────────────────────
-  is_all_caught_up: { en: 'All caught up ✓', ko: '모두 불러왔어요 ✓' },
+  is_all_caught_up: { en: 'All caught up', ko: '모두 불러왔어요' },
 
   // ── Landing Page ────────────────────────────────────────────────────────────
   lp_title: { en: 'Host Your Vote', ko: '투표 개설하기' },

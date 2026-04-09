@@ -40,14 +40,14 @@ export function useHostVotes(): UseHostVotesResult {
         if (cancelled) return
 
         const mapped = elections.map(
-          (election, index) =>
+          (election) =>
             ({
               id: election.id,
               title: election.title ?? 'Untitled election',
               badge: mapApiStateToBadge(election.onchainState),
               participantCount: election.resultSummary?.totalSubmissions ?? 0,
               endDate: formatVoteDate(election.endAt),
-              emoji: ['🎤', '🏆', '💜', '🎧', '⭐', '🔥'][index % 6],
+              emoji: '',
             }) satisfies HostVoteCardData,
         )
 

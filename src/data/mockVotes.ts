@@ -4,7 +4,7 @@ import type { HotVote, VoteListItem } from '../types/vote'
 export const HOT_VOTES: HotVote[] = [
   {
     id: '1',
-    emoji: '🎤',
+    emoji: '',
     gradient: 'linear-gradient(135deg,#1a1035,#2d1b6e)',
     org: 'Show! Music Core',
     name: '이번 주 1위는 누구?',
@@ -13,7 +13,7 @@ export const HOT_VOTES: HotVote[] = [
   },
   {
     id: '2',
-    emoji: '🏆',
+    emoji: '',
     gradient: 'linear-gradient(135deg,#0a1a35,#1a2d6e)',
     org: 'Mnet × MAMA Awards',
     name: '2026 MAMA 대상',
@@ -22,7 +22,7 @@ export const HOT_VOTES: HotVote[] = [
   },
   {
     id: '3',
-    emoji: '💜',
+    emoji: '',
     gradient: 'linear-gradient(135deg,#1a0a35,#3d1a6e)',
     org: 'ARMY 팬카페 공식',
     name: 'BTS 컴백 콘셉트 투표',
@@ -31,7 +31,7 @@ export const HOT_VOTES: HotVote[] = [
   },
   {
     id: '4',
-    emoji: '🎧',
+    emoji: '',
     gradient: 'linear-gradient(135deg,#1a1a1a,#2a2a2a)',
     org: 'Melon Music Awards',
     name: '올해의 앨범 최종 투표',
@@ -44,7 +44,7 @@ export const HOT_VOTES: HotVote[] = [
 export const VOTE_ITEMS: VoteListItem[] = [
   {
     id: '1',
-    emoji: '🎤',
+    emoji: '',
     emojiColor: '#e8f0ff',
     org: 'Show! Music Core × Mubeat',
     name: '이번 주 1위 사전투표',
@@ -56,7 +56,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '2',
-    emoji: '🏆',
+    emoji: '',
     emojiColor: '#fef3c7',
     org: 'Mnet × MAMA Awards',
     name: '2026 MAMA 대상 — 부문별 투표',
@@ -68,7 +68,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '3',
-    emoji: '💜',
+    emoji: '',
     emojiColor: '#f0edff',
     org: 'ARMY 팬카페 공식 투표',
     name: 'BTS 컴백 콘셉트 투표',
@@ -80,7 +80,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '4',
-    emoji: '🎵',
+    emoji: '',
     emojiColor: '#fff5e8',
     org: 'MBC Show Champion',
     name: '주간 최애 아이돌 랭킹',
@@ -92,7 +92,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '5',
-    emoji: '🎧',
+    emoji: '',
     emojiColor: '#e8f8ff',
     org: 'Gaon Chart 공식',
     name: '이 달의 최고 뮤직비디오',
@@ -104,7 +104,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '6',
-    emoji: '🌟',
+    emoji: '',
     emojiColor: '#fff0f0',
     org: 'SBS 인기가요',
     name: 'K-POP 올스타 인기 투표',
@@ -116,7 +116,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '7',
-    emoji: '💫',
+    emoji: '',
     emojiColor: '#f5f0ff',
     org: 'Mnet 엠카운트다운',
     name: '이번 주 1위 도전자',
@@ -128,7 +128,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '8',
-    emoji: '🌸',
+    emoji: '',
     emojiColor: '#fff0f5',
     org: '멜론 차트',
     name: '봄 시즌 베스트 컴백',
@@ -140,7 +140,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '9',
-    emoji: '🎀',
+    emoji: '',
     emojiColor: '#fff5ff',
     org: 'KBS 뮤직뱅크',
     name: '뮤직뱅크 주간 1위',
@@ -152,7 +152,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '10',
-    emoji: '🎼',
+    emoji: '',
     emojiColor: '#f0f8ff',
     org: 'MBC 뮤직',
     name: '스트리밍 킹 결정전',
@@ -164,7 +164,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '11',
-    emoji: '💎',
+    emoji: '',
     emojiColor: '#e8f0fe',
     org: '네이버 NOW',
     name: '라이브 팬 투표 1위',
@@ -176,7 +176,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '12',
-    emoji: '🔥',
+    emoji: '',
     emojiColor: '#fff3e8',
     org: 'Bugs Music',
     name: '핫 트렌드 아티스트',
@@ -188,7 +188,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '13',
-    emoji: '⭐',
+    emoji: '',
     emojiColor: '#fffde8',
     org: 'HANTEO Chart',
     name: '한터 이달의 아티스트',
@@ -200,7 +200,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '14',
-    emoji: '🌙',
+    emoji: '',
     emojiColor: '#f0f0ff',
     org: 'IDOL CHAMP',
     name: '아이돌챔프 주간 투표',
@@ -212,7 +212,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '15',
-    emoji: '🦋',
+    emoji: '',
     emojiColor: '#e8fff5',
     org: 'Choeaedol',
     name: '최애돌 이달의 1위',
@@ -224,7 +224,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '16',
-    emoji: '🎭',
+    emoji: '',
     emojiColor: '#fff8e8',
     org: 'VLIVE Charts',
     name: '팬덤 파워 랭킹',
@@ -236,7 +236,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '17',
-    emoji: '🏅',
+    emoji: '',
     emojiColor: '#e8fffe',
     org: 'M2 채널',
     name: '베스트 퍼포먼스 투표',
@@ -248,7 +248,7 @@ export const VOTE_ITEMS: VoteListItem[] = [
   },
   {
     id: '18',
-    emoji: '🎬',
+    emoji: '',
     emojiColor: '#fef0ff',
     org: '유튜브 뮤직 코리아',
     name: '올해의 MV 결선',

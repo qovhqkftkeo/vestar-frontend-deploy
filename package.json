@@ -4,8 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node ./scripts/dev-with-verification-portal.mjs",
+    "dev:app": "vite",
+    "build": "node ./scripts/build-with-verification-portal.mjs",
+    "build:app": "tsc -b && vite build",
     "preview": "vite preview",
     "sync:vestar-contracts": "node ./scripts/sync-vestar-contracts.mjs",
     "lint": "biome lint .",

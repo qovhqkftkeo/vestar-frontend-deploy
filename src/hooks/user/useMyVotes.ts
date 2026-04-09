@@ -65,7 +65,6 @@ function mapToMyVoteItem(item: ApiVoteHistoryItem): MyVoteItem {
     date: formatDate(item.blockTimestamp),
     karmaEarned: 0,
     choice: mapChoiceLabel(item),
-    choiceEmoji: item.type === 'PRIVATE' ? '🔐' : '🗳️',
     badge: mapBadge(item.onchainElection?.onchainState ?? 'FINALIZED'),
   }
 }

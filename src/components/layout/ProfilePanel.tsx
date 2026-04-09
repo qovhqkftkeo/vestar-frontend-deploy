@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { formatUnits } from 'viem'
-import { useAccount, useChainId, useDisconnect, useSwitchChain, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useConnect, useDisconnect, useSwitchChain, useWalletClient } from 'wagmi'
 import accountCircleIcon from '../../assets/account_circle.svg'
+import connectWalletIcon from '../../assets/account_connect_wallet.svg'
+import disconnectWalletIcon from '../../assets/account_disconnect_wallet.svg'
+import completeVoteIcon from '../../assets/complete_vote.svg'
+import karmaIcon from '../../assets/karma.svg'
+import languageIcon from '../../assets/language.svg'
+import libraryAddIcon from '../../assets/library_add.svg'
+import mockUsdtIcon from '../../assets/mock_usdt.svg'
+import sttStakingIcon from '../../assets/stt_staking.svg'
 import verifiedIcon from '../../assets/verified.svg'
 import {
   getMockUsdtBalance,
@@ -39,21 +47,21 @@ const MENU_ITEMS: MenuItem[] = [
   {
     kind: 'internal',
     labelKey: 'pp_my_votes',
-    icon: '🗳️',
+    icon: completeVoteIcon,
     bg: '#F0EDFF',
     to: '/mypage?tab=votes',
   },
   {
     kind: 'internal',
     labelKey: 'pp_karma_history',
-    icon: '⚡',
+    icon: karmaIcon,
     bg: '#E8FFF0',
     to: '/mypage?tab=karma',
   },
   {
     kind: 'external',
     labelKey: 'pp_stt_staking',
-    icon: '🪙',
+    icon: sttStakingIcon,
     bg: '#FFF5E8',
     href: 'https://hub.status.network/stake',
   },
@@ -67,20 +75,19 @@ function truncateAddress(address: string): string {
 
 function getKarmaTier(karma: number): {
   label: string
-  emoji: string
   color: string
 } {
-  if (karma >= 100000000) return { label: 'Legendary', emoji: '👑', color: '#F59E0B' }
-  if (karma >= 5000000) return { label: 'S-Tier', emoji: '💎', color: '#22d3ee' }
-  if (karma >= 500000) return { label: 'High-Throughput', emoji: '🚀', color: '#06b6d4' }
-  if (karma >= 100000) return { label: 'Pro User', emoji: '💫', color: '#818cf8' }
-  if (karma >= 20000) return { label: 'Power User', emoji: '🔥', color: '#f97316' }
-  if (karma >= 5000) return { label: 'Regular', emoji: '⭐', color: '#eab308' }
-  if (karma >= 500) return { label: 'Active', emoji: '🟣', color: '#7140FF' }
-  if (karma >= 50) return { label: 'Basic', emoji: '🔵', color: '#3b82f6' }
-  if (karma >= 2) return { label: 'Newbie', emoji: '🌱', color: '#22c55e' }
-  if (karma >= 1) return { label: 'Entry', emoji: '⚡', color: '#9CA3AF' }
-  return { label: '—', emoji: '·', color: '#707070' }
+  if (karma >= 100000000) return { label: 'Legendary', color: '#F59E0B' }
+  if (karma >= 5000000) return { label: 'S-Tier', color: '#22d3ee' }
+  if (karma >= 500000) return { label: 'High-Throughput', color: '#06b6d4' }
+  if (karma >= 100000) return { label: 'Pro User', color: '#818cf8' }
+  if (karma >= 20000) return { label: 'Power User', color: '#f97316' }
+  if (karma >= 5000) return { label: 'Regular', color: '#eab308' }
+  if (karma >= 500) return { label: 'Active', color: '#7140FF' }
+  if (karma >= 50) return { label: 'Basic', color: '#3b82f6' }
+  if (karma >= 2) return { label: 'Newbie', color: '#22c55e' }
+  if (karma >= 1) return { label: 'Entry', color: '#9CA3AF' }
+  return { label: '—', color: '#707070' }
 }
 
 function formatMockUsdtBalance(balance: bigint): string {
@@ -91,10 +98,15 @@ function formatMockUsdtBalance(balance: bigint): string {
   return trimmedFraction ? `${wholeWithCommas}.${trimmedFraction}` : wholeWithCommas
 }
 
+function ActionIcon({ src, alt }: { src: string; alt: string }) {
+  return <img src={src} alt={alt} className="w-6 h-6" />
+}
+
 export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { data: walletClient } = useWalletClient()
+  const { connect, connectors, isPending: isConnectPending } = useConnect()
   const { switchChainAsync } = useSwitchChain()
   const { disconnect } = useDisconnect()
   const navigate = useNavigate()
@@ -106,6 +118,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   const karma = isConnected ? 2480 : 0
   const votes = isConnected ? 14 : 0
   const tier = getKarmaTier(karma)
+  const verificationPortalPath = `${import.meta.env.BASE_URL}verification/`
 
   useEffect(() => {
     let cancelled = false
@@ -134,6 +147,18 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
     disconnect()
     onClose()
   }
+
+  const handleConnect = () => {
+    // sungje : 프로필 패널 하단 버튼은 연결 상태에 따라 connect / disconnect 동작을 같은 자리에서 바꿔준다.
+    const injectedConnector = connectors.find((connector) => connector.id === 'injected')
+    const connector = injectedConnector ?? connectors[0]
+
+    if (connector) {
+      connect({ connector })
+    }
+  }
+
+  const isDisconnectAction = isConnected
 
   const handleMintMockUsdt = async () => {
     if (!isConnected || !address) {
@@ -259,14 +284,11 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
         <div className="grid grid-cols-3 gap-[1px] bg-[#E7E9ED] border-b border-[#E7E9ED] flex-shrink-0">
           <div className="bg-white px-4 py-[14px]">
             <div className="text-[11px] text-[#707070] mb-1">{t('pp_tier_stat')}</div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[17px]">{isConnected ? tier.emoji : '⚡'}</span>
-              <span
-                className="text-[15px] font-bold font-mono"
-                style={{ color: isConnected ? tier.color : '#707070' }}
-              >
-                {isConnected ? tier.label : '—'}
-              </span>
+            <div
+              className="text-[15px] font-bold font-mono"
+              style={{ color: isConnected ? tier.color : '#707070' }}
+            >
+              {isConnected ? tier.label : '—'}
             </div>
           </div>
           <div className="bg-white px-4 py-[14px]">
@@ -291,7 +313,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
                     className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0"
                     style={{ background: item.bg }}
                   >
-                    {item.icon}
+                    <ActionIcon src={item.icon} alt="" />
                   </span>
                   <span className="text-[14px] font-medium text-[#090A0B]">{t(item.labelKey)}</span>
                   <span className="ml-auto text-[#707070]">
@@ -366,7 +388,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F7F8FA] transition-colors cursor-pointer text-left disabled:opacity-50 disabled:cursor-default"
             >
               <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[#FFF5E8]">
-                🪙
+                <ActionIcon src={mockUsdtIcon} alt="" />
               </span>
               <span className="text-[14px] font-medium text-[#090A0B]">
                 {isMintingMockUsdt ? t('pp_mint_mock_usdt_loading') : t('pp_mint_mock_usdt')}
@@ -402,9 +424,40 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F7F8FA] transition-colors cursor-pointer text-left disabled:opacity-50 disabled:cursor-default"
             >
               <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[#F0EDFF]">
-                ✨
+                <ActionIcon src={libraryAddIcon} alt="" />
               </span>
               <span className="text-[14px] font-medium text-[#090A0B]">{t('pp_host_page')}</span>
+              <span className="ml-auto text-[#707070]">
+                <svg
+                  aria-hidden="true"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                window.location.assign(verificationPortalPath)
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F7F8FA] transition-colors cursor-pointer text-left"
+            >
+              <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[#E8F0FF]">
+                <ActionIcon src={completeVoteIcon} alt="" />
+              </span>
+              <span className="text-[14px] font-medium text-[#090A0B]">
+                {t('mp_verification_cta')}
+              </span>
               <span className="ml-auto text-[#707070]">
                 <svg
                   aria-hidden="true"
@@ -427,7 +480,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
             {/* Language toggle */}
             <div className="flex items-center gap-3 px-3 py-3">
               <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[#E8F0FF]">
-                🌐
+                <ActionIcon src={languageIcon} alt="" />
               </span>
               <span className="text-[14px] font-medium text-[#090A0B] flex-1">
                 {t('pp_language')}
@@ -455,14 +508,36 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
 
             <button
               type="button"
-              onClick={handleDisconnect}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[rgba(220,38,38,0.06)] transition-colors cursor-pointer text-left"
-              style={{ background: 'rgba(220,38,38,0.08)' }}
+              onClick={isConnected ? handleDisconnect : handleConnect}
+              disabled={!isConnected && isConnectPending}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors cursor-pointer text-left disabled:opacity-50 disabled:cursor-default ${isDisconnectAction ? 'hover:bg-[rgba(220,38,38,0.12)]' : 'border border-[#E3D8FF] hover:bg-[#F7F2FF]'}`}
+              style={{
+                background: isDisconnectAction ? 'rgba(220,38,38,0.08)' : '#F8F5FF',
+              }}
             >
-              <span className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0 bg-[rgba(220,38,38,0.10)]">
-                🔌
+              <span
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] flex-shrink-0"
+                style={{
+                  background: isDisconnectAction ? 'rgba(220,38,38,0.10)' : 'rgba(113,64,255,0.14)',
+                }}
+              >
+                {/* sungje : 업로드한 connect / disconnect 전용 아이콘을 상태에 맞게 분기해서 사용한다. */}
+                <img
+                  src={isDisconnectAction ? disconnectWalletIcon : connectWalletIcon}
+                  alt=""
+                  className="w-[18px] h-[18px]"
+                />
               </span>
-              <span className="text-[14px] font-medium text-[#dc2626]">{t('pp_disconnect')}</span>
+              <span
+                className="text-[14px] font-medium"
+                style={{ color: isDisconnectAction ? '#dc2626' : '#7140FF' }}
+              >
+                {isDisconnectAction
+                  ? t('pp_disconnect')
+                  : isConnectPending
+                    ? t('pp_connect_wallet_loading')
+                    : t('pp_connect_wallet')}
+              </span>
             </button>
           </div>
         </div>

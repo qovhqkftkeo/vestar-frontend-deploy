@@ -1,10 +1,11 @@
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAccount } from 'wagmi'
-// import keyboardArrowLeft from "../../assets/keyboard_arrow_left.svg";
-import { useLanguage } from '../../providers/LanguageProvider'
+import completeVoteIcon from '../../assets/complete_vote.svg'
+import karmaIcon from '../../assets/karma.svg'
 import { useMyKarma } from '../../hooks/user/useMyKarma'
 import { useMyVotes } from '../../hooks/user/useMyVotes'
-import type { BadgeVariant, KarmaEventType, KarmaEvent, MyVoteItem } from '../../types/user'
+import { useLanguage } from '../../providers/LanguageProvider'
+import type { BadgeVariant, KarmaEvent, KarmaEventType, MyVoteItem } from '../../types/user'
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -12,20 +13,19 @@ function truncateAddress(address: string): string {
 
 function getKarmaTier(karma: number): {
   label: string
-  emoji: string
   color: string
 } {
-  if (karma >= 100000000) return { label: 'Legendary', emoji: '👑', color: '#F59E0B' }
-  if (karma >= 5000000) return { label: 'S-Tier', emoji: '💎', color: '#22d3ee' }
-  if (karma >= 500000) return { label: 'High-Throughput', emoji: '🚀', color: '#06b6d4' }
-  if (karma >= 100000) return { label: 'Pro User', emoji: '💫', color: '#818cf8' }
-  if (karma >= 20000) return { label: 'Power User', emoji: '🔥', color: '#f97316' }
-  if (karma >= 5000) return { label: 'Regular', emoji: '⭐', color: '#eab308' }
-  if (karma >= 500) return { label: 'Active', emoji: '🟣', color: '#7140FF' }
-  if (karma >= 50) return { label: 'Basic', emoji: '🔵', color: '#3b82f6' }
-  if (karma >= 2) return { label: 'Newbie', emoji: '🌱', color: '#22c55e' }
-  if (karma >= 1) return { label: 'Entry', emoji: '⚡', color: '#9CA3AF' }
-  return { label: '—', emoji: '·', color: '#707070' }
+  if (karma >= 100000000) return { label: 'Legendary', color: '#F59E0B' }
+  if (karma >= 5000000) return { label: 'S-Tier', color: '#22d3ee' }
+  if (karma >= 500000) return { label: 'High-Throughput', color: '#06b6d4' }
+  if (karma >= 100000) return { label: 'Pro User', color: '#818cf8' }
+  if (karma >= 20000) return { label: 'Power User', color: '#f97316' }
+  if (karma >= 5000) return { label: 'Regular', color: '#eab308' }
+  if (karma >= 500) return { label: 'Active', color: '#7140FF' }
+  if (karma >= 50) return { label: 'Basic', color: '#3b82f6' }
+  if (karma >= 2) return { label: 'Newbie', color: '#22c55e' }
+  if (karma >= 1) return { label: 'Entry', color: '#9CA3AF' }
+  return { label: '—', color: '#707070' }
 }
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
@@ -47,7 +47,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
   const navigate = useNavigate()
   const badgeLabel: Record<BadgeVariant, string> = {
     live: '● LIVE',
-    hot: '🔥 HOT',
+    hot: 'HOT',
     new: 'NEW',
     end: lang === 'ko' ? '종료' : 'END',
   }
@@ -55,7 +55,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <span className="text-5xl">⏳</span>
+        <img src={completeVoteIcon} alt="" className="w-10 h-10 opacity-35" />
         <p className="text-[14px] text-[#707070]">{t('common_loading')}</p>
       </div>
     )
@@ -64,7 +64,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
   if (votes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <span className="text-5xl">🗳️</span>
+        <img src={completeVoteIcon} alt="" className="w-10 h-10 opacity-35" />
         <p className="text-[14px] text-[#707070]">{t('mp_no_votes')}</p>
       </div>
     )
@@ -83,7 +83,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
             className="w-[48px] h-[48px] rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
             style={{ background: '#F0EDFF' }}
           >
-            {item.choiceEmoji}
+            <img src={completeVoteIcon} alt="" className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[11px] text-[#707070] font-mono mb-[2px] truncate">{item.org}</div>
@@ -105,7 +105,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
               {badgeLabel[item.badge]}
             </span>
             <span className="text-[12px] font-semibold text-[#7140FF] font-mono">
-              +{item.karmaEarned} ⚡
+              +{item.karmaEarned}
             </span>
           </div>
         </button>
@@ -120,7 +120,7 @@ function KarmaHistoryList({ events, total }: { events: KarmaEvent[]; total: numb
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <span className="text-5xl">⚡</span>
+        <img src={karmaIcon} alt="" className="w-10 h-10 opacity-35" />
         <p className="text-[14px] text-[#707070]">{t('mp_no_karma')}</p>
       </div>
     )
@@ -128,18 +128,16 @@ function KarmaHistoryList({ events, total }: { events: KarmaEvent[]; total: numb
 
   return (
     <div className="px-4 py-4">
-      {/* Total summary */}
       <div className="bg-white border border-[#E7E9ED] rounded-2xl px-4 py-4 mb-4 flex items-center justify-between">
         <div>
           <div className="text-[11px] text-[#707070] mb-1">{t('mp_total_karma_stat')}</div>
           <div className="text-[24px] font-bold text-[#7140FF] font-mono">
-            {total.toLocaleString()} ⚡
+            {total.toLocaleString()}
           </div>
         </div>
-        <div className="text-4xl">🏆</div>
+        <img src={karmaIcon} alt="" className="w-8 h-8 opacity-70" />
       </div>
 
-      {/* Timeline */}
       <div className="flex flex-col gap-[8px]">
         {events.map((event) => {
           const style = KARMA_TYPE_STYLES[event.type]
@@ -152,7 +150,7 @@ function KarmaHistoryList({ events, total }: { events: KarmaEvent[]; total: numb
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                 style={{ background: style.bg }}
               >
-                {event.icon}
+                <img src={karmaIcon} alt="" className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-medium text-[#090A0B] leading-[1.35] truncate">
@@ -186,8 +184,6 @@ export function MyPage() {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* Header strip */}
-      {/* 페이지 궁성 좀 더 풍성하게 할만한 것들 채워주기 */}
       <div className="h-80 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB] overflow-hidden">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
 
@@ -198,13 +194,10 @@ export function MyPage() {
           {isConnected && address ? truncateAddress(address) : t('pp_not_connected')}
         </div>
         <div className="text-[13px] text-violet-600/60">
-          {tier.label} · {total.toLocaleString()} ⚡
+          {tier.label} · {total.toLocaleString()}
         </div>
       </div>
 
-      {/* Tab bar */}
-      {/* karma history 지워주기 */}
-      {/* emoji들 다 지우고 default image setting한 걸 불러오거나 그냥 contract에서 내가 참여한 vote들 목록 불러오기를 하면 될 듯 */}
       <div className="bg-white border-b border-[#E7E9ED] flex">
         <button
           type="button"
@@ -230,7 +223,6 @@ export function MyPage() {
         </button>
       </div>
 
-      {/* Tab content */}
       <div className="bg-[#ffffff] min-h-screen">
         {tab === 'votes' ? (
           <VoteHistoryList votes={votes} isLoading={isVotesLoading} />

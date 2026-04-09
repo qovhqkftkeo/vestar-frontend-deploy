@@ -15,6 +15,7 @@ import { useVoteSubmit } from '../../hooks/user/useVoteSubmit'
 import { useVotedVotes } from '../../hooks/useVotedVotes'
 import { useLanguage } from '../../providers/LanguageProvider'
 import { useToast } from '../../providers/ToastProvider'
+import { withKoreanParticle } from '../../utils/korean'
 import { getWalletActionErrorMessage } from '../../utils/walletErrors'
 import { CandidateSection, GroupedCandidateSection } from '../user/CandidateSection'
 import { VoteBottomSheetContent } from '../user/VoteBottomSheetContent'
@@ -264,15 +265,16 @@ export function VoteDetailPage() {
     if (isGrouped) {
       addToast({
         type: 'success',
-        message: `${sectionSelection.selectedCount} ${lang === 'ko' ? '섹션 투표 완료! ⚡' : 'sections voted! ⚡'}`,
+        message: `${sectionSelection.selectedCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`,
       })
     } else {
+      const selectedCandidateName = selectedCandidate?.name ?? '후보'
       addToast({
         type: 'success',
         message:
           lang === 'ko'
-            ? `"${selectedCandidate?.name}" 투표 완료! ⚡`
-            : `Voted for "${selectedCandidate?.name}"! ⚡`,
+            ? `${withKoreanParticle(selectedCandidateName, '을/를')} 선택했어요!`
+            : `Voted for "${selectedCandidate?.name}"!`,
       })
     }
   }, [
@@ -330,8 +332,10 @@ export function VoteDetailPage() {
   // ── Action bar label ──────────────────────────────────────────────────────
   const submitLabel = resolvedHasVoted
     ? isGrouped
-      ? `✓ ${votedSectionCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`
-      : `✓ ${lang === 'ko' ? `"${selectedCandidate?.name ?? ''}" 투표 완료` : `Voted for "${selectedCandidate?.name ?? ''}"`}`
+      ? `${votedSectionCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`
+      : `${lang === 'ko'
+          ? `${withKoreanParticle(selectedCandidate?.name ?? '후보', '을/를')} 선택했어요`
+          : `Voted for "${selectedCandidate?.name ?? ''}"`}`
     : isGrouped
       ? activeCanSubmit
         ? groupedSelectionLabel
@@ -341,7 +345,9 @@ export function VoteDetailPage() {
             ? '현재 제출 가능한 투표권이 없습니다.'
             : 'No ballot available right now.'
       : activeCanSubmit
-        ? `${lang === 'ko' ? `"${selectedCandidate?.name}" 투표` : `Vote for "${selectedCandidate?.name}"`}`
+        ? `${lang === 'ko'
+            ? `${withKoreanParticle(selectedCandidate?.name ?? '후보', '을/를')} 선택하기`
+            : `Vote for "${selectedCandidate?.name}"`}`
         : canSubmitByEligibility
           ? t('vd_select_candidate')
           : lang === 'ko'

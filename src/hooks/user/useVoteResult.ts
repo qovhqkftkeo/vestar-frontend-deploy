@@ -65,20 +65,17 @@ function toVoteResultData(
     .sort((left, right) => left.displayOrder - right.displayOrder)
     .map((candidate) => {
       const tallyRow = tallyMap.get(candidate.candidateKey)
+      const manifestCandidate = manifest?.candidates.find(
+        (item) => item.candidateKey === candidate.candidateKey,
+      )
       const votes = tallyRow?.count ?? 0
       const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0
 
       return {
         id: candidate.candidateKey,
-        name:
-          manifest?.candidates.find(
-            (manifestCandidate) => manifestCandidate.candidateKey === candidate.candidateKey,
-          )?.displayName ?? candidate.candidateKey,
-        group:
-          manifest?.candidates.find(
-            (manifestCandidate) => manifestCandidate.candidateKey === candidate.candidateKey,
-          )?.groupLabel ?? '',
-        emoji: '🎤',
+        name: manifestCandidate?.displayName ?? candidate.candidateKey,
+        group: manifestCandidate?.groupLabel ?? '',
+        emoji: '',
         emojiColor: '#F0EDFF',
         imageUrl: candidate.imageUrl ?? undefined,
         votes,
@@ -97,7 +94,7 @@ function toVoteResultData(
     title: election.title ?? '투표 결과',
     org: election.series?.seriesPreimage ?? 'Unknown series',
     verified: Boolean(election.organizer),
-    emoji: '🎤',
+    emoji: '',
     endDate: formatVoteDate(election.endAt),
     totalVotes,
     rankedCandidates,

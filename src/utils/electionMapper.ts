@@ -75,7 +75,7 @@ const HOT_GRADIENTS = [
   'linear-gradient(135deg,#1a0a35,#3d1a6e)',
   'linear-gradient(135deg,#0d1a2e,#1a3d5e)',
 ]
-const HOT_EMOJIS = ['🎤', '🏆', '💜', '🎧', '⭐', '🔥']
+const HOT_EMOJIS = ['', '', '', '', '', '']
 const EMOJI_COLORS: Record<number, string> = {
   0: '#e8f0ff',
   1: '#fce7f3',
@@ -245,7 +245,7 @@ export function mapToVoteDetail(
         id: candidate.candidateKey,
         name: manifestCandidate?.displayName ?? candidate.candidateKey,
         group: manifestCandidate?.groupLabel ?? '',
-        emoji: '🎤',
+        emoji: '',
         emojiColor: '#F0EDFF',
         imageUrl: candidate.imageUrl ?? undefined,
         votes:
@@ -262,7 +262,7 @@ export function mapToVoteDetail(
     org: election.series?.seriesPreimage ?? 'Unknown series',
     host: election.organizer?.organizationName ?? election.organizerWalletAddress,
     verified: Boolean(election.organizer),
-    emoji: '🎤',
+    emoji: '',
     badge,
     deadlineLabel: deadlineLabel(election.endAt),
     urgent: isUrgent(election.endAt),

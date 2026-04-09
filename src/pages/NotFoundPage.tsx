@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import completeVoteIcon from '../assets/complete_vote.svg'
 import { useLanguage } from '../providers/LanguageProvider'
 
 export function NotFoundPage() {
@@ -7,7 +8,7 @@ export function NotFoundPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-[#F7F8FA] px-8 text-center">
-      <div className="text-[64px] mb-4">🗳️</div>
+      <img src={completeVoteIcon} alt="" className="w-14 h-14 mb-4 opacity-65" />
       <div className="text-[11px] font-bold text-[#7140FF] tracking-[1.4px] uppercase font-mono mb-2">
         404
       </div>

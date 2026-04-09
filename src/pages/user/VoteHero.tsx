@@ -37,11 +37,10 @@ export function VoteHero({ vote }: VoteHeroProps) {
       )}
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#090A0B]/82 via-[#090A0B]/44 to-[#090A0B]/18" />
-
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
 
       <div className="relative flex min-h-[296px] flex-col justify-end">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="mb-3 flex items-center gap-2">
           <span
             className={`text-[10px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[vote.badge]}`}
           >
@@ -54,17 +53,16 @@ export function VoteHero({ vote }: VoteHeroProps) {
           </span>
         </div>
 
-        <div className="flex items-center gap-1 mb-2">
+        <div className="mb-2 flex items-center gap-1">
           <span className="text-[11px] text-white/76 font-mono">{vote.org}</span>
-          {vote.verified && <span className="text-white/80 text-[11px]">✦</span>}
-          {vote.verified && (
-            <img src={verifiedIcon} alt="verified" className="w-3 h-3 opacity-75 invert" />
-          )}
+          {vote.verified ? (
+            <img src={verifiedIcon} alt="verified" className="h-3 w-3 opacity-75 invert" />
+          ) : null}
         </div>
 
-        <h1 className="text-[22px] font-bold text-white leading-tight mb-4">{vote.title}</h1>
+        <h1 className="mb-4 text-[22px] font-bold leading-tight text-white">{vote.title}</h1>
 
-        <div className="flex items-center gap-0 text-[12px] text-white/74 flex-wrap mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-0 text-[12px] text-white/74">
           <span className="font-mono font-semibold text-white">
             {vote.participantCount.toLocaleString()} {t('vh_participants')}
           </span>

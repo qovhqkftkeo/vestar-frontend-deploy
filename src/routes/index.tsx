@@ -10,6 +10,8 @@ import { VoteManagePage } from '../pages/host/VoteManagePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 import { MyPage } from '../pages/user/MyPage'
+import { VerifiedAdminPage } from '../pages/verified/VerifiedAdminPage'
+import { VerifiedRequestPage } from '../pages/verified/VerifiedRequestPage'
 import { VoteDetailPage } from '../pages/vote/VoteDetailPage'
 import { VoteListPage } from '../pages/vote/VoteListPage'
 import { VoteResultPage } from '../pages/vote/VoteResultPage'
@@ -35,8 +37,16 @@ export const router = createBrowserRouter([
         element: <MyPage />,
       },
       {
+        path: '/verified/admin',
+        element: <VerifiedAdminPage />,
+      },
+      {
         element: <WalletGuard />,
         children: [
+          {
+            path: '/verified',
+            element: <VerifiedRequestPage />,
+          },
           {
             element: <HostGuard />,
             children: [

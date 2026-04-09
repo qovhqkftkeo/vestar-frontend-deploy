@@ -12,6 +12,7 @@ import { UnauthorizedPage } from '../pages/UnauthorizedPage'
 import { MyPage } from '../pages/user/MyPage'
 import { VerifiedAdminPage } from '../pages/verified/VerifiedAdminPage'
 import { VerifiedRequestPage } from '../pages/verified/VerifiedRequestPage'
+import VerificationPortalPage from '../features/verification/VerificationPortalPage'
 import { VoteDetailPage } from '../pages/vote/VoteDetailPage'
 import { VoteListPage } from '../pages/vote/VoteListPage'
 import { VoteResultPage } from '../pages/vote/VoteResultPage'
@@ -21,6 +22,14 @@ export const router = createBrowserRouter([
   {
     path: '/unauthorized',
     element: <UnauthorizedPage />,
+  },
+  {
+    path: '/verification',
+    element: <VerificationPortalPage />,
+  },
+  {
+    path: '/vote/verification',
+    element: <VerificationPortalPage />,
   },
   {
     element: <AppLayout />,

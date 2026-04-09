@@ -45,6 +45,71 @@ const FILTER_CHIPS: FilterChip[] = [
   { labelKey: 'filter_popular', filter: 'popular' },
 ]
 
+function getHeroCopy(filter: VoteFilter, lang: string) {
+  switch (filter) {
+    case 'live':
+      return lang === 'ko'
+        ? {
+            eyebrow: '진행 중',
+            title: '지금 참여 가능한 투표만 모아봤어요',
+            sub: '지금 바로 참여할 수 있는 투표를 최신 순으로 확인할 수 있어요.',
+          }
+        : {
+            eyebrow: 'Live Now',
+            title: 'See active votes you can join right now',
+            sub: 'Browse currently open votes in the newest order.',
+          }
+    case 'hot':
+      return lang === 'ko'
+        ? {
+            eyebrow: 'HOT',
+            title: '참여가 몰린 투표부터 보여드려요',
+            sub: '1명 이상 참여한 진행 중 투표를 참여 수가 많은 순서로 정렬했어요.',
+          }
+        : {
+            eyebrow: 'Hot Now',
+            title: 'Most-participated active votes first',
+            sub: 'Active votes with at least one participant are sorted by participation count.',
+          }
+    case 'new':
+      return lang === 'ko'
+        ? {
+            eyebrow: '예정된 투표',
+            title: '곧 열릴 투표를 먼저 확인해보세요',
+            sub: '아직 시작 전인 투표를 모아보고 미리 준비할 수 있어요.',
+          }
+        : {
+            eyebrow: 'Coming Soon',
+            title: 'Preview scheduled votes before they open',
+            sub: 'Check upcoming votes that have not started yet.',
+          }
+    case 'popular':
+      return lang === 'ko'
+        ? {
+            eyebrow: '인기순',
+            title: '참여가 많은 투표부터 둘러보세요',
+            sub: '전체 투표를 참여 수 기준으로 정렬해서 빠르게 살펴볼 수 있어요.',
+          }
+        : {
+            eyebrow: 'Popular',
+            title: 'Browse votes ranked by participation',
+            sub: 'See all votes ordered by total participation.',
+          }
+    default:
+      return lang === 'ko'
+        ? {
+            eyebrow: '전체 보기',
+            title: '지금 열려 있는 시리즈를 한눈에 볼 수 있어요',
+            sub: '진행 중이거나 마감된 시리즈를 모아서 빠르게 둘러보세요.',
+          }
+        : {
+            eyebrow: 'All Votes',
+            title: 'See every vote series at a glance',
+            sub: 'Browse active and ended series in one place.',
+          }
+  }
+}
+
 function HotVoteCard({ vote, onNavigate }: { vote: HotVote; onNavigate: (vote: HotVote) => void }) {
   const { t, lang } = useLanguage()
   const badgeLabel = vote.badge === 'end' ? t('badge_end') : BADGE_LABEL[vote.badge]
@@ -260,7 +325,9 @@ export function VoteListPage() {
     isLoadingMore,
     loadMore,
   } = useInfiniteVotes(FILTER_CHIPS[activeFilter].filter)
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
+  const currentFilter = FILTER_CHIPS[activeFilter].filter
+  const heroCopy = getHeroCopy(currentFilter, lang)
 
   const handleHotNavigate = (vote: HotVote) => {
     navigate(vote.badge === 'end' ? `/vote/${vote.id}/result` : `/vote/${vote.id}`)
@@ -284,13 +351,16 @@ export function VoteListPage() {
     })
   }
 
-  const visibleSeriesCount = groupVoteItemsBySeries(items).length
+  const visibleGroupedItems = groupVoteItemsBySeries(items)
+  const visibleActiveGroups = visibleGroupedItems.filter((group) => !isVoteSeriesEnded(group))
+  const visibleEndedGroups = visibleGroupedItems.filter((group) => isVoteSeriesEnded(group))
   const allGroupedItems = groupVoteItemsBySeries(allItems)
   const allActiveGroups = allGroupedItems.filter((group) => !isVoteSeriesEnded(group))
   const allEndedGroups = allGroupedItems.filter((group) => isVoteSeriesEnded(group))
   const totalGroups = seriesTab === 'active' ? allActiveGroups : allEndedGroups
-  const groupedItems = totalGroups.slice(0, visibleSeriesCount)
+  const groupedItems = seriesTab === 'active' ? visibleActiveGroups : visibleEndedGroups
   const hasMoreSeries = groupedItems.length < totalGroups.length
+  const shouldShowHotSection = isHotLoading || hotVotes.length > 0
   const shouldShowEmptyState = !isItemsLoading && groupedItems.length === 0 && !hasMoreSeries
 
   return (
@@ -298,12 +368,10 @@ export function VoteListPage() {
       <div className="h-80 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
         <div className="text-[10px] font-semibold text-violet-600 tracking-[1.2px] uppercase font-mono mb-1.5">
-          Live Now
+          {heroCopy.eyebrow}
         </div>
-        <div className="text-[22px] font-semibold text-violet-600 leading-tight mb-1">
-          {t('vl_hero_title')}
-        </div>
-        <div className="text-[13px] text-violet-600/60">{t('vl_hero_sub')}</div>
+        <div className="text-[22px] font-semibold text-violet-600 leading-tight mb-1">{heroCopy.title}</div>
+        <div className="text-[13px] text-violet-600/60">{heroCopy.sub}</div>
       </div>
 
       <div className="bg-[#FFFFFF]">
@@ -324,22 +392,26 @@ export function VoteListPage() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between px-5 pt-4 pb-[10px]">
-          <span className="text-[15px] font-semibold text-[#090A0B]">{t('vl_hot_section')}</span>
-          <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_see_all')}</span>
-        </div>
-        <div className="px-5 pb-1 flex gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {isHotLoading
-            ? Array.from({ length: 4 }, (_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
-                <HotCardSkeleton key={i} />
-              ))
-            : hotVotes.map((vote) => (
-                <HotVoteCard key={vote.id} vote={vote} onNavigate={handleHotNavigate} />
-              ))}
-        </div>
+        {shouldShowHotSection ? (
+          <>
+            <div className="flex items-center justify-between px-5 pt-4 pb-[10px]">
+              <span className="text-[15px] font-semibold text-[#090A0B]">{t('vl_hot_section')}</span>
+              <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_see_all')}</span>
+            </div>
+            <div className="px-5 pb-1 flex gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {isHotLoading
+                ? Array.from({ length: 4 }, (_, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
+                    <HotCardSkeleton key={i} />
+                  ))
+                : hotVotes.map((vote) => (
+                    <HotVoteCard key={vote.id} vote={vote} onNavigate={handleHotNavigate} />
+                  ))}
+            </div>
 
-        <div className="border-t border-[#E7E9ED] mt-5" />
+            <div className="border-t border-[#E7E9ED] mt-5" />
+          </>
+        ) : null}
 
         <div className="flex items-center justify-between gap-3 px-5 pt-[20px] pb-[10px]">
           <div className="inline-flex rounded-full bg-[#F4F5F7] p-1">

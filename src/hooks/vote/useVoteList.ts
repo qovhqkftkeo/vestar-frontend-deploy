@@ -1,11 +1,39 @@
 import { useEffect, useState } from 'react'
 import { fetchElections } from '../../api/elections'
+import type { ApiElection } from '../../api/types'
 import { HOT_VOTES } from '../../data/mockVotes'
 import { mapToHotVote } from '../../utils/electionMapper'
 import type { HotVote } from '../../types/vote'
 
+function parseVoteCount(value: string): number {
+  const normalized = value.replace(/,/g, '').trim().toUpperCase()
+
+  if (!normalized) return 0
+  if (normalized.endsWith('M')) return Math.round(Number.parseFloat(normalized) * 1_000_000)
+  if (normalized.endsWith('K')) return Math.round(Number.parseFloat(normalized) * 1_000)
+
+  return Number.parseInt(normalized, 10) || 0
+}
+
+function getSubmissionCount(election: Pick<ApiElection, 'resultSummary'>): number {
+  return election.resultSummary?.totalSubmissions ?? 0
+}
+
+function compareBySubmissionCount(left: ApiElection, right: ApiElection): number {
+  const bySubmissionCount = getSubmissionCount(right) - getSubmissionCount(left)
+
+  if (bySubmissionCount !== 0) {
+    return bySubmissionCount
+  }
+
+  return Number(right.id) - Number(left.id)
+}
+
 function hotMockFallback(): HotVote[] {
-  return HOT_VOTES.slice(0, 4)
+  return [...HOT_VOTES]
+    .filter((vote) => parseVoteCount(vote.count) >= 1)
+    .sort((left, right) => parseVoteCount(right.count) - parseVoteCount(left.count))
+    .slice(0, 4)
 }
 
 export interface UseVoteListResult {
@@ -27,15 +55,12 @@ export function useVoteList(): UseVoteListResult {
     fetchElections({ onchainState: 'ACTIVE', sortBy: 'HOT' })
       .then((elections) => {
         if (cancelled) return
-        const hot = elections
-          .sort(
-            (left, right) =>
-              (right.resultSummary?.totalSubmissions ?? 0) -
-              (left.resultSummary?.totalSubmissions ?? 0),
-          )
+        const hot = [...elections]
+          .filter((election) => getSubmissionCount(election) >= 1)
+          .sort(compareBySubmissionCount)
           .slice(0, 4)
           .map(mapToHotVote)
-        setHotVotes(hot.length > 0 ? hot : hotMockFallback())
+        setHotVotes(hot)
       })
       .catch(() => {
         if (cancelled) return

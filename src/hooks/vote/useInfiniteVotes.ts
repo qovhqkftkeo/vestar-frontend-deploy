@@ -31,12 +31,46 @@ function filterToApiState(filter: VoteFilter): string | undefined {
   }
 }
 
+function parseVoteCount(value: string): number {
+  const normalized = value.replace(/,/g, '').trim().toUpperCase()
+
+  if (!normalized) return 0
+  if (normalized.endsWith('M')) return Math.round(Number.parseFloat(normalized) * 1_000_000)
+  if (normalized.endsWith('K')) return Math.round(Number.parseFloat(normalized) * 1_000)
+
+  return Number.parseInt(normalized, 10) || 0
+}
+
+function getSubmissionCount(election: Pick<ApiElection, 'resultSummary'>): number {
+  return election.resultSummary?.totalSubmissions ?? 0
+}
+
+function compareByNewest(left: Pick<ApiElection, 'id'>, right: Pick<ApiElection, 'id'>): number {
+  return Number(right.id) - Number(left.id)
+}
+
+function compareBySubmissionCount(left: ApiElection, right: ApiElection): number {
+  const bySubmissionCount = getSubmissionCount(right) - getSubmissionCount(left)
+
+  if (bySubmissionCount !== 0) {
+    return bySubmissionCount
+  }
+
+  return compareByNewest(left, right)
+}
+
 /** Client-side sort for filters that need it */
 function sortElections(elections: ApiElection[], filter: VoteFilter): ApiElection[] {
-  const byNewest = [...elections].sort((a, b) => Number(b.id) - Number(a.id))
+  const byNewest = [...elections].sort(compareByNewest)
 
-  if (filter === 'popular' || filter === 'hot') {
-    return byNewest
+  if (filter === 'hot') {
+    return [...elections]
+      .filter((election) => getSubmissionCount(election) >= 1)
+      .sort(compareBySubmissionCount)
+  }
+
+  if (filter === 'popular') {
+    return [...elections].sort(compareBySubmissionCount)
   }
 
   return byNewest
@@ -105,14 +139,14 @@ function applyMockFilter(items: VoteListItem[], filter: VoteFilter): VoteListIte
     case 'live':
       return items.filter((v) => v.badge === 'live')
     case 'hot':
-      return items.filter((v) => v.badge === 'hot')
+      return [...items]
+        .filter((vote) => vote.badge === 'live' && parseVoteCount(vote.count) >= 1)
+        .sort((left, right) => parseVoteCount(right.count) - parseVoteCount(left.count))
     case 'new':
       return items.filter((v) => v.badge === 'new')
     case 'popular':
       return [...items].sort(
-        (a, b) =>
-          Number.parseInt(b.count.replace(/,/g, ''), 10) -
-          Number.parseInt(a.count.replace(/,/g, ''), 10),
+        (left, right) => parseVoteCount(right.count) - parseVoteCount(left.count),
       )
     default:
       return items

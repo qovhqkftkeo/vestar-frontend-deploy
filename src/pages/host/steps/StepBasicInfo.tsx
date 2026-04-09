@@ -41,14 +41,18 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         />
         <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
       </div>
-      
+
       {/* Banner Image */}
       <div>
         <label className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2">
           <span>배너 이미지</span>
-          {isBannerChanged && <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">수정됨</span>}
+          {isBannerChanged && (
+            <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">
+              수정됨
+            </span>
+          )}
         </label>
-        <div 
+        <div
           onClick={() => fileInputRef.current?.click()}
           className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-[#E7E9ED] bg-[#F7F8FA] hover:border-[#7140FF]/50 transition-colors flex items-center justify-center cursor-pointer overflow-hidden relative"
         >
@@ -56,20 +60,29 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
             <img src={draft.bannerImage} alt="배너 이미지" className="w-full h-full object-cover" />
           ) : (
             <div className="flex flex-col items-center gap-2 text-[#C0C4CC]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
               </svg>
               <span className="text-[13px] font-medium">이미지 업로드</span>
             </div>
           )}
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef} 
-            onChange={handleImageUpload} 
-            className="hidden" 
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="hidden"
           />
         </div>
       </div>

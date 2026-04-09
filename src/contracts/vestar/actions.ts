@@ -250,15 +250,16 @@ export async function getOrganizerSnapshot(organizerAddress: Address): Promise<O
 
 export async function createElection(
   walletClient: WalletClient,
-  input: CreateElectionInput,
+  config: ElectionConfigInput,
+  initialCandidateHashes: Hex[],
 ): Promise<Hash> {
   return writeVestarContract({
     walletClient,
     abi: vestarElectionFactoryAbi,
     address: vestarContractAddresses.electionFactory,
-    functionName: 'createElection',
-    args: [input.config, input.initialCandidateHashes],
-  })
+    functionName: "createElection",
+    args: [config, initialCandidateHashes],
+  });
 }
 
 export async function getElectionAddress(electionId: Hex): Promise<Address> {

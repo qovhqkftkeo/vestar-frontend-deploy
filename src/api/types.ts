@@ -81,7 +81,6 @@ export interface ApiElection {
   title: string | null
   coverImageUrl: string | null
   syncState: ApiElectionSyncState | null
-  candidateManifestPreimage: ApiCandidateManifestPreimage | null
   series: ApiElectionSeries | null
   electionKey: ApiElectionKey | null
   electionCandidates: ApiElectionCandidate[]

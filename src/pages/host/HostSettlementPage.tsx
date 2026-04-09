@@ -1,8 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { formatEther, type Address } from 'viem'
 import { useChainId, useSwitchChain, useWalletClient } from 'wagmi'
-import { VoteDetailHeaderContext } from '../../components/layout/VoteDetailLayout'
 import {
   getElectionSnapshot,
   settleElectionRevenue,
@@ -55,7 +54,6 @@ function formatSettlementError(error: unknown) {
 export function HostSettlementPage() {
   const { id = '1' } = useParams()
   const navigate = useNavigate()
-  const { setConfig } = useContext(VoteDetailHeaderContext)
   const { vote, isLoading: isVoteLoading } = useVoteDetail(id)
   const { addToast } = useToast()
   const chainId = useChainId()
@@ -65,19 +63,6 @@ export function HostSettlementPage() {
   const [snapshot, setSnapshot] = useState<Awaited<ReturnType<typeof getElectionSnapshot>> | null>(null)
   const [isSnapshotLoading, setIsSnapshotLoading] = useState(true)
   const [isSettling, setIsSettling] = useState(false)
-
-  useEffect(() => {
-    if (!vote) return
-
-    setConfig({
-      title: `${vote.title} — 정산`,
-      onShare: () => {
-        if (navigator.share) {
-          navigator.share({ title: vote.title, url: window.location.href }).catch(() => {})
-        }
-      },
-    })
-  }, [vote, setConfig])
 
   useEffect(() => {
     if (!vote?.electionAddress) {

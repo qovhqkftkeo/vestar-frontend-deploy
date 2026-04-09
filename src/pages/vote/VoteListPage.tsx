@@ -159,7 +159,7 @@ function SeriesVoteCard({
 
         <div className="absolute bottom-4 left-4 right-4">
           {group.host ? (
-            <div className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-white/12 px-3 py-1.5 text-[11px] font-mono text-white/85 backdrop-blur-sm">
+            <div className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-black/28 px-2.5 py-1 text-[11px] text-white/92 backdrop-blur-sm">
               {group.verified ? (
                 <img
                   src={verifiedIcon}
@@ -286,6 +286,7 @@ export function VoteListPage() {
         <div className="px-5 pb-1 flex gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {isHotLoading
             ? Array.from({ length: 4 }, (_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
                 <HotCardSkeleton key={i} />
               ))
             : hotVotes.map((vote) => (
@@ -297,11 +298,12 @@ export function VoteListPage() {
 
         <div className="flex items-center justify-between px-5 pt-[20px] pb-[10px]">
           <span className="text-[15px] font-semibold text-[#090A0B]">{t('vl_active_section')}</span>
-          <span className="text-[12px] text-[#7140FF] cursor-pointer">최신 생성순</span>
+          <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_sort_latest')}</span>
         </div>
         <div className="px-5 flex flex-col gap-4 pb-2">
           {isItemsLoading
             ? Array.from({ length: 6 }, (_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders have no stable id
                 <VoteCardSkeleton key={i} />
               ))
             : groupedItems.map((group) => (

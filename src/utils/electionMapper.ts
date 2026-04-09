@@ -159,11 +159,11 @@ export function applyManifestToElection(
 ): ApiElection {
   return {
     ...rawElection,
-    coverImageUrl: manifest?.election.coverImageUrl ?? rawElection.coverImageUrl,
+    coverImageUrl: manifest?.election?.coverImageUrl ?? rawElection.coverImageUrl,
     series: rawElection.series
       ? {
           ...rawElection.series,
-          coverImageUrl: manifest?.series.coverImageUrl ?? rawElection.series.coverImageUrl,
+          coverImageUrl: manifest?.series?.coverImageUrl ?? rawElection.series.coverImageUrl,
         }
       : rawElection.series,
     electionCandidates: resolveElectionCandidates(rawElection, manifest),

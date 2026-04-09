@@ -26,6 +26,9 @@ function VoteHeroPreview({ title, bannerImage }: { title: string; bannerImage: s
         <div className="relative flex min-h-[296px] flex-col justify-end">
           <div className="mb-2 text-[11px] font-mono text-white/76">SERIES</div>
           <h2 className="text-[22px] font-bold text-white leading-tight mb-4">{previewTitle}</h2>
+          <div className="inline-flex self-start rounded-full bg-white/12 px-4 py-2 text-[12px] font-semibold text-white/88 backdrop-blur-sm">
+            4 votes
+          </div>
         </div>
       </div>
     </div>
@@ -56,6 +59,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
     <div className="px-5 py-6 flex flex-col gap-6">
       <VoteHeroPreview title={draft.title} bannerImage={draft.bannerImage} />
 
+      {/* Banner Image */}
       <div>
         <label
           htmlFor="vote-banner-image"
@@ -107,6 +111,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         </button>
       </div>
 
+      {/* Series name */}
       <div>
         <label htmlFor="vote-title" className="block text-[13px] font-semibold text-[#090A0B] mb-2">
           시리즈명 <span className="text-[#7140FF]">*</span>
@@ -123,6 +128,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
       </div>
 
+      {/* Banner Image */}
       <div>
         <label
           htmlFor="vote-banner-image"
@@ -174,6 +180,9 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         </button>
       </div>
 
+      
+
+      {/* Category */}
       <div>
         <span className="block text-[13px] font-semibold text-[#090A0B] mb-2">카테고리</span>
         <div className="flex flex-wrap gap-2">

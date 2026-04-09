@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAccount } from 'wagmi'
+// import keyboardArrowLeft from "../../assets/keyboard_arrow_left.svg";
 import { useLanguage } from '../../providers/LanguageProvider'
 import { useMyKarma } from '../../hooks/user/useMyKarma'
 import { useMyVotes } from '../../hooks/user/useMyVotes'
@@ -127,6 +128,7 @@ function KarmaHistoryList({ events, total }: { events: KarmaEvent[]; total: numb
 
   return (
     <div className="px-4 py-4">
+      {/* Total summary */}
       <div className="bg-white border border-[#E7E9ED] rounded-2xl px-4 py-4 mb-4 flex items-center justify-between">
         <div>
           <div className="text-[11px] text-[#707070] mb-1">{t('mp_total_karma_stat')}</div>
@@ -137,6 +139,7 @@ function KarmaHistoryList({ events, total }: { events: KarmaEvent[]; total: numb
         <div className="text-4xl">🏆</div>
       </div>
 
+      {/* Timeline */}
       <div className="flex flex-col gap-[8px]">
         {events.map((event) => {
           const style = KARMA_TYPE_STYLES[event.type]
@@ -183,6 +186,8 @@ export function MyPage() {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* Header strip */}
+      {/* 페이지 궁성 좀 더 풍성하게 할만한 것들 채워주기 */}
       <div className="h-80 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB] overflow-hidden">
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
 
@@ -197,6 +202,9 @@ export function MyPage() {
         </div>
       </div>
 
+      {/* Tab bar */}
+      {/* karma history 지워주기 */}
+      {/* emoji들 다 지우고 default image setting한 걸 불러오거나 그냥 contract에서 내가 참여한 vote들 목록 불러오기를 하면 될 듯 */}
       <div className="bg-white border-b border-[#E7E9ED] flex">
         <button
           type="button"
@@ -222,6 +230,7 @@ export function MyPage() {
         </button>
       </div>
 
+      {/* Tab content */}
       <div className="bg-[#ffffff] min-h-screen">
         {tab === 'votes' ? (
           <VoteHistoryList votes={votes} isLoading={isVotesLoading} />

@@ -74,7 +74,9 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
             election.visibilityMode === 'OPEN'
               ? fetchCandidateVotes(
                   address,
-                  resolvedCandidates.map((candidate) => candidate.candidateKey),
+                  resolvedCandidates
+                    .map((candidate) => candidate.candidateKey)
+                    .filter((candidateKey): candidateKey is string => Boolean(candidateKey)),
                 )
               : Promise.resolve(undefined)
 

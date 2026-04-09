@@ -47,7 +47,9 @@ export function groupVoteItemsBySeries(items: VoteListItem[]): VoteSeriesGroup[]
 
   // sungje : 시리즈 카드와 시리즈 상세가 같은 순서를 보도록 묶은 뒤 내부 아이템을 한 번 더 최신순으로 정렬한다.
   groups.forEach((group) => {
-    group.items.sort((left, right) => (right.sortKey ?? Number(right.id)) - (left.sortKey ?? Number(left.id)))
+    group.items.sort(
+      (left, right) => (right.sortKey ?? Number(right.id)) - (left.sortKey ?? Number(left.id)),
+    )
   })
 
   return groups

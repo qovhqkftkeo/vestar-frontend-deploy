@@ -11,6 +11,7 @@ const STRINGS = {
   btn_cancel: { en: 'Cancel', ko: '취소' },
   btn_vote_now: { en: 'Vote Now', ko: '투표하기' },
   btn_search: { en: 'Search', ko: '검색' },
+  btn_back: { en: 'Back', ko: '뒤로' },
   btn_profile: { en: 'Profile', ko: '프로필' },
   btn_share: { en: 'Share', ko: '공유' },
   btn_hold: { en: 'Create poll', ko: '투표 생성' },

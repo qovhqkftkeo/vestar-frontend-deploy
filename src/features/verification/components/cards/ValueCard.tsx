@@ -1,0 +1,26 @@
+import { PortalButton } from '../ui/PortalButton'
+import { PortalPanel } from '../ui/PortalPanel'
+
+type ValueCardProps = {
+  label: string
+  value: string
+  actionHref?: string
+}
+
+export function ValueCard({ label, value, actionHref }: ValueCardProps) {
+  return (
+    <PortalPanel className="rounded-[22px]">
+      <div className="text-[13px] font-medium text-[#707070]">{label}</div>
+      <div className="mt-3 break-all font-mono text-[12px] leading-[1.75] text-[#090A0B]">
+        {value}
+      </div>
+      {actionHref ? (
+        <div className="mt-4 flex justify-start">
+          <PortalButton href={actionHref} size="sm">
+            블록체인에서 보기
+          </PortalButton>
+        </div>
+      ) : null}
+    </PortalPanel>
+  )
+}

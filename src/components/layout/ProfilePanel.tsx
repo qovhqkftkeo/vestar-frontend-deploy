@@ -118,7 +118,8 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   const karma = isConnected ? 2480 : 0
   const votes = isConnected ? 14 : 0
   const tier = getKarmaTier(karma)
-  const verificationPortalPath = `${import.meta.env.BASE_URL}verification/`
+  const verificationPortalPath =
+    import.meta.env.BASE_URL === '/vote/' ? '/vote/verification' : '/verification'
 
   useEffect(() => {
     let cancelled = false
@@ -448,7 +449,7 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
               type="button"
               onClick={() => {
                 onClose()
-                window.location.assign(verificationPortalPath)
+                navigate(verificationPortalPath)
               }}
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#F7F8FA] transition-colors cursor-pointer text-left"
             >

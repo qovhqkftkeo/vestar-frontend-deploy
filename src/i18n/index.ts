@@ -159,6 +159,7 @@ const STRINGS = {
   pp_connect_wallet: { en: 'Connect Wallet', ko: '지갑 연결' },
   pp_connect_wallet_loading: { en: 'Connecting…', ko: '연결 중…' },
   pp_disconnect: { en: 'Disconnect Wallet', ko: '지갑 연결 해제' },
+  pp_connect_wallet: { en: 'Connect Wallet', ko: '지갑 연결' },
   pp_language: { en: 'Language', ko: '언어' },
 
   // ── PWA update ─────────────────────────────────────────────────────────────

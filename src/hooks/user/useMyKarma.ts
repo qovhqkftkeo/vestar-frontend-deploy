@@ -1,71 +1,47 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useAccount } from 'wagmi'
+import { getKarmaBalance } from '../../contracts/vestar/actions'
 import type { KarmaEvent } from '../../types/user'
 
 export interface UseMyKarmaResult {
   events: KarmaEvent[]
   total: number
   isLoading: boolean
+  error: Error | undefined
+  refetch: () => void
 }
 
-const MOCK_KARMA_EVENTS: KarmaEvent[] = [
-  {
-    id: 'ke1',
-    type: 'vote',
-    label: '투표 참여 — 이번 주 1위는 누구?',
-    karma: 20,
-    date: '2026.04.07',
-  },
-  {
-    id: 'ke2',
-    type: 'streak',
-    label: '3일 연속 투표 보너스',
-    karma: 50,
-    date: '2026.04.05',
-  },
-  {
-    id: 'ke3',
-    type: 'vote',
-    label: '투표 참여 — 4월 이달의 소녀',
-    karma: 50,
-    date: '2026.04.05',
-  },
-  {
-    id: 'ke4',
-    type: 'vote',
-    label: '투표 참여 — 봄 컴백 기대 아티스트',
-    karma: 20,
-    date: '2026.04.01',
-  },
-  {
-    id: 'ke5',
-    type: 'referral',
-    label: '친구 초대 보너스',
-    karma: 100,
-    date: '2026.03.30',
-  },
-  {
-    id: 'ke6',
-    type: 'vote',
-    label: '투표 참여 — 3월 인기 그룹 TOP 10',
-    karma: 30,
-    date: '2026.03.28',
-  },
-  {
-    id: 'ke7',
-    type: 'bonus',
-    label: '첫 투표 참여 기념 보너스',
-    karma: 200,
-    date: '2026.03.22',
-  },
-  {
-    id: 'ke8',
-    type: 'vote',
-    label: '투표 참여 — 2026 월드투어 팬 응원 투표',
-    karma: 20,
-    date: '2026.03.22',
-  },
-]
-
 export function useMyKarma(): UseMyKarmaResult {
-  const total = MOCK_KARMA_EVENTS.reduce((sum, e) => sum + e.karma, 0)
-  return { events: MOCK_KARMA_EVENTS, total, isLoading: false }
+  const { address, isConnected } = useAccount()
+  const [total, setTotal] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | undefined>(undefined)
+
+  const fetchKarma = useCallback(async () => {
+    if (!isConnected || !address) {
+      setTotal(0)
+      setIsLoading(false)
+      setError(undefined)
+      return
+    }
+
+    setIsLoading(true)
+    setError(undefined)
+
+    try {
+      const balance = await getKarmaBalance(address)
+      setTotal(Number(balance))
+    } catch (err) {
+      setTotal(0)
+      setError(err instanceof Error ? err : new Error('Failed to fetch karma balance'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [address, isConnected])
+
+  useEffect(() => {
+    fetchKarma()
+  }, [fetchKarma])
+
+  return { events: [], total, isLoading, error, refetch: fetchKarma }
 }

@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import completeVoteIcon from '../../assets/complete_vote.svg'
+import checkboxBlank from '../../assets/check_box_outline_blank.svg'
 import verifiedIcon from '../../assets/verified.svg'
 import { useLanguage } from '../../providers/LanguageProvider'
 import { useVotedVotes } from '../../hooks/useVotedVotes'
 import { HotCardSkeleton } from '../../components/shared/HotCardSkeleton'
+import { InfiniteScrollSentinel } from '../../components/shared/InfiniteScrollSentinel'
 import { VoteCardSkeleton } from '../../components/shared/VoteCardSkeleton'
 import { useInfiniteVotes, type VoteFilter } from '../../hooks/vote/useInfiniteVotes'
 import { useVoteList } from '../../hooks/vote/useVoteList'
-import type { BadgeVariant, HotVote } from '../../types/vote'
-import { buildVoteTargetPath, groupVoteItemsBySeries, type VoteSeriesGroup } from '../../utils/voteSeries'
+import type { BadgeVariant, HotVote, VoteListItem } from '../../types/vote'
+import { buildVoteTargetPath, groupVoteItemsBySeries } from '../../utils/voteSeries'
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
   live: 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]',
@@ -78,27 +81,107 @@ function HotVoteCard({ vote, onNavigate }: { vote: HotVote; onNavigate: (id: str
   )
 }
 
-function SeriesCard({ group, onOpenSeries, isVoted }: {
-  group: VoteSeriesGroup
-  onOpenSeries: (group: VoteSeriesGroup) => void
-  isVoted: (id: string) => boolean
+function VoteItem({
+  item,
+  onNavigate,
+  isVoted,
+}: {
+  item: VoteListItem
+  onNavigate: (item: VoteListItem) => void
+  isVoted: boolean
 }) {
-  const votedCount = group.items.filter((item) => isVoted(item.id)).length
+  const isEnded = item.badge === 'end'
+  const { t } = useLanguage()
+  const badgeLabel = item.badge === 'end' ? t('badge_end') : BADGE_LABEL[item.badge]
 
   return (
     <button
       type="button"
-      onClick={() => onOpenSeries(group)}
-      className="w-full rounded-[28px] border border-[#E7E9ED] bg-white p-4 text-left transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[rgba(113,64,255,0.25)] hover:shadow-[0_6px_24px_rgba(113,64,255,0.10)] active:scale-[0.99]"
+      onClick={() => onNavigate(item)}
+      className="w-full bg-white border border-[#E7E9ED] rounded-2xl p-4 flex items-center gap-[14px] cursor-pointer transition-[border-color,background] duration-150 hover:border-[rgba(113,64,255,0.25)] hover:bg-[#F0EDFF] active:scale-[0.99] text-left"
     >
+      <div
+        className="w-[52px] h-[52px] rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+        style={{ background: item.emojiColor }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 mb-1">
+          <span className="text-[11px] text-[#707070] font-mono truncate">{item.org}</span>
+        </div>
+        <div className="text-[15px] font-semibold text-[#090A0B] mb-1.5 truncate leading-[1.35]">
+          {item.name}
+        </div>
+        <div className="text-[12px] text-[#707070]">
+          <strong className="text-[#7140FF] font-mono">{item.count}</strong> {t('vl_participating')}
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+        <span
+          className={`text-[9px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[item.badge]}`}
+        >
+          {badgeLabel}
+        </span>
+        <span
+          className={`text-[11px] font-mono ${item.urgent ? 'text-[#dc2626] font-semibold' : 'text-[#707070]'}`}
+        >
+          {item.deadline}
+        </span>
+        {isVoted ? (
+          <img
+            src={completeVoteIcon}
+            alt={t('vl_voted_alt')}
+            className="w-4 h-4"
+            style={{
+              filter:
+                'brightness(0) saturate(100%) invert(33%) sepia(98%) saturate(400%) hue-rotate(93deg) brightness(95%) contrast(97%)',
+            }}
+          />
+        ) : (
+          <img src={checkboxBlank} alt="" className="w-4 h-4 opacity-30" />
+        )}
+      </div>
+    </button>
+  )
+}
+
+function SeriesSection({
+  title,
+  host,
+  verified,
+  items,
+  onNavigate,
+  isVoted,
+}: {
+  title: string
+  host?: string
+  verified?: boolean
+  items: VoteListItem[]
+  onNavigate: (item: VoteListItem) => void
+  isVoted: (id: string) => boolean
+}) {
+  return (
+    <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[15px] font-semibold text-[#090A0B]">{group.title}</div>
-          <div className="text-[12px] text-[#707070]">{group.items.length}개의 투표</div>
+          <div className="flex items-center gap-1">
+            <div className="text-[15px] font-semibold text-[#090A0B]">{title}</div>
+            {verified && (
+              <img
+                src={verifiedIcon}
+                alt="verified"
+                className="w-[15px] h-[15px] flex-shrink-0"
+                style={{
+                  filter:
+                    'brightness(0) saturate(100%) invert(48%) sepia(76%) saturate(566%) hue-rotate(88deg) brightness(95%) contrast(93%)',
+                }}
+              />
+            )}
+          </div>
+          <div className="text-[12px] text-[#707070]">{items.length}개의 투표</div>
         </div>
-        {group.host ? (
+        {host ? (
           <div className="flex items-center gap-1.5 max-w-[168px] self-start rounded-full border border-[#E7E9ED] bg-white px-2.5 py-1">
-            {group.verified ? (
+            {verified ? (
               <img
                 src={verifiedIcon}
                 alt="verified organizer"
@@ -109,21 +192,21 @@ function SeriesCard({ group, onOpenSeries, isVoted }: {
                 }}
               />
             ) : null}
-            <span className="text-[11px] font-semibold text-[#090A0B] truncate">{group.host}</span>
+            <span className="text-[11px] font-semibold text-[#090A0B] truncate">{host}</span>
           </div>
         ) : null}
       </div>
-      <div className="mt-3 rounded-2xl border border-[#E7E9ED] bg-[#F7F8FA] px-4 py-4">
-        <div className="text-[13px] text-[#707070]">
-          {group.items.length === 1
-            ? '이 시리즈는 투표 1개로 구성돼 있어서 누르면 바로 투표로 이동합니다.'
-            : `이 시리즈 안에 총 ${group.items.length}개의 투표가 있습니다. 눌러서 전체 투표를 확인하세요.`}
-        </div>
-        {votedCount > 0 ? (
-          <div className="mt-2 text-[12px] font-semibold text-[#7140FF]">{`${votedCount}개 투표 참여 완료`}</div>
-        ) : null}
+      <div className="flex flex-col gap-[10px]">
+        {items.map((item) => (
+          <VoteItem
+            key={item.id}
+            item={item}
+            onNavigate={onNavigate}
+            isVoted={isVoted(item.id)}
+          />
+        ))}
       </div>
-    </button>
+    </section>
   )
 }
 
@@ -133,27 +216,17 @@ export function VoteListPage() {
   const { isVoted } = useVotedVotes()
   const { isLoading: isHotLoading, hotVotes } = useVoteList()
   const {
-    allItems,
+    items,
     isLoading: isItemsLoading,
+    hasMore,
+    isLoadingMore,
+    loadMore,
   } = useInfiniteVotes(FILTER_CHIPS[activeFilter].filter)
   const { t } = useLanguage()
 
   const handleHotNavigate = (id: string) => navigate(`/vote/${id}`)
-  const handleOpenSeries = (group: VoteSeriesGroup) => {
-    if (group.items.length === 1) {
-      navigate(buildVoteTargetPath(group.items[0]))
-      return
-    }
-
-    navigate(`/vote/series/${encodeURIComponent(group.key)}`, {
-      state: {
-        title: group.title,
-        host: group.host,
-        verified: group.verified,
-      },
-    })
-  }
-  const groupedItems = groupVoteItemsBySeries(allItems)
+  const handleNavigate = (item: VoteListItem) => navigate(buildVoteTargetPath(item))
+  const groupedItems = groupVoteItemsBySeries(items)
 
   return (
     <>
@@ -221,15 +294,26 @@ export function VoteListPage() {
                 <VoteCardSkeleton key={i} />
               ))
             : groupedItems.map((group) => (
-                <SeriesCard
+                <SeriesSection
                   key={group.key}
-                  group={group}
-                  onOpenSeries={handleOpenSeries}
+                  title={group.title}
+                  host={group.host}
+                  verified={group.verified}
+                  items={group.items}
+                  onNavigate={handleNavigate}
                   isVoted={isVoted}
                 />
               ))}
         </div>
 
+        {/* Infinite scroll sentinel */}
+        {!isItemsLoading && (
+          <InfiniteScrollSentinel
+            onVisible={loadMore}
+            isLoading={isLoadingMore}
+            hasMore={hasMore}
+          />
+        )}
       </div>
     </>
   )

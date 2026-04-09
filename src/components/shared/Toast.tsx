@@ -39,7 +39,7 @@ export function Toast({ id, type, message, autoClose = true, onRemove }: ToastPr
       </span>
       <button
         type="button"
-        aria-label="닫기"
+        aria-label="Close"
         onClick={() => onRemove(id)}
         className="text-[#707070] hover:text-[#090A0B] transition-colors text-[18px] leading-none flex-shrink-0"
       >

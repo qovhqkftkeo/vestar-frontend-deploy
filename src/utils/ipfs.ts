@@ -19,4 +19,17 @@ export async function uploadJsonToPinata(jsonData: any): Promise<string> {
     console.error('Failed to upload to Pinata:', error)
     throw new Error('Failed to upload to Pinata IPFS')
   }
+const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/'
+
+/**
+ * Resolves an IPFS URI or HTTP URL to a fetchable URL.
+ * ipfs://CID  → https://gateway.pinata.cloud/ipfs/CID
+ * https://... → returned as-is
+ 
+ 이 분엣 일단 겹치는 건 딱히 없는듯. 그래서 만약 build랑 그런 거 안되면 ai돌려주3
+ */
+export function resolveIpfsUrl(uri: string): string {
+  if (!uri) return uri
+  if (uri.startsWith('ipfs://')) return uri.replace('ipfs://', IPFS_GATEWAY)
+  return uri
 }

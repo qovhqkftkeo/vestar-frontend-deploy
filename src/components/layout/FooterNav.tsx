@@ -1,15 +1,16 @@
 import { useLocation, useNavigate } from 'react-router'
+import { useLanguage } from '../../providers/LanguageProvider'
 import type { ScrollState } from '../../hooks/useScrollDirection'
 
 interface NavItem {
-  label: string
+  labelKey: 'nav_home' | 'nav_my'
   path: string
   icon: (active: boolean) => React.ReactNode
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: '홈',
+    labelKey: 'nav_home',
     path: '/vote',
     icon: (active) => (
       <svg
@@ -29,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: '마이',
+    labelKey: 'nav_my',
     path: '/mypage',
     icon: (active) => (
       <svg
@@ -64,6 +65,7 @@ interface FooterNavProps {
 export function FooterNav({ scrollState }: FooterNavProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { t } = useLanguage()
 
   return (
     <nav
@@ -74,13 +76,13 @@ export function FooterNav({ scrollState }: FooterNavProps) {
           pathname === item.path || (item.path === '/vote' && pathname.startsWith('/vote'))
         return (
           <button
-            key={item.label}
+            key={item.labelKey}
             type="button"
             onClick={() => navigate(item.path)}
-            className={`flex-1 h-full flex flex-col items-center justify-center gap-1 bg-transparent border-none cursor-pointer transition-colors ${active ? 'text-[#7140FF]' : 'text-white/30'}`}
+            className={`flex-1 h-full flex flex-col items-center justify-center gap-1 bg-transparent border-none cursor-pointer transition-colors ${active ? 'text-[#7140FF]' : scrollState === 'hidden' ? 'text-white/30' : 'text-[#13141A]/30'}`}
           >
             {item.icon(active)}
-            <span className="text-[10px] font-medium tracking-[-0.1px]">{item.label}</span>
+            <span className="text-[10px] font-medium tracking-[-0.1px]">{t(item.labelKey)}</span>
           </button>
         )
       })}

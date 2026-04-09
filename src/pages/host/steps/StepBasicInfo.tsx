@@ -59,6 +59,23 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
     <div className="px-5 py-6 flex flex-col gap-6">
       <VoteHeroPreview title={draft.title} bannerImage={draft.bannerImage} />
 
+      {/* Series name */}
+      <div>
+        <label htmlFor="vote-title" className="block text-[13px] font-semibold text-[#090A0B] mb-2">
+          시리즈명 <span className="text-[#7140FF]">*</span>
+        </label>
+        <input
+          id="vote-title"
+          type="text"
+          value={draft.title}
+          onChange={(e) => onUpdate('title', e.target.value)}
+          placeholder="예: MAMA 2026"
+          maxLength={60}
+          className="w-full bg-white border border-[#E7E9ED] rounded-xl px-4 py-3 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:ring-2 focus:ring-[#7140FF]/10 transition-all"
+        />
+        <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
+      </div>
+
       {/* Banner Image */}
       <div>
         <label
@@ -111,22 +128,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         </button>
       </div>
 
-      {/* Series name */}
-      <div>
-        <label htmlFor="vote-title" className="block text-[13px] font-semibold text-[#090A0B] mb-2">
-          시리즈명 <span className="text-[#7140FF]">*</span>
-        </label>
-        <input
-          id="vote-title"
-          type="text"
-          value={draft.title}
-          onChange={(e) => onUpdate('title', e.target.value)}
-          placeholder="예: MAMA 2026"
-          maxLength={60}
-          className="w-full bg-white border border-[#E7E9ED] rounded-xl px-4 py-3 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:ring-2 focus:ring-[#7140FF]/10 transition-all"
-        />
-        <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
-      </div>
+      
 
       {/* Category */}
       <div>

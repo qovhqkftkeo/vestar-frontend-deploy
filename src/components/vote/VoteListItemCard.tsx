@@ -12,7 +12,7 @@ const BADGE_STYLES: Record<BadgeVariant, string> = {
 
 const BADGE_LABEL: Record<BadgeVariant, string> = {
   live: '● LIVE',
-  hot: '🔥 HOT',
+  hot: 'HOT',
   new: 'NEW',
   end: 'END',
 }

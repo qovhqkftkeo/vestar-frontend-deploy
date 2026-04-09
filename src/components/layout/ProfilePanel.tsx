@@ -75,20 +75,19 @@ function truncateAddress(address: string): string {
 
 function getKarmaTier(karma: number): {
   label: string
-  emoji: string
   color: string
 } {
-  if (karma >= 100000000) return { label: 'Legendary', emoji: '👑', color: '#F59E0B' }
-  if (karma >= 5000000) return { label: 'S-Tier', emoji: '💎', color: '#22d3ee' }
-  if (karma >= 500000) return { label: 'High-Throughput', emoji: '🚀', color: '#06b6d4' }
-  if (karma >= 100000) return { label: 'Pro User', emoji: '💫', color: '#818cf8' }
-  if (karma >= 20000) return { label: 'Power User', emoji: '🔥', color: '#f97316' }
-  if (karma >= 5000) return { label: 'Regular', emoji: '⭐', color: '#eab308' }
-  if (karma >= 500) return { label: 'Active', emoji: '🟣', color: '#7140FF' }
-  if (karma >= 50) return { label: 'Basic', emoji: '🔵', color: '#3b82f6' }
-  if (karma >= 2) return { label: 'Newbie', emoji: '🌱', color: '#22c55e' }
-  if (karma >= 1) return { label: 'Entry', emoji: '⚡', color: '#9CA3AF' }
-  return { label: '—', emoji: '·', color: '#707070' }
+  if (karma >= 100000000) return { label: 'Legendary', color: '#F59E0B' }
+  if (karma >= 5000000) return { label: 'S-Tier', color: '#22d3ee' }
+  if (karma >= 500000) return { label: 'High-Throughput', color: '#06b6d4' }
+  if (karma >= 100000) return { label: 'Pro User', color: '#818cf8' }
+  if (karma >= 20000) return { label: 'Power User', color: '#f97316' }
+  if (karma >= 5000) return { label: 'Regular', color: '#eab308' }
+  if (karma >= 500) return { label: 'Active', color: '#7140FF' }
+  if (karma >= 50) return { label: 'Basic', color: '#3b82f6' }
+  if (karma >= 2) return { label: 'Newbie', color: '#22c55e' }
+  if (karma >= 1) return { label: 'Entry', color: '#9CA3AF' }
+  return { label: '—', color: '#707070' }
 }
 
 function formatMockUsdtBalance(balance: bigint): string {
@@ -284,14 +283,11 @@ export function ProfilePanel({ open, onClose }: ProfilePanelProps) {
         <div className="grid grid-cols-3 gap-[1px] bg-[#E7E9ED] border-b border-[#E7E9ED] flex-shrink-0">
           <div className="bg-white px-4 py-[14px]">
             <div className="text-[11px] text-[#707070] mb-1">{t('pp_tier_stat')}</div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[17px]">{isConnected ? tier.emoji : '⚡'}</span>
-              <span
-                className="text-[15px] font-bold font-mono"
-                style={{ color: isConnected ? tier.color : '#707070' }}
-              >
-                {isConnected ? tier.label : '—'}
-              </span>
+            <div
+              className="text-[15px] font-bold font-mono"
+              style={{ color: isConnected ? tier.color : '#707070' }}
+            >
+              {isConnected ? tier.label : '—'}
             </div>
           </div>
           <div className="bg-white px-4 py-[14px]">

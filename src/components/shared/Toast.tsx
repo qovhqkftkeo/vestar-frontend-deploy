@@ -11,8 +11,8 @@ interface ToastProps {
 }
 
 const ICON: Record<ToastType, string> = {
-  success: '✓',
-  error: '✕',
+  success: 'OK',
+  error: '!',
   info: 'i',
 }
 
@@ -43,7 +43,7 @@ export function Toast({ id, type, message, autoClose = true, onRemove }: ToastPr
         onClick={() => onRemove(id)}
         className="text-[#707070] hover:text-[#090A0B] transition-colors text-[18px] leading-none flex-shrink-0"
       >
-        ×
+        x
       </button>
     </div>
   )

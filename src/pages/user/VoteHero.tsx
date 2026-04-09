@@ -1,4 +1,5 @@
 import verifiedIcon from '../../assets/verified.svg'
+import completeVoteIcon from '../../assets/complete_vote.svg'
 import { useLanguage } from '../../providers/LanguageProvider'
 import { resolveIpfsUrl } from '../../utils/ipfs'
 import type { BadgeVariant, VoteDetailData } from '../../types/vote'
@@ -54,13 +55,12 @@ export function VoteHero({ vote }: VoteHeroProps) {
 
       {/* Org icon */}
       <div className="w-16 h-16 bg-white/60 border border-[#E7E9ED] rounded-[18px] flex items-center justify-center text-[32px] mb-4">
-        {vote.emoji}
+        <img src={completeVoteIcon} alt="" className="w-8 h-8 opacity-70" />
       </div>
 
       {/* Org row */}
       <div className="flex items-center gap-1 mb-2">
         <span className="text-[11px] text-[#707070] font-mono">{vote.org}</span>
-        {vote.verified && <span className="text-[#7140FF] text-[11px]">✦</span>}
         {vote.verified && <img src={verifiedIcon} alt="verified" className="w-3 h-3 opacity-60" />}
       </div>
 

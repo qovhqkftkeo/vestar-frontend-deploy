@@ -97,15 +97,15 @@ const STRINGS = {
     ko: '투표가 종료되었습니다 · 더 이상 투표할 수 없어요',
   },
   vd_switch_network: {
-    en: '⚠ Switch to Status Testnet',
-    ko: '⚠ 네트워크 전환 필요 — Status Testnet',
+    en: 'Switch to Status Testnet',
+    ko: '네트워크 전환 필요 — Status Testnet',
   },
 
   // ── Danger Confirm Modal ────────────────────────────────────────────────────
   dm_title: { en: 'Confirm Your Vote', ko: '투표를 확인하세요' },
   dm_irreversible: {
-    en: '⚠ This action is irreversible. Once submitted, your vote cannot be changed or cancelled.',
-    ko: '⚠ 이 투표는 되돌릴 수 없어요. 한 번 제출하면 변경하거나 취소할 수 없습니다.',
+    en: 'This action is irreversible. Once submitted, your vote cannot be changed or cancelled.',
+    ko: '이 투표는 되돌릴 수 없어요. 한 번 제출하면 변경하거나 취소할 수 없습니다.',
   },
   dm_vote_fee: { en: 'Vote fee', ko: '투표권' },
   dm_selected_candidates: { en: 'Selected candidates', ko: '선택한 후보' },
@@ -190,7 +190,7 @@ const STRINGS = {
   nf_btn: { en: 'Go back home', ko: '홈으로 돌아가기' },
 
   // ── Infinite Scroll ─────────────────────────────────────────────────────────
-  is_all_caught_up: { en: 'All caught up ✓', ko: '모두 불러왔어요 ✓' },
+  is_all_caught_up: { en: 'All caught up', ko: '모두 불러왔어요' },
 
   // ── Landing Page ────────────────────────────────────────────────────────────
   lp_title: { en: 'Host Your Vote', ko: '투표 개설하기' },

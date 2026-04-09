@@ -10,7 +10,6 @@ export interface MyVoteItem {
   date: string
   karmaEarned: number
   choice: string
-  choiceEmoji: string
   badge: BadgeVariant
 }
 
@@ -20,5 +19,4 @@ export interface KarmaEvent {
   label: string
   karma: number
   date: string
-  icon: string
 }

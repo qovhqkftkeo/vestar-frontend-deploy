@@ -1,3 +1,4 @@
+import karmaIcon from '../../assets/karma.svg'
 import type { SubmitState } from '../../hooks/user/useVoteSubmit'
 import { useLanguage } from '../../providers/LanguageProvider'
 
@@ -100,7 +101,7 @@ function SuccessPhase({
 
       {/* Karma card */}
       <div className="bg-[#FEF9EC] border border-[#FDE68A] rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
-        <span className="text-2xl">⚡</span>
+        <img src={karmaIcon} alt="" className="w-6 h-6 flex-shrink-0" />
         <div>
           <div className="text-[14px] font-bold text-[#92400E]">+{karmaEarned} Karma Points</div>
           <div className="text-[12px] text-[#B45309]">{t('bs_karma_reward')}</div>
@@ -113,8 +114,8 @@ function SuccessPhase({
           Sponsored
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl flex-shrink-0">
-            🎧
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-[11px] font-mono text-white/50 flex-shrink-0">
+            AD
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-semibold text-white truncate">

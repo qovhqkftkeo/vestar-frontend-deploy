@@ -276,15 +276,15 @@ export function VoteDetailPage() {
     if (isGrouped) {
       addToast({
         type: 'success',
-        message: `${sectionSelection.selectedCount} ${lang === 'ko' ? '섹션 투표 완료! ⚡' : 'sections voted! ⚡'}`,
+        message: `${sectionSelection.selectedCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`,
       })
     } else {
       addToast({
         type: 'success',
         message:
           lang === 'ko'
-            ? `"${selectedCandidate?.name}" 투표 완료! ⚡`
-            : `Voted for "${selectedCandidate?.name}"! ⚡`,
+            ? `"${selectedCandidate?.name}" 투표 완료!`
+            : `Voted for "${selectedCandidate?.name}"!`,
       })
     }
   }, [
@@ -342,8 +342,8 @@ export function VoteDetailPage() {
   // ── Action bar label ──────────────────────────────────────────────────────
   const submitLabel = resolvedHasVoted
     ? isGrouped
-      ? `✓ ${votedSectionCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`
-      : `✓ ${lang === 'ko' ? `"${selectedCandidate?.name ?? ''}" 투표 완료` : `Voted for "${selectedCandidate?.name ?? ''}"`}`
+      ? `${votedSectionCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`
+      : `${lang === 'ko' ? `"${selectedCandidate?.name ?? ''}" 투표 완료` : `Voted for "${selectedCandidate?.name ?? ''}"`}`
     : isGrouped
       ? activeCanSubmit
         ? groupedSelectionLabel

@@ -6,13 +6,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  // sungje : dev 서버에서는 루트 경로로 바로 열리게 하고, 배포 빌드에서만 /vote/ base를 유지한다.
-  const baseUrl = command === 'serve' ? '/' : '/vote/'
 
   return {
-    base: baseUrl,
+    base: '/',
     define: {
       __PINATA_JWT__: JSON.stringify(env.PINATA_JWT ?? ''),
       __PINATA_GATEWAYS__: JSON.stringify(env.PINATA_GATEWAYS ?? ''),
@@ -32,8 +30,8 @@ export default defineConfig(({ mode, command }) => {
           background_color: '#090A0B',
           display: 'standalone',
           orientation: 'portrait',
-          scope: baseUrl,
-          start_url: baseUrl,
+          scope: '/',
+          start_url: '/',
           icons: [
             {
               src: 'pwa-icon.svg',
@@ -52,6 +50,7 @@ export default defineConfig(({ mode, command }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,woff2}'],
           navigateFallback: '/index.html',
+          navigateFallbackAllowlist: [/^(?!\/__).*/],
           navigateFallbackDenylist: [/^\/api/],
           runtimeCaching: [
             {

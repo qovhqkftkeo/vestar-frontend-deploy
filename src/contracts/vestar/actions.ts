@@ -12,6 +12,7 @@ import {
 } from 'viem'
 import { vestarStatusTestnetChain } from './chain'
 import {
+  mockUsdtAbi,
   vestarContractAddresses,
   vestarElectionAbi,
   vestarElectionFactoryAbi,
@@ -83,7 +84,8 @@ export function toVestarUnixTime(value: TimestampInput = Date.now()): bigint {
     return value
   }
 
-  return BigInt(Math.floor(value))
+  // sungje : JS number timestamp는 Date.now()처럼 ms가 들어올 수 있어서 초 단위로 정규화
+  return BigInt(Math.floor(value >= 1_000_000_000_000 ? value / 1000 : value))
 }
 
 export async function waitForVestarTransactionReceipt(hash: Hash): Promise<TransactionReceipt> {
@@ -409,6 +411,34 @@ export async function quoteElectionPayment(
     address: electionAddress,
     functionName: 'quotePayment',
     args: [ballotCount],
+  })
+}
+
+export async function getErc20Allowance(
+  tokenAddress: Address,
+  owner: Address,
+  spender: Address,
+): Promise<bigint> {
+  return readVestarContract<bigint>({
+    abi: mockUsdtAbi,
+    address: tokenAddress,
+    functionName: 'allowance',
+    args: [owner, spender],
+  })
+}
+
+export async function approveErc20Spending(
+  walletClient: WalletClient,
+  tokenAddress: Address,
+  spender: Address,
+  amount: bigint,
+): Promise<Hash> {
+  return writeVestarContract({
+    walletClient,
+    abi: mockUsdtAbi,
+    address: tokenAddress,
+    functionName: 'approve',
+    args: [spender, amount],
   })
 }
 

@@ -9,9 +9,25 @@
  */
 
 import { hashVestarText } from '../contracts/vestar/actions'
-import { VESTAR_ELECTION_STATE } from '../contracts/vestar/types'
+import {
+  VESTAR_BALLOT_POLICY,
+  VESTAR_ELECTION_STATE,
+  VESTAR_PAYMENT_MODE,
+  VESTAR_VISIBILITY_MODE,
+  type ElectionConfig,
+} from '../contracts/vestar/types'
 import type { ApiElection, ApiElectionDetail, ApiElectionState } from '../api/types'
-import type { BadgeVariant, Candidate, HotVote, VoteDetailData, VoteListItem } from '../types/vote'
+import type {
+  BadgeVariant,
+  Candidate,
+  HotVote,
+  VoteBallotPolicy,
+  VoteDetailData,
+  VoteListItem,
+  VotePaymentMode,
+  VoteVisibilityMode,
+} from '../types/vote'
+import type { Hex } from 'viem'
 
 // ── State mapping ─────────────────────────────────────────────────────────────
 
@@ -87,6 +103,46 @@ export function mapBallotPolicyLabel(policy: string): string {
   }
 }
 
+function mapVisibilityMode(
+  apiMode: ApiElectionDetail['visibility_mode'],
+  contractConfig?: ElectionConfig,
+): VoteVisibilityMode {
+  if (!contractConfig) {
+    return apiMode
+  }
+
+  return contractConfig.visibilityMode === VESTAR_VISIBILITY_MODE.PRIVATE ? 'PRIVATE' : 'OPEN'
+}
+
+function mapPaymentMode(
+  apiMode: ApiElectionDetail['payment_mode'],
+  contractConfig?: ElectionConfig,
+): VotePaymentMode {
+  if (!contractConfig) {
+    return apiMode
+  }
+
+  return contractConfig.paymentMode === VESTAR_PAYMENT_MODE.PAID ? 'PAID' : 'FREE'
+}
+
+function mapBallotPolicy(
+  apiPolicy: ApiElectionDetail['ballot_policy'],
+  contractConfig?: ElectionConfig,
+): VoteBallotPolicy {
+  if (!contractConfig) {
+    return apiPolicy
+  }
+
+  switch (contractConfig.ballotPolicy) {
+    case VESTAR_BALLOT_POLICY.ONE_PER_INTERVAL:
+      return 'ONE_PER_INTERVAL'
+    case VESTAR_BALLOT_POLICY.UNLIMITED_PAID:
+      return 'UNLIMITED_PAID'
+    default:
+      return 'ONE_PER_ELECTION'
+  }
+}
+
 // ── Hot vote card ─────────────────────────────────────────────────────────────
 
 const HOT_GRADIENTS = [
@@ -152,7 +208,15 @@ export function mapToVoteDetail(
   contractState?: number,
   contractTotalSubmissions?: bigint,
   candidateVotes?: Map<string, bigint>,
+  contractConfig?: ElectionConfig,
+  contractElectionId?: Hex,
 ): VoteDetailData {
+  const visibilityMode = mapVisibilityMode(election.visibility_mode, contractConfig)
+  const paymentMode = mapPaymentMode(election.payment_mode, contractConfig)
+  const ballotPolicy = mapBallotPolicy(election.ballot_policy, contractConfig)
+  const maxSelectionsPerSubmission =
+    contractConfig?.maxSelectionsPerSubmission ?? election.max_selections_per_submission
+  const allowMultipleChoice = contractConfig?.allowMultipleChoice ?? election.allow_multiple_choice
   const badge =
     contractState !== undefined
       ? mapContractStateToBadge(contractState)
@@ -169,10 +233,11 @@ export function mapToVoteDetail(
     .map((c): Candidate => {
       const contractVotes = candidateVotes?.get(c.candidate_key)
       return {
-        // id = keccak256(toHex(candidate_key)) — matches what submitOpenVote expects
+        // sungje : UI 선택 id와 실제 컨트랙트 candidateKey를 분리해서 제출 시점 변환 가능하게 유지
         id: hashVestarText(c.candidate_key),
-        name: c.candidate_key,
-        group: '',
+        candidateKey: c.candidate_key,
+        name: c.display_name ?? c.candidate_key,
+        group: c.group_label ?? '',
         emoji: '🎤',
         emojiColor: '#F0EDFF',
         imageUrl: c.image_url ?? undefined,
@@ -193,14 +258,24 @@ export function mapToVoteDetail(
     endDate: formatVoteDate(election.end_at),
     endDateISO: election.end_at,
     resultReveal: formatVoteDate(election.result_reveal_at),
-    maxChoices: election.max_selections_per_submission,
+    maxChoices: maxSelectionsPerSubmission,
     participantCount,
     goalVotes: 0,
-    voteFrequency: mapBallotPolicyLabel(election.ballot_policy),
-    voteLimit: election.allow_multiple_choice ? 'Multiple choices' : '1 vote per ballot',
-    resultPublic: election.visibility_mode === 'OPEN',
+    voteFrequency: mapBallotPolicyLabel(ballotPolicy),
+    voteLimit: allowMultipleChoice ? 'Multiple choices' : '1 vote per ballot',
+    resultPublic: visibilityMode === 'OPEN',
     candidates,
     electionAddress: election.onchain_election_address ?? undefined,
+    electionId: (contractElectionId ?? election.onchain_election_id) as `0x${string}`,
+    electionState: contractState,
+    visibilityMode,
+    paymentMode,
+    ballotPolicy,
+    minKarmaTier: contractConfig?.minKarmaTier,
+    allowMultipleChoice,
+    costPerBallot: contractConfig?.costPerBallot?.toString() ?? election.cost_per_ballot,
+    paymentToken: contractConfig?.paymentToken,
+    electionPublicKey: contractConfig?.electionPublicKey,
     imageUrl: election.cover_image_url ?? undefined,
   }
 }

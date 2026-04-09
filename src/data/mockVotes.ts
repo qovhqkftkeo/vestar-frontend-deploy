@@ -1,5 +1,6 @@
 import type { HotVote, VoteListItem } from '../types/vote'
 
+// 목업 : API/온체인 데이터를 읽지 못할 때만 보여주는 개발용 카드 데이터
 export const HOT_VOTES: HotVote[] = [
   {
     id: '1',
@@ -39,6 +40,7 @@ export const HOT_VOTES: HotVote[] = [
   },
 ]
 
+// 목업 : 리스트 fallback 전용 샘플 데이터
 export const VOTE_ITEMS: VoteListItem[] = [
   {
     id: '1',

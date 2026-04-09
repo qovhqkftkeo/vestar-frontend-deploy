@@ -90,6 +90,8 @@ export interface ApiElection {
 export interface ApiCandidate {
   /** Human-readable identifier — also used as on-chain key preimage */
   candidate_key: string
+  display_name?: string | null
+  group_label?: string | null
   image_url: string | null
   display_order: number
 }

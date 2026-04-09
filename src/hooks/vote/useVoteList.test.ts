@@ -10,7 +10,6 @@ describe('useVoteList', () => {
     const { result } = renderHook(() => useVoteList())
     expect(result.current.isLoading).toBe(true)
     expect(result.current.hotVotes).toHaveLength(0)
-    expect(result.current.items).toHaveLength(0)
   })
 
   it('sets isLoading: false after delay', async () => {
@@ -27,13 +26,5 @@ describe('useVoteList', () => {
       vi.advanceTimersByTime(700)
     })
     expect(result.current.hotVotes.length).toBeGreaterThan(0)
-  })
-
-  it('provides items after loading', async () => {
-    const { result } = renderHook(() => useVoteList())
-    await act(async () => {
-      vi.advanceTimersByTime(700)
-    })
-    expect(result.current.items.length).toBeGreaterThan(0)
   })
 })

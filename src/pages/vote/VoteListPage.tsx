@@ -536,7 +536,7 @@ export function VoteListPage() {
 
         <div className="flex items-center justify-between gap-3 px-5 pt-[20px] pb-[10px]">
           <div className="flex flex-col gap-2">
-            <div className="inline-flex rounded-full bg-[#F4F5F7] p-1">
+            <div className="inline-flex w-fit self-start rounded-full bg-[#F4F5F7] p-1">
               <button
                 type="button"
                 onClick={() => setSeriesTab('active')}

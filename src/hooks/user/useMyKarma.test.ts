@@ -10,10 +10,10 @@ vi.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
 }))
 
-const mockGetKarmaBalance = vi.fn<() => Promise<bigint>>()
+const mockGetKarmaBalance = vi.fn<(address: string) => Promise<bigint>>()
 
 vi.mock('../../contracts/vestar/actions', () => ({
-  getKarmaBalance: (...args: unknown[]) => mockGetKarmaBalance(...(args as [never])),
+  getKarmaBalance: (address: string) => mockGetKarmaBalance(address),
 }))
 
 describe('useMyKarma', () => {

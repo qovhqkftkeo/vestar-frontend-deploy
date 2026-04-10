@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { CandidateDraft, SectionDraft, VoteCreateDraft } from '../../../types/host'
 import { useLanguage } from '../../../providers/LanguageProvider'
 
@@ -5,9 +6,12 @@ const MAX_CANDIDATES = 10
 
 interface StepCandidatesProps {
   electionTitle: VoteCreateDraft['electionTitle']
+  electionCoverImage: VoteCreateDraft['electionCoverImage']
   candidates: VoteCreateDraft['candidates']
   sections: VoteCreateDraft['sections']
   onUpdateElectionTitle: (value: VoteCreateDraft['electionTitle']) => void
+  onUpdateElectionCoverImage: (value: VoteCreateDraft['electionCoverImage']) => void
+  onUpdateElectionCoverImageFile: (value: VoteCreateDraft['electionCoverImageFile']) => void
   onAdd: () => void
   onRemove: (id: string) => void
   onUpdate: (
@@ -18,6 +22,7 @@ interface StepCandidatesProps {
   onAddSection: () => void
   onRemoveSection: (sectionId: string) => void
   onUpdateSectionName: (sectionId: string, name: string) => void
+  onUpdateSectionCoverImage: (sectionId: string, image: string, imageFile: File | null) => void
   onAddCandidateToSection: (sectionId: string) => void
   onRemoveCandidateFromSection: (sectionId: string, candidateId: string) => void
   onUpdateSectionCandidate: (
@@ -28,6 +33,7 @@ interface StepCandidatesProps {
   ) => void
   onClearSections: () => void
   initialCandidates?: VoteCreateDraft['candidates']
+  initialElectionCoverImage?: VoteCreateDraft['electionCoverImage']
 }
 
 function CandidateCard({
@@ -160,6 +166,7 @@ function SectionCard({
   canRemove,
   onRemoveSection,
   onUpdateSectionName,
+  onUpdateSectionCoverImage,
   onAddCandidate,
   onRemoveCandidate,
   onUpdateCandidate,
@@ -171,6 +178,7 @@ function SectionCard({
   canRemove: boolean
   onRemoveSection: () => void
   onUpdateSectionName: (name: string) => void
+  onUpdateSectionCoverImage: (image: string, imageFile: File | null) => void
   onAddCandidate: () => void
   onRemoveCandidate: (candidateId: string) => void
   onUpdateCandidate: (
@@ -181,6 +189,7 @@ function SectionCard({
   isEditMode: boolean
   initialCandidates?: VoteCreateDraft['candidates']
 }) {
+  const sectionCoverInputId = `section-cover-upload-${section.id}`
   const { lang } = useLanguage()
   return (
     <div className="bg-[#F0EDFF]/40 border-2 border-[#7140FF]/20 rounded-2xl p-4">
@@ -223,6 +232,59 @@ function SectionCard({
         maxLength={30}
         className="w-full bg-white border border-[#E7E9ED] rounded-xl px-3 py-2.5 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:bg-white transition-all mb-3"
       />
+
+      <div className="mb-3">
+        <label className="block text-[13px] font-semibold text-[#090A0B] mb-2">
+          {lang === 'ko' ? '섹션 대표 이미지' : 'Section Cover Image'}
+        </label>
+        <div
+          onClick={() => document.getElementById(sectionCoverInputId)?.click()}
+          className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-[#E7E9ED] bg-white hover:border-[#7140FF]/50 transition-colors flex items-center justify-center cursor-pointer overflow-hidden relative"
+        >
+          {section.electionCoverImage ? (
+            <img
+              src={section.electionCoverImage}
+              alt={lang === 'ko' ? '섹션 대표 이미지' : 'Section cover image'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-[#C0C4CC]">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <title>{lang === 'ko' ? '이미지 업로드' : 'Upload image'}</title>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <span className="text-[13px] font-medium">
+                {lang === 'ko' ? '이미지 업로드' : 'Upload image'}
+              </span>
+            </div>
+          )}
+          <input
+            id={sectionCoverInputId}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                const file = e.target.files[0]
+                const url = URL.createObjectURL(file)
+                onUpdateSectionCoverImage(url, file)
+              }
+            }}
+            className="hidden"
+          />
+        </div>
+      </div>
 
       {/* Candidates */}
       <div className="flex flex-col gap-3">
@@ -267,24 +329,32 @@ function SectionCard({
 
 export function StepCandidates({
   electionTitle,
+  electionCoverImage,
   candidates,
   sections,
   onUpdateElectionTitle,
+  onUpdateElectionCoverImage,
+  onUpdateElectionCoverImageFile,
   onAdd,
   onRemove,
   onUpdate,
   onAddSection,
   onRemoveSection,
   onUpdateSectionName,
+  onUpdateSectionCoverImage,
   onAddCandidateToSection,
   onRemoveCandidateFromSection,
   onUpdateSectionCandidate,
   onClearSections,
   initialCandidates,
+  initialElectionCoverImage,
 }: StepCandidatesProps) {
   const { lang } = useLanguage()
   const isEditMode = !!initialCandidates
   const useSections = sections.length > 0
+  const electionCoverInputRef = useRef<HTMLInputElement>(null)
+  const isElectionCoverChanged =
+    initialElectionCoverImage !== undefined && initialElectionCoverImage !== electionCoverImage
 
   const handleToggleSections = () => {
     if (isEditMode) return // 수정 모드에서는 섹션 토글 불가
@@ -343,6 +413,69 @@ export function StepCandidates({
             maxLength={60}
             className="w-full bg-[#F7F8FA] border border-[#E7E9ED] rounded-xl px-4 py-3 text-[14px] text-[#090A0B] placeholder:text-[#C0C4CC] outline-none focus:border-[#7140FF] focus:bg-white transition-all"
           />
+          <div className="mt-4">
+            <label
+              htmlFor="vote-election-cover-image"
+              className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2"
+            >
+              <span>투표 대표 이미지</span>
+              {isElectionCoverChanged && (
+                <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">
+                  {lang === 'ko' ? '수정됨' : 'Edited'}
+                </span>
+              )}
+            </label>
+            <button
+              type="button"
+              onClick={() => electionCoverInputRef.current?.click()}
+              className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-[#E7E9ED] bg-[#F7F8FA] hover:border-[#7140FF]/50 transition-colors flex items-center justify-center cursor-pointer overflow-hidden relative"
+            >
+              {electionCoverImage ? (
+                <img
+                  src={electionCoverImage}
+                  alt={lang === 'ko' ? '투표 대표 이미지' : 'Vote cover image'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-[#C0C4CC]">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <title>{lang === 'ko' ? '이미지 업로드' : 'Upload image'}</title>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span className="text-[13px] font-medium">
+                    {lang === 'ko' ? '이미지 업로드' : 'Upload image'}
+                  </span>
+                </div>
+              )}
+              <input
+                id="vote-election-cover-image"
+                type="file"
+                accept="image/*"
+                ref={electionCoverInputRef}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    const file = e.target.files[0]
+                    const url = URL.createObjectURL(file)
+                    onUpdateElectionCoverImage(url)
+                    onUpdateElectionCoverImageFile(file)
+                  }
+                }}
+                className="hidden"
+              />
+            </button>
+          </div>
         </div>
       )}
 
@@ -373,6 +506,9 @@ export function StepCandidates({
                 canRemove={sections.length > 1}
                 onRemoveSection={() => onRemoveSection(section.id)}
                 onUpdateSectionName={(name) => onUpdateSectionName(section.id, name)}
+                onUpdateSectionCoverImage={(image, imageFile) =>
+                  onUpdateSectionCoverImage(section.id, image, imageFile)
+                }
                 onAddCandidate={() => onAddCandidateToSection(section.id)}
                 onRemoveCandidate={(cid) => onRemoveCandidateFromSection(section.id, cid)}
                 onUpdateCandidate={(cid, field, value) =>

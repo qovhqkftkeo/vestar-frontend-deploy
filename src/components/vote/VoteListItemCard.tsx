@@ -2,6 +2,7 @@ import completeVoteIcon from '../../assets/complete_vote.svg'
 import checkboxBlank from '../../assets/check_box_outline_blank.svg'
 import { useLanguage } from '../../providers/LanguageProvider'
 import type { BadgeVariant, VoteListItem } from '../../types/vote'
+import { resolveIpfsUrl } from '../../utils/ipfs'
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
   live: 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]',
@@ -34,9 +35,17 @@ export function VoteListItemCard({ item, onNavigate, isVoted }: VoteListItemCard
       className="w-full bg-white border border-[#E7E9ED] rounded-2xl p-4 flex items-center gap-[14px] cursor-pointer transition-[border-color,background] duration-150 hover:border-[rgba(113,64,255,0.25)] hover:bg-[#F0EDFF] active:scale-[0.99] text-left"
     >
       <div
-        className="w-[52px] h-[52px] rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-        style={{ background: item.emojiColor }}
-      ></div>
+        className="w-[52px] h-[52px] rounded-xl flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden bg-[#F7F8FA]"
+        style={!item.imageUrl ? { background: item.emojiColor } : undefined}
+      >
+        {item.imageUrl ? (
+          <img
+            src={resolveIpfsUrl(item.imageUrl)}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : null}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1 mb-1">
           <span className="text-[11px] text-[#707070] font-mono truncate">{item.org}</span>

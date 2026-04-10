@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
+import { fetchCandidateManifest } from '../../api/candidateManifest'
 import { fetchElections } from '../../api/elections'
-import { formatVoteDate, mapApiStateToBadge } from '../../utils/electionMapper'
+import {
+  applyManifestToElection,
+  formatVoteDate,
+  mapApiStateToBadge,
+} from '../../utils/electionMapper'
 
 export interface HostVoteCardData {
   id: string
@@ -36,10 +41,23 @@ export function useHostVotes(): UseHostVotesResult {
     setIsLoading(true)
 
     fetchElections({ organizerWalletAddress: address })
-      .then((elections) => {
+      .then(async (elections) => {
         if (cancelled) return
 
-        const mapped = elections.map(
+        const electionsWithManifest = await Promise.all(
+          elections.map(async (election) => {
+            const manifest = await fetchCandidateManifest(
+              election.candidateManifestUri,
+              election.candidateManifestHash,
+            )
+
+            return applyManifestToElection(election, manifest)
+          }),
+        )
+
+        if (cancelled) return
+
+        const mappedWithManifest = electionsWithManifest.map(
           (election) =>
             ({
               id: election.id,
@@ -51,7 +69,7 @@ export function useHostVotes(): UseHostVotesResult {
             }) satisfies HostVoteCardData,
         )
 
-        setVotes(mapped)
+        setVotes(mappedWithManifest)
       })
       .catch(() => {
         if (cancelled) return

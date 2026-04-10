@@ -406,8 +406,8 @@ export function VoteDetailPage() {
           <div className="px-5 pt-5">
             <button
               type="button"
-            onClick={() => navigate(`/vote/${id}/result`)}
-            className="w-full rounded-2xl border border-[#E7E9ED] bg-white px-4 py-4 text-[14px] font-semibold text-[#7140FF] hover:border-[rgba(113,64,255,0.25)] hover:bg-[#F7F4FF] transition-colors active:scale-[0.99]"
+              onClick={() => navigate(`/vote/${id}/live`)}
+              className="w-full rounded-2xl border border-[#E7E9ED] bg-white px-4 py-4 text-[14px] font-semibold text-[#7140FF] hover:border-[rgba(113,64,255,0.25)] hover:bg-[#F7F4FF] transition-colors active:scale-[0.99]"
           >
             {lang === 'ko' ? '실시간 집계 보기' : 'View live tally'}
           </button>

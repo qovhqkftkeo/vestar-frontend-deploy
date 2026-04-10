@@ -1,60 +1,15 @@
 import { useEffect, useState } from 'react'
 import { fetchCandidateManifest } from '../../api/candidateManifest'
-import {
-  fetchElectionDetail,
-  fetchFinalizedTally,
-  fetchLiveTally,
-  fetchResultSummaries,
-} from '../../api/elections'
-import type { ApiElection, ApiFinalizedTallyRow, ApiLiveTallyRow } from '../../api/types'
-import {
-  applyManifestToElection,
-  formatVoteDate,
-  resolveElectionCandidates,
-} from '../../utils/electionMapper'
-import { findLocalOpenElectionMetadata } from '../../utils/localOpenElectionMetadata'
+import { fetchElectionDetail, fetchFinalizedTally, fetchResultSummaries } from '../../api/elections'
+import type { ApiElection, ApiFinalizedTallyRow } from '../../api/types'
+import { applyManifestToElection, formatVoteDate, resolveElectionCandidates } from '../../utils/electionMapper'
 import type { CandidateManifest } from '../../utils/candidateManifest'
 import type { RankedCandidate, VoteResultData } from '../../types/vote'
 import { useLanguage } from '../../providers/LanguageProvider'
 
-type TallyRow = ApiLiveTallyRow | ApiFinalizedTallyRow
-
-function mergeLocalMetadata(election: ApiElection): ApiElection {
-  if (election.title && election.series) {
-    return election
-  }
-
-  const local = findLocalOpenElectionMetadata({
-    onchainElectionId: election.onchainElectionId,
-    onchainElectionAddress: election.onchainElectionAddress,
-  })
-
-  if (!local) {
-    return election
-  }
-
-  return {
-    ...election,
-    title: election.title ?? local.title,
-    coverImageUrl: election.coverImageUrl ?? local.coverImageUrl ?? null,
-    series: election.series ?? {
-      id: `local-${local.seriesId}`,
-      seriesPreimage: local.series.seriesPreimage,
-      onchainSeriesId: local.seriesId,
-      coverImageUrl: local.series.coverImageUrl ?? null,
-    },
-    electionCandidates: local.electionCandidates.map((candidate, index) => ({
-      id: `local-${election.id}-${index + 1}`,
-      candidateKey: candidate.candidateKey,
-      imageUrl: candidate.imageUrl ?? null,
-      displayOrder: candidate.displayOrder,
-    })),
-  }
-}
-
 function toVoteResultData(
   election: ApiElection,
-  tally: TallyRow[],
+  tally: ApiFinalizedTallyRow[],
   totalVotes: number,
   manifest: CandidateManifest | null,
   lang: 'en' | 'ko',
@@ -100,6 +55,7 @@ function toVoteResultData(
     endDate: formatVoteDate(election.endAt),
     totalVotes,
     rankedCandidates,
+    mode: 'finalized',
   }
 }
 
@@ -125,14 +81,16 @@ export function useVoteResult(id: string): UseVoteResultResult {
           rawElection.candidateManifestUri,
           rawElection.candidateManifestHash,
         )
-        const election = mergeLocalMetadata(applyManifestToElection(rawElection, manifest))
+        const election = applyManifestToElection(rawElection, manifest)
+
+        if (election.onchainState !== 'FINALIZED') {
+          setResult(null)
+          return
+        }
+
         const [summaries, tally] = await Promise.all([
           fetchResultSummaries(id),
-          election.onchainState === 'FINALIZED'
-            ? fetchFinalizedTally(id)
-            : election.visibilityMode === 'OPEN'
-              ? fetchLiveTally(id)
-              : Promise.resolve([]),
+          fetchFinalizedTally(id),
         ])
 
         if (cancelled) return

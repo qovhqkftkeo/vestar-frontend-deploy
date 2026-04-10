@@ -22,8 +22,8 @@ function EmptyState() {
       </div>
       <div className="mt-2 text-[13px] text-[#707070]">
         {lang === 'ko'
-          ? '비공개 투표는 finalize 이후에만 결과를 볼 수 있습니다.'
-          : 'Private votes can be viewed only after finalization.'}
+          ? '최종 결과는 finalize 이후에만 볼 수 있습니다.'
+          : 'Final results are available only after finalization.'}
       </div>
     </div>
   )
@@ -41,8 +41,8 @@ export function VoteResultPage() {
 
   return (
     <>
-      <VoteResultWinner result={result} winner={winner} />
-      <VoteResultRankings rankedCandidates={result.rankedCandidates} />
+      <VoteResultWinner result={result} winner={winner} mode="finalized" />
+      <VoteResultRankings rankedCandidates={result.rankedCandidates} mode="finalized" />
     </>
   )
 }

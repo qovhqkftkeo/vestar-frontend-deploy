@@ -149,65 +149,6 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
         />
         <div className="text-right text-[11px] text-[#707070] mt-1">{draft.title.length}/60</div>
       </div>
-
-      {/* Banner Image */}
-      <div>
-        <label
-          htmlFor="vote-banner-image"
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-[#090A0B] mb-2"
-        >
-          <span>{lang === 'ko' ? '배너 이미지' : 'Banner Image'}</span>
-          {isBannerChanged && (
-            <span className="text-[10px] font-bold text-[#7140FF] bg-[#7140FF]/10 px-1.5 py-0.5 rounded-md">
-              {lang === 'ko' ? '수정됨' : 'Edited'}
-            </span>
-          )}
-        </label>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full aspect-[21/9] rounded-xl border-2 border-dashed border-[#E7E9ED] bg-[#F7F8FA] hover:border-[#7140FF]/50 transition-colors flex items-center justify-center cursor-pointer overflow-hidden relative"
-        >
-          {draft.bannerImage ? (
-            <img
-              src={draft.bannerImage}
-              alt={lang === 'ko' ? '배너 이미지' : 'Banner image'}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-[#C0C4CC]">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <title>{lang === 'ko' ? '이미지 업로드' : 'Upload image'}</title>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <span className="text-[13px] font-medium">
-                {lang === 'ko' ? '이미지 업로드' : 'Upload image'}
-              </span>
-            </div>
-          )}
-          <input
-            id="vote-banner-image"
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </button>
-      </div>
-
       {/* Category */}
       <div>
         <span className="block text-[13px] font-semibold text-[#090A0B] mb-2">
@@ -230,6 +171,7 @@ export function StepBasicInfo({ draft, onUpdate, initialDraft }: StepBasicInfoPr
           ))}
         </div>
       </div>
+
     </div>
   )
 }

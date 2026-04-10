@@ -143,16 +143,7 @@ function withLocalOpenMetadata(election: ApiElection) {
 
   return {
     ...election,
-    title: election.title ?? local.title,
     coverImageUrl: election.coverImageUrl ?? local.coverImageUrl ?? null,
-    series:
-      election.series ??
-      ({
-        id: `local-${local.seriesId}`,
-        seriesPreimage: local.series.seriesPreimage,
-        onchainSeriesId: local.seriesId,
-        coverImageUrl: local.series.coverImageUrl ?? null,
-      } as ApiElection['series']),
     electionCandidates: toLocalElectionCandidates(local),
   }
 }
@@ -166,22 +157,17 @@ export function applyManifestToElection(
 
   return {
     ...rawElection,
-    title: rawElection.title ?? (manifestTitle || null),
+    title: manifestTitle || null,
     coverImageUrl: manifest?.election?.coverImageUrl ?? rawElection.coverImageUrl,
-    series: rawElection.series
-      ? {
-          ...rawElection.series,
-          seriesPreimage: rawElection.series.seriesPreimage || manifestSeriesPreimage,
-          coverImageUrl: manifest?.series?.coverImageUrl ?? rawElection.series.coverImageUrl,
-        }
-      : manifestSeriesPreimage || manifest?.series?.coverImageUrl
+    series: manifestSeriesPreimage || manifest?.series?.coverImageUrl
         ? {
-            id: `manifest-${rawElection.onchainElectionId}`,
-            onchainSeriesId: rawElection.onchainSeriesId,
+            ...(rawElection.series ?? {}),
+            id: rawElection.series?.id ?? `manifest-${rawElection.onchainElectionId}`,
+            onchainSeriesId: rawElection.series?.onchainSeriesId ?? rawElection.onchainSeriesId,
             seriesPreimage: manifestSeriesPreimage || 'Unknown series',
             coverImageUrl: manifest?.series?.coverImageUrl ?? null,
           }
-        : rawElection.series,
+        : null,
     electionCandidates: resolveElectionCandidates(rawElection, manifest),
   }
 }

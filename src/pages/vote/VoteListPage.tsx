@@ -135,7 +135,18 @@ function HotVoteCard({
       onClick={() => onNavigate(vote)}
       className="flex-shrink-0 w-[200px] bg-white border border-[#E7E9ED] rounded-2xl overflow-hidden cursor-pointer transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(113,64,255,0.10)] hover:border-[rgba(113,64,255,0.25)] active:scale-[0.98] text-left"
     >
-      <div className="h-[100px] relative" style={{ background: vote.gradient }}>
+      <div
+        className="h-[100px] relative overflow-hidden"
+        style={!vote.imageUrl ? { background: vote.gradient } : undefined}
+      >
+        {vote.imageUrl ? (
+          <img
+            src={resolveIpfsUrl(vote.imageUrl)}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090A0B]/26 to-transparent" />
         <span
           className={`absolute top-2 right-2 text-[9px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[vote.badge]}`}
         >

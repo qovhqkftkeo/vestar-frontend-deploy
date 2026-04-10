@@ -148,6 +148,7 @@ const STRINGS = {
   // ── Profile Panel ───────────────────────────────────────────────────────────
   pp_my_votes: { en: 'My Votes', ko: '내 투표 내역' },
   pp_karma_history: { en: 'Karma History', ko: 'Karma 내역' },
+  pp_verified_organizer: { en: 'Verified Organizer', ko: '공식 주최사 인증' },
   pp_stt_staking: { en: 'STT Staking', ko: 'STT 스테이킹' },
   pp_votes_stat: { en: 'Votes', ko: '투표 수' },
   pp_tier_stat: { en: 'Tier', ko: '등급' },

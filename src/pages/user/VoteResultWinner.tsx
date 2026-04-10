@@ -5,9 +5,10 @@ import type { RankedCandidate, VoteResultData } from '../../types/vote'
 interface VoteResultWinnerProps {
   result: VoteResultData
   winner: RankedCandidate
+  mode?: 'live' | 'finalized'
 }
 
-export function VoteResultWinner({ result, winner }: VoteResultWinnerProps) {
+export function VoteResultWinner({ result, winner, mode = 'finalized' }: VoteResultWinnerProps) {
   const { t, lang } = useLanguage()
   return (
     <div className="bg-[linear-gradient(180deg,#1a1035_0%,#0f0a24_60%,#090A0B_100%)] px-5 pt-6 pb-8 relative overflow-hidden">
@@ -17,10 +18,10 @@ export function VoteResultWinner({ result, winner }: VoteResultWinnerProps) {
       {/* Top: badge + end date */}
       <div className="flex items-center gap-2 mb-5">
         <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-[10px] tracking-[0.4px] uppercase bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)]">
-          {t('vr_results')}
+          {mode === 'live' ? 'LIVE TALLY' : t('vr_results')}
         </span>
         <span className="text-[12px] font-mono text-white/40">
-          {result.endDate} {t('vr_ended')}
+          {result.endDate} {mode === 'live' ? '기준 집계' : t('vr_ended')}
         </span>
       </div>
 
@@ -33,7 +34,7 @@ export function VoteResultWinner({ result, winner }: VoteResultWinnerProps) {
       {/* Winner card */}
       <div className="bg-white/[0.07] border border-[rgba(245,158,11,0.3)] rounded-2xl p-5">
         <div className="text-[11px] font-mono text-[#F59E0B] mb-3 uppercase tracking-wider">
-          {t('vr_1st_place')}
+          {mode === 'live' ? '현재 1위' : t('vr_1st_place')}
         </div>
         <div className="flex items-center gap-4">
           <CandidateAvatar

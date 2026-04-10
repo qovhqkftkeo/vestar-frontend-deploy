@@ -670,7 +670,7 @@ export function VoteListPage() {
           ) : null}
         </div>
 
-        {!isItemsLoading && (
+        {!isItemsLoading && !shouldShowEmptyState && (
           <InfiniteScrollSentinel
             onVisible={loadMore}
             isLoading={isLoadingMore}

@@ -23,6 +23,8 @@ const INITIAL_DRAFT: VoteCreateDraft = {
   group: '',
   bannerImage: '',
   bannerImageFile: null,
+  electionCoverImage: '',
+  electionCoverImageFile: null,
   category: '음악방송',
   visibilityMode: 'PRIVATE',
   candidates: [],
@@ -81,6 +83,8 @@ export function useEditVoteDraft(id: string) {
         group: vote.host || '',
         bannerImage: '', // Mock doesn't have it
         bannerImageFile: null,
+        electionCoverImage: vote.imageUrl || '',
+        electionCoverImageFile: null,
         category: '음악방송',
         visibilityMode: vote.visibilityMode ?? 'PRIVATE',
         candidates: vote.candidates.map((c) => ({
@@ -152,6 +156,8 @@ export function useEditVoteDraft(id: string) {
       const newSection: SectionDraft = {
         id: makeId(),
         name: '',
+        electionCoverImage: '',
+        electionCoverImageFile: null,
         candidates: [makeBlankCandidate(), makeBlankCandidate()],
         startDate: prev.startDate,
         endDate: prev.endDate,
@@ -183,6 +189,20 @@ export function useEditVoteDraft(id: string) {
       sections: prev.sections.map((s) => (s.id === sectionId ? { ...s, name } : s)),
     }))
   }, [])
+
+  const updateSectionCoverImage = useCallback(
+    (sectionId: string, image: string, imageFile: File | null) => {
+      setDraft((prev) => ({
+        ...prev,
+        sections: prev.sections.map((section) =>
+          section.id === sectionId
+            ? { ...section, electionCoverImage: image, electionCoverImageFile: imageFile }
+            : section,
+        ),
+      }))
+    },
+    [],
+  )
 
   const addCandidateToSection = useCallback((sectionId: string) => {
     setDraft((prev) => ({
@@ -262,6 +282,7 @@ export function useEditVoteDraft(id: string) {
     addSection,
     removeSection,
     updateSectionName,
+    updateSectionCoverImage,
     addCandidateToSection,
     removeCandidateFromSection,
     updateSectionCandidate,

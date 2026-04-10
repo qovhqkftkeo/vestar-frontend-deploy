@@ -65,6 +65,7 @@ type FlattenedCandidate = {
 type SubmissionUnit = {
   title: string
   settings: ElectionSettingsDraft
+  electionCoverImageFile?: File | null
   candidates: FlattenedCandidate[]
 }
 
@@ -136,6 +137,8 @@ const INITIAL_DRAFT: VoteCreateDraft = {
   group: '',
   bannerImage: '',
   bannerImageFile: null,
+  electionCoverImage: '',
+  electionCoverImageFile: null,
   category: '음악방송',
   candidates: [makeBlankCandidate(), makeBlankCandidate()],
   sections: [],
@@ -293,14 +296,18 @@ function buildCandidateHashes(candidates: FlattenedCandidate[]) {
 
 function buildManifestPayload(
   draft: VoteCreateDraft,
+  electionTitle: string,
   candidates: FlattenedCandidate[],
   candidateImageUrls: Map<string, string>,
   bannerImageUrl: string | null,
+  electionCoverImageUrl: string | null,
 ) {
   return buildCandidateManifest({
+    seriesPreimage: draft.title,
+    electionTitle,
     seriesCoverImageUrl: bannerImageUrl,
     category: draft.category,
-    electionCoverImageUrl: bannerImageUrl,
+    electionCoverImageUrl,
     candidates: buildCandidateManifestCandidates(candidates, candidateImageUrls),
   })
 }
@@ -349,6 +356,7 @@ export interface UseCreateVoteDraftResult {
   addSection: () => void
   removeSection: (sectionId: string) => void
   updateSectionName: (sectionId: string, name: string) => void
+  updateSectionCoverImage: (sectionId: string, image: string, imageFile: File | null) => void
   updateSectionField: <K extends keyof ElectionSettingsDraft>(
     sectionId: string,
     key: K,
@@ -457,6 +465,8 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
       const newSection: SectionDraft = {
         id: makeId(),
         name: '',
+        electionCoverImage: '',
+        electionCoverImageFile: null,
         candidates: defaultCandidates,
         startDate: prev.startDate,
         endDate: prev.endDate,
@@ -496,6 +506,18 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
       ),
     }))
   }, [])
+
+  const updateSectionCoverImage = useCallback(
+    (sectionId: string, image: string, imageFile: File | null) => {
+      setDraft((prev) => ({
+        ...prev,
+        sections: prev.sections.map((section) =>
+          section.id === sectionId ? { ...section, electionCoverImage: image, electionCoverImageFile: imageFile } : section,
+        ),
+      }))
+    },
+    [],
+  )
 
   const updateSectionField = useCallback(
     <K extends keyof ElectionSettingsDraft>(
@@ -619,9 +641,12 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
               imageFile: candidate.imageFile ?? null,
             }))
 
-      const [bannerImageUrl, candidateImageEntries] = await Promise.all([
+      const [bannerImageUrl, electionCoverImageUrl, candidateImageEntries] = await Promise.all([
         draft.bannerImageFile
           ? uploadImageToIpfs(draft.bannerImageFile)
+          : Promise.resolve<string | null>(null),
+        draft.electionCoverImageFile
+          ? uploadImageToIpfs(draft.electionCoverImageFile)
           : Promise.resolve<string | null>(null),
         Promise.all(
           allCandidates.map(async (candidate) => [
@@ -656,6 +681,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
           ? draft.sections.map((section) => ({
               title: section.name.trim(),
               settings: section,
+              electionCoverImageFile: section.electionCoverImageFile ?? null,
               candidates: section.candidates.map((candidate) => ({
                 id: candidate.id,
                 candidateKey: candidate.name.trim(),
@@ -666,6 +692,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
               {
                 title: draft.electionTitle.trim(),
                 settings: draft,
+                electionCoverImageFile: draft.electionCoverImageFile ?? null,
                 candidates: draft.candidates.map((candidate) => ({
                   id: candidate.id,
                   candidateKey: candidate.name.trim(),
@@ -700,11 +727,19 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
           throw new Error('후보명은 같은 투표 안에서 중복될 수 없습니다.')
         }
 
+        const resolvedElectionCoverImageUrl = electionDraft.electionCoverImageFile
+          ? await uploadImageToIpfs(electionDraft.electionCoverImageFile)
+          : draft.sections.length > 0
+            ? null
+            : electionCoverImageUrl
+
         const manifest = buildManifestPayload(
           draft,
+          electionDraft.title,
           electionDraft.candidates,
           candidateImageUrls,
           bannerImageUrl,
+          resolvedElectionCoverImageUrl,
         )
         const manifestFileName = buildCandidateManifestFileName(
           draft.title,
@@ -742,7 +777,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
             seriesPreimage: draft.title.trim(),
             seriesCoverImageUrl: bannerImageUrl,
             title: electionDraft.title,
-            coverImageUrl: bannerImageUrl,
+            coverImageUrl: resolvedElectionCoverImageUrl,
           })
 
           electionPublicKey = toHex(extractPublicKeyValue(prepareResponse.publicKey))
@@ -863,6 +898,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
     addSection,
     removeSection,
     updateSectionName,
+    updateSectionCoverImage,
     updateSectionField,
     addCandidateToSection,
     removeCandidateFromSection,

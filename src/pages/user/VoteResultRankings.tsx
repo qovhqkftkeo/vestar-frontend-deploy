@@ -4,6 +4,7 @@ import type { RankedCandidate } from '../../types/vote'
 
 interface VoteResultRankingsProps {
   rankedCandidates: RankedCandidate[]
+  mode?: 'live' | 'finalized'
 }
 
 const RANK_COLORS: Record<number, string> = {
@@ -18,14 +19,17 @@ const BAR_COLORS: Record<number, string> = {
   3: 'bg-[#7140FF]/70',
 }
 
-export function VoteResultRankings({ rankedCandidates }: VoteResultRankingsProps) {
+export function VoteResultRankings({
+  rankedCandidates,
+  mode = 'finalized',
+}: VoteResultRankingsProps) {
   const { t, lang } = useLanguage()
   const sorted = [...rankedCandidates].sort((a, b) => a.rank - b.rank)
 
   return (
     <div className="mx-5 mt-5 mb-6">
       <div className="text-[13px] font-semibold text-[#707070] uppercase tracking-wider font-mono mb-3">
-        {t('vr_rankings')}
+        {mode === 'live' ? '실시간 집계' : t('vr_rankings')}
       </div>
 
       <div className="flex flex-col gap-3">

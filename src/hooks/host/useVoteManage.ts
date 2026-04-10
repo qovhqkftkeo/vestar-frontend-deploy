@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { useVoteDetail } from '../user/useVoteDetail'
-import { useVoteResult } from '../user/useVoteResult'
 
 export function useVoteManage(id: string) {
   // TODO: 공개 투표(Open Tally)와 비공개 투표(Private Tally)에 따른 데이터 페칭 로직 분기
@@ -14,7 +13,6 @@ export function useVoteManage(id: string) {
   // * 현재는 프론트 체인 연결 로직 구현 전이므로 기존 Mock 데이터 훅을 활용.
 
   const { vote, isLoading: isVoteLoading } = useVoteDetail(id)
-  const { result, isLoading: isResultLoading } = useVoteResult(id)
 
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -35,8 +33,8 @@ export function useVoteManage(id: string) {
 
   return {
     vote,
-    result,
-    isLoading: isVoteLoading || isResultLoading,
+    result: null,
+    isLoading: isVoteLoading,
     isUpdating,
     updateEndDate,
   }

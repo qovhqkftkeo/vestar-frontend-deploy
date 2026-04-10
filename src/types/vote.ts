@@ -45,6 +45,7 @@ export interface VoteResultData {
   endDate: string
   totalVotes: number
   rankedCandidates: RankedCandidate[]
+  mode?: 'live' | 'finalized'
 }
 
 export interface Candidate {

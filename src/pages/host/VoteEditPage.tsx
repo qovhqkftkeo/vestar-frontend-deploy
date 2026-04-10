@@ -74,6 +74,7 @@ export function VoteEditPage() {
     addSection,
     removeSection,
     updateSectionName,
+    updateSectionCoverImage,
     addCandidateToSection,
     removeCandidateFromSection,
     updateSectionCandidate,
@@ -132,20 +133,27 @@ export function VoteEditPage() {
         {step === 2 && (
           <StepCandidates
             electionTitle={draft.electionTitle}
+            electionCoverImage={draft.electionCoverImage}
             candidates={draft.candidates}
             sections={draft.sections}
             onUpdateElectionTitle={(value) => updateField('electionTitle', value)}
+            onUpdateElectionCoverImage={(value) => updateField('electionCoverImage', value)}
+            onUpdateElectionCoverImageFile={(value) =>
+              updateField('electionCoverImageFile', value)
+            }
             onAdd={addCandidate}
             onRemove={removeCandidate}
             onUpdate={updateCandidate}
             onAddSection={addSection}
             onRemoveSection={removeSection}
             onUpdateSectionName={updateSectionName}
+            onUpdateSectionCoverImage={updateSectionCoverImage}
             onAddCandidateToSection={addCandidateToSection}
             onRemoveCandidateFromSection={removeCandidateFromSection}
             onUpdateSectionCandidate={updateSectionCandidate}
             onClearSections={clearSections}
             initialCandidates={initialDraft?.candidates}
+            initialElectionCoverImage={initialDraft?.electionCoverImage}
           />
         )}
       </main>

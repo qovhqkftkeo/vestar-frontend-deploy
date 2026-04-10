@@ -30,6 +30,8 @@ export interface CandidateDraft {
 export interface SectionDraft extends ElectionSettingsDraft {
   id: string
   name: string
+  electionCoverImage: string
+  electionCoverImageFile?: File | null
   candidates: CandidateDraft[]
 }
 
@@ -39,6 +41,8 @@ export interface VoteCreateDraft extends ElectionSettingsDraft {
   group: string
   bannerImage: string
   bannerImageFile?: File | null
+  electionCoverImage: string
+  electionCoverImageFile?: File | null
   category: string
   candidates: CandidateDraft[]
   sections: SectionDraft[]

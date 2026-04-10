@@ -54,7 +54,9 @@ type CandidateManifestCandidateInput = {
 }
 
 type BuildCandidateManifestArgs = {
+  seriesPreimage: string
   category?: string | null
+  electionTitle: string
   seriesCoverImageUrl?: string | null
   electionCoverImageUrl?: string | null
   candidates: CandidateManifestCandidate[]
@@ -211,9 +213,11 @@ export function buildCandidateManifest(args: BuildCandidateManifestArgs): Candid
     schema: CANDIDATE_MANIFEST_SCHEMA,
     version: CANDIDATE_MANIFEST_VERSION,
     series: {
+      preimage: args.seriesPreimage.trim(),
       coverImageUrl: args.seriesCoverImageUrl ?? null,
     },
     election: {
+      title: args.electionTitle.trim(),
       category: args.category?.trim() ?? null,
       coverImageUrl: args.electionCoverImageUrl ?? null,
     },

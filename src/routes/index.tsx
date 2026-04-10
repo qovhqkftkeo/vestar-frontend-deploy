@@ -3,6 +3,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { VoteDetailLayout } from '../components/layout/VoteDetailLayout'
 import { WalletGuard } from '../guards/WalletGuard'
 import { HostDashboardPage } from '../pages/host/HostDashboardPage'
+import { HostFinalTallyPage } from '../pages/host/HostFinalTallyPage'
 import { HostLiveTallyPage } from '../pages/host/HostLiveTallyPage'
 import { HostSettlementPage } from '../pages/host/HostSettlementPage'
 import { VoteCreatePage } from '../pages/host/VoteCreatePage'
@@ -14,6 +15,7 @@ import { VerifiedAdminPage } from '../pages/verified/VerifiedAdminPage'
 import { VerifiedRequestPage } from '../pages/verified/VerifiedRequestPage'
 import VerificationPortalPage from '../features/verification/VerificationPortalPage'
 import { VoteDetailPage } from '../pages/vote/VoteDetailPage'
+import { VoteLiveTallyPage } from '../pages/vote/VoteLiveTallyPage'
 import { VoteListPage } from '../pages/vote/VoteListPage'
 import { VoteResultPage } from '../pages/vote/VoteResultPage'
 import { VoteSeriesPage } from '../pages/vote/VoteSeriesPage'
@@ -77,6 +79,10 @@ export const router = createBrowserRouter([
         element: <VoteDetailPage />,
       },
       {
+        path: '/vote/:id/live',
+        element: <VoteLiveTallyPage />,
+      },
+      {
         path: '/vote/:id/result',
         element: <VoteResultPage />,
       },
@@ -90,6 +96,10 @@ export const router = createBrowserRouter([
           {
             path: '/host/:id/live',
             element: <HostLiveTallyPage />,
+          },
+          {
+            path: '/host/:id/result',
+            element: <HostFinalTallyPage />,
           },
           {
             path: '/host/:id/settlement',

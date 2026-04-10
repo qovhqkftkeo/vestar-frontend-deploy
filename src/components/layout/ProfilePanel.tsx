@@ -30,14 +30,22 @@ interface ProfilePanelProps {
 type MenuItem =
   | {
       kind: 'internal'
-      labelKey: 'pp_my_votes' | 'pp_karma_history' | 'pp_stt_staking'
+      labelKey:
+        | 'pp_my_votes'
+        | 'pp_karma_history'
+        | 'pp_stt_staking'
+        | 'pp_verified_organizer'
       icon: string
       bg: string
       to: string
     }
   | {
       kind: 'external'
-      labelKey: 'pp_my_votes' | 'pp_karma_history' | 'pp_stt_staking'
+      labelKey:
+        | 'pp_my_votes'
+        | 'pp_karma_history'
+        | 'pp_stt_staking'
+        | 'pp_verified_organizer'
       icon: string
       bg: string
       href: string
@@ -57,6 +65,13 @@ const MENU_ITEMS: MenuItem[] = [
     icon: karmaIcon,
     bg: '#E8FFF0',
     to: '/mypage?tab=karma',
+  },
+  {
+    kind: 'internal',
+    labelKey: 'pp_verified_organizer',
+    icon: verifiedIcon,
+    bg: '#EEF2FF',
+    to: '/verified',
   },
   {
     kind: 'external',

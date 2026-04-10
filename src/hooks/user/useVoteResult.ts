@@ -5,12 +5,14 @@ import type { ApiElection, ApiFinalizedTallyRow } from '../../api/types'
 import { applyManifestToElection, formatVoteDate, resolveElectionCandidates } from '../../utils/electionMapper'
 import type { CandidateManifest } from '../../utils/candidateManifest'
 import type { RankedCandidate, VoteResultData } from '../../types/vote'
+import { useLanguage } from '../../providers/LanguageProvider'
 
 function toVoteResultData(
   election: ApiElection,
   tally: ApiFinalizedTallyRow[],
   totalVotes: number,
   manifest: CandidateManifest | null,
+  lang: 'en' | 'ko',
 ): VoteResultData {
   const tallyMap = new Map(tally.map((row) => [row.candidateKey, row]))
   const candidates = resolveElectionCandidates(election, manifest)
@@ -46,8 +48,8 @@ function toVoteResultData(
 
   return {
     id: election.id,
-    title: election.title ?? '투표 결과',
-    org: election.series?.seriesPreimage ?? 'Unknown series',
+    title: election.title ?? (lang === 'ko' ? '투표 결과' : 'Vote results'),
+    org: election.series?.seriesPreimage ?? (lang === 'ko' ? '시리즈 정보 없음' : 'Unknown series'),
     verified: Boolean(election.organizer),
     emoji: '',
     endDate: formatVoteDate(election.endAt),
@@ -63,6 +65,7 @@ export interface UseVoteResultResult {
 }
 
 export function useVoteResult(id: string): UseVoteResultResult {
+  const { lang } = useLanguage()
   const [result, setResult] = useState<VoteResultData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -95,7 +98,7 @@ export function useVoteResult(id: string): UseVoteResultResult {
         const totalVotes =
           summaries[0]?.totalValidVotes ?? tally.reduce((sum, row) => sum + row.count, 0)
 
-        setResult(toVoteResultData(election, tally, totalVotes, manifest))
+        setResult(toVoteResultData(election, tally, totalVotes, manifest, lang))
       })
       .catch(() => {
         if (!cancelled) {
@@ -111,7 +114,7 @@ export function useVoteResult(id: string): UseVoteResultResult {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, lang])
 
   return { result, isLoading }
 }

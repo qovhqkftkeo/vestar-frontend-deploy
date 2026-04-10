@@ -55,10 +55,15 @@ type CandidateManifestCandidateInput = {
 
 type BuildCandidateManifestArgs = {
   seriesPreimage: string
-  category?: string | null
   electionTitle: string
+  category?: string | null
   seriesCoverImageUrl?: string | null
   electionCoverImageUrl?: string | null
+  visibilityMode?: VoteVisibilityMode
+  paymentMode?: VotePaymentMode
+  ballotPolicy?: VoteBallotPolicy
+  allowMultipleChoice?: boolean
+  maxSelectionsPerSubmission?: number
   candidates: CandidateManifestCandidate[]
 }
 
@@ -220,6 +225,11 @@ export function buildCandidateManifest(args: BuildCandidateManifestArgs): Candid
       title: args.electionTitle.trim(),
       category: args.category?.trim() ?? null,
       coverImageUrl: args.electionCoverImageUrl ?? null,
+      visibilityMode: args.visibilityMode,
+      paymentMode: args.paymentMode,
+      ballotPolicy: args.ballotPolicy,
+      allowMultipleChoice: args.allowMultipleChoice,
+      maxSelectionsPerSubmission: args.maxSelectionsPerSubmission,
     },
     candidates: [...args.candidates]
       .sort((left, right) => (left.displayOrder ?? 0) - (right.displayOrder ?? 0))

@@ -135,7 +135,18 @@ function HotVoteCard({
       onClick={() => onNavigate(vote)}
       className="flex-shrink-0 w-[200px] bg-white border border-[#E7E9ED] rounded-2xl overflow-hidden cursor-pointer transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:shadow-[0_6px_24px_rgba(113,64,255,0.10)] hover:border-[rgba(113,64,255,0.25)] active:scale-[0.98] text-left"
     >
-      <div className="h-[100px] relative" style={{ background: vote.gradient }}>
+      <div
+        className="h-[100px] relative overflow-hidden"
+        style={!vote.imageUrl ? { background: vote.gradient } : undefined}
+      >
+        {vote.imageUrl ? (
+          <img
+            src={resolveIpfsUrl(vote.imageUrl)}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090A0B]/26 to-transparent" />
         <span
           className={`absolute top-2 right-2 text-[9px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[vote.badge]}`}
         >
@@ -191,10 +202,10 @@ function SeriesVoteCard({
       ? isEndedSeries
         ? lang === "ko"
           ? `${group.items[0].count}명 참여`
-          : `${group.items[0].count} participated`
+          : `${group.items[0].count} votes`
         : lang === "ko"
           ? `${group.items[0].count}명 참여 중`
-          : `${group.items[0].count} participating`
+          : `${group.items[0].count} voting`
       : isEndedSeries
         ? lang === "ko"
           ? `${group.items.length}개의 마감된 투표`
@@ -213,7 +224,7 @@ function SeriesVoteCard({
     : group.items.length === 1
       ? lang === "ko"
         ? "바로 입장"
-        : "Open now"
+        : "Open vote"
       : lang === "ko"
         ? `${group.items.length}개 보기`
         : `View ${group.items.length}`;
@@ -338,6 +349,7 @@ export function VoteListPage() {
   const [activeVisibilityFilter, setActiveVisibilityFilter] = useState<'all' | 'OPEN' | 'PRIVATE'>(
     'all',
   )
+  const [activePaymentFilter, setActivePaymentFilter] = useState<'all' | 'FREE' | 'PAID'>('all')
   const navigate = useNavigate()
   const { isVoted } = useVotedVotes()
   const { isLoading: isHotLoading, hotVotes } = useVoteList()
@@ -356,6 +368,11 @@ export function VoteListPage() {
     { key: 'all' as const, label: lang === 'ko' ? '전체' : 'All' },
     { key: 'OPEN' as const, label: 'OPEN' },
     { key: 'PRIVATE' as const, label: 'PRIVATE' },
+  ]
+  const activePaymentChips = [
+    { key: 'all' as const, label: lang === 'ko' ? '전체' : 'All' },
+    { key: 'FREE' as const, label: lang === 'ko' ? '무료' : 'FREE' },
+    { key: 'PAID' as const, label: lang === 'ko' ? '유료' : 'PAID' },
   ]
 
   const handleHotNavigate = (vote: HotVote) => {
@@ -382,14 +399,18 @@ export function VoteListPage() {
     });
   };
 
-  const visibleVoteItems =
-    seriesTab === 'active' && activeVisibilityFilter !== 'all'
-      ? items.filter((item) => item.visibilityMode === activeVisibilityFilter)
-      : items
-  const allVoteItems =
-    seriesTab === 'active' && activeVisibilityFilter !== 'all'
-      ? allItems.filter((item) => item.visibilityMode === activeVisibilityFilter)
-      : allItems
+  const visibleVoteItems = items.filter((item) => {
+    const matchesVisibility =
+      activeVisibilityFilter === 'all' || item.visibilityMode === activeVisibilityFilter
+    const matchesPayment = activePaymentFilter === 'all' || item.paymentMode === activePaymentFilter
+    return matchesVisibility && matchesPayment
+  })
+  const allVoteItems = allItems.filter((item) => {
+    const matchesVisibility =
+      activeVisibilityFilter === 'all' || item.visibilityMode === activeVisibilityFilter
+    const matchesPayment = activePaymentFilter === 'all' || item.paymentMode === activePaymentFilter
+    return matchesVisibility && matchesPayment
+  })
   const visibleGroupedItems = groupVoteItemsBySeries(visibleVoteItems)
   const visibleActiveGroups = visibleGroupedItems.filter((group) => !isVoteSeriesEnded(group))
   const visibleEndedGroups = visibleGroupedItems.filter((group) => isVoteSeriesEnded(group))
@@ -526,7 +547,7 @@ export function VoteListPage() {
 
         <div className="flex items-center justify-between gap-3 px-5 pt-[20px] pb-[10px]">
           <div className="flex flex-col gap-2">
-            <div className="inline-flex rounded-full bg-[#F4F5F7] p-1">
+            <div className="inline-flex w-fit self-start rounded-full bg-[#F4F5F7] p-1">
               <button
                 type="button"
                 onClick={() => setSeriesTab('active')}
@@ -550,24 +571,50 @@ export function VoteListPage() {
                 {t('vl_ended_section')}
               </button>
             </div>
-            {seriesTab === 'active' ? (
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                {activeVisibilityChips.map((chip) => (
-                  <button
-                    key={chip.key}
-                    type="button"
-                    onClick={() => setActiveVisibilityFilter(chip.key)}
-                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
-                      activeVisibilityFilter === chip.key
-                        ? 'border-[#7140FF] bg-[#F0EDFF] text-[#7140FF]'
-                        : 'border-[#E7E9ED] bg-white text-[#707070]'
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                ))}
+                <span className="shrink-0 text-[11px] font-semibold text-[#7140FF]">
+                  {lang === 'ko' ? '공개 방식' : 'Visibility'}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {activeVisibilityChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() => setActiveVisibilityFilter(chip.key)}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+                        activeVisibilityFilter === chip.key
+                          ? 'border-[#7140FF] bg-[#F0EDFF] text-[#7140FF]'
+                          : 'border-[#E7E9ED] bg-white text-[#707070]'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : null}
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[11px] font-semibold text-[#7140FF]">
+                  {lang === 'ko' ? '결제 방식' : 'Payment'}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {activePaymentChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() => setActivePaymentFilter(chip.key)}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+                        activePaymentFilter === chip.key
+                          ? 'border-[#7140FF] bg-[#F0EDFF] text-[#7140FF]'
+                          : 'border-[#E7E9ED] bg-white text-[#707070]'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           <span className="text-[12px] text-[#7140FF]">
             {lang === 'ko' ? '시리즈 최신순' : 'Latest series first'}

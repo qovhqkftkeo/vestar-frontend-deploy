@@ -1,9 +1,12 @@
+import { useLanguage } from '../../../../providers/LanguageProvider'
+import { resolveIpfsUrl } from '../../../../utils/ipfs'
 import { PortalPanel } from '../ui/PortalPanel'
 
 type ResultCardProps = {
   rank: number
   name: string
   emoji: string
+  imageUrl?: string | null
   subtitle: string
   votes: number
   percentage: number
@@ -13,10 +16,12 @@ export function ResultCard({
   rank,
   name,
   emoji,
+  imageUrl,
   subtitle,
   votes,
   percentage,
 }: ResultCardProps) {
+  const { lang } = useLanguage()
   const rankColor =
     rank === 1 ? 'text-[#F59E0B]' : rank === 2 ? 'text-[#9CA3AF]' : 'text-[#CD7C3A]'
   const barColor = rank === 1 ? 'bg-[#F59E0B]' : rank === 2 ? 'bg-[#7140FF]' : 'bg-[#8B5CF6]'
@@ -27,16 +32,26 @@ export function ResultCard({
         <div className={`flex h-8 w-8 items-center justify-center font-mono text-[14px] font-bold ${rankColor}`}>
           {rank}
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0EDFF] text-[18px]">
-          {emoji}
-        </div>
+        {imageUrl ? (
+          <img
+            src={resolveIpfsUrl(imageUrl)}
+            alt=""
+            className="h-10 w-10 rounded-xl bg-[#F0EDFF] object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0EDFF] text-[18px]">
+            {emoji}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[15px] font-semibold text-[#090A0B]">{name}</div>
           <div className="truncate text-[12px] text-[#707070]">{subtitle}</div>
         </div>
         <div className="text-right">
           <div className={`font-mono text-[15px] font-bold ${rankColor}`}>{percentage.toFixed(1)}%</div>
-          <div className="font-mono text-[12px] text-[#707070]">{votes.toLocaleString()}표</div>
+          <div className="font-mono text-[12px] text-[#707070]">
+            {lang === 'ko' ? `${votes.toLocaleString()}표` : `${votes.toLocaleString()} votes`}
+          </div>
         </div>
       </div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F7F8FA]">

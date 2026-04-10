@@ -1,11 +1,15 @@
 import { useNavigate } from 'react-router'
 import { useCreateVoteDraft } from '../../hooks/host/useCreateVoteDraft'
+import { useLanguage } from '../../providers/LanguageProvider'
 import { useToast } from '../../providers/ToastProvider'
 import { StepBasicInfo } from './steps/StepBasicInfo'
 import { StepCandidates } from './steps/StepCandidates'
 import { StepSchedule } from './steps/StepSchedule'
 
-const STEP_LABELS = ['기본 정보', '후보 등록', '일정 & 설정']
+const STEP_LABELS = {
+  ko: ['기본 정보', '후보 등록', '일정 & 설정'],
+  en: ['Basic Info', 'Candidates', 'Schedule & Settings'],
+} as const
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -53,6 +57,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 export function VoteCreatePage() {
   const navigate = useNavigate()
   const { addToast } = useToast()
+  const { lang } = useLanguage()
   const {
     draft,
     step,
@@ -84,8 +89,12 @@ export function VoteCreatePage() {
       const result = await submit()
       const successMessage =
         result.elections.length > 1
-          ? `${result.elections.length}개의 투표가 같은 시리즈로 생성되었습니다.`
-          : `투표가 생성되었습니다. election: ${result.electionAddress.slice(0, 6)}...${result.electionAddress.slice(-4)}`
+          ? lang === 'ko'
+            ? `${result.elections.length}개의 투표가 같은 시리즈로 생성되었습니다.`
+            : `${result.elections.length} votes were created in the same series.`
+          : lang === 'ko'
+            ? `투표가 생성되었습니다. election: ${result.electionAddress.slice(0, 6)}...${result.electionAddress.slice(-4)}`
+            : `Vote created. election: ${result.electionAddress.slice(0, 6)}...${result.electionAddress.slice(-4)}`
       addToast({
         type: 'success',
         message: successMessage,
@@ -94,7 +103,12 @@ export function VoteCreatePage() {
     } catch (error) {
       addToast({
         type: 'error',
-        message: error instanceof Error ? error.message : '투표 생성에 실패했습니다.',
+        message:
+          error instanceof Error
+            ? error.message
+            : lang === 'ko'
+              ? '투표 생성에 실패했습니다.'
+              : 'Failed to create the vote.',
       })
     }
   }
@@ -102,10 +116,10 @@ export function VoteCreatePage() {
   return (
     <div className="relative mx-auto h-screen w-full max-w-[430px] overflow-hidden bg-[#F7F8FA] shadow-[0_0_60px_rgba(0,0,0,0.12)]">
       {/* Header */}
-      <header className="fixed left-1/2 top-0 z-[100] flex h-[var(--header-h)] w-full max-w-[430px] -translate-x-1/2 items-center gap-3 bg-[#13141A] px-4 pt-[var(--safe-top)]">
+      <header className="fixed left-1/2 top-0 z-[100] flex h-[calc(4rem+var(--safe-top))] w-full max-w-[430px] -translate-x-1/2 items-end gap-3 bg-[#13141A] px-[calc(1.25rem+var(--safe-left))] pb-3 pt-[calc(var(--safe-top)+0.75rem)] pr-[calc(1.25rem+var(--safe-right))]">
         <button
           type="button"
-          aria-label="뒤로가기"
+          aria-label={lang === 'ko' ? '뒤로가기' : 'Go back'}
           onClick={() => (step === 1 ? navigate('/host') : prevStep())}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14] transition-colors flex-shrink-0"
         >
@@ -125,14 +139,16 @@ export function VoteCreatePage() {
         </button>
 
         <div className="flex-1">
-          <div className="text-[11px] text-white/40 font-mono">{STEP_LABELS[step - 1]}</div>
+          <div className="text-[15px] font-semibold tracking-[-0.01em] text-white">
+            {STEP_LABELS[lang][step - 1]}
+          </div>
         </div>
 
         <StepIndicator current={step} total={3} />
       </header>
 
       {/* Scrollable content */}
-      <main className="h-screen overflow-y-auto px-[var(--safe-left)] pr-[var(--safe-right)] pt-[var(--header-h)] pb-[var(--footer-h)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <main className="h-screen overflow-y-auto px-[var(--safe-left)] pr-[var(--safe-right)] pt-[calc(4rem+var(--safe-top))] pb-[calc(var(--footer-h)+1.5rem)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {step === 1 && <StepBasicInfo draft={draft} onUpdate={updateField} />}
         {step === 2 && (
           <StepCandidates
@@ -181,22 +197,34 @@ export function VoteCreatePage() {
               <span>
                 {submissionProgress.currentTitle
                   ? submissionProgress.total > 1 && submissionProgress.current > 0
-                    ? `${submissionProgress.current}/${submissionProgress.total} ${submissionProgress.currentTitle} 서명 요청 중`
-                    : `${submissionProgress.currentTitle} 서명 요청 중`
+                    ? lang === 'ko'
+                      ? `${submissionProgress.current}/${submissionProgress.total} ${submissionProgress.currentTitle} 서명 요청 중`
+                      : `${submissionProgress.current}/${submissionProgress.total} Awaiting signature for ${submissionProgress.currentTitle}`
+                    : lang === 'ko'
+                      ? `${submissionProgress.currentTitle} 서명 요청 중`
+                      : `Awaiting signature for ${submissionProgress.currentTitle}`
                   : submissionProgress.total > 1
-                    ? `${submissionProgress.current}/${submissionProgress.total} 지갑 서명 요청 중`
-                    : '지갑 서명 요청 중'}
+                    ? lang === 'ko'
+                      ? `${submissionProgress.current}/${submissionProgress.total} 지갑 서명 요청 중`
+                      : `${submissionProgress.current}/${submissionProgress.total} Awaiting wallet signature`
+                    : lang === 'ko'
+                      ? '지갑 서명 요청 중'
+                      : 'Awaiting wallet signature'}
               </span>
             </>
           ) : step === 3 ? (
             draft.sections.length > 0 ? (
-              `투표 만들기 (${draft.sections.length}건)`
+              lang === 'ko' ? (
+                `투표 만들기 (${draft.sections.length}건)`
+              ) : (
+                `Create Votes (${draft.sections.length})`
+              )
             ) : (
-              '투표 만들기 완료'
+              lang === 'ko' ? '투표 만들기 완료' : 'Create Vote'
             )
           ) : (
             <>
-              다음 단계
+              {lang === 'ko' ? '다음 단계' : 'Next Step'}
               <svg
                 width="16"
                 height="16"

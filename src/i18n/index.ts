@@ -148,6 +148,7 @@ const STRINGS = {
   // ── Profile Panel ───────────────────────────────────────────────────────────
   pp_my_votes: { en: 'My Votes', ko: '내 투표 내역' },
   pp_karma_history: { en: 'Karma History', ko: 'Karma 내역' },
+  pp_verified_organizer: { en: 'Verified Organizer', ko: '공식 주최사 인증' },
   pp_stt_staking: { en: 'STT Staking', ko: 'STT 스테이킹' },
   pp_votes_stat: { en: 'Votes', ko: '투표 수' },
   pp_tier_stat: { en: 'Tier', ko: '등급' },
@@ -155,7 +156,7 @@ const STRINGS = {
   pp_not_connected: { en: 'Not Connected', ko: '지갑 미연결' },
   pp_mint_mock_usdt: { en: 'Mint MockUSDT', ko: 'MockUSDT 민트' },
   pp_mint_mock_usdt_loading: { en: 'Minting…', ko: '민트 중…' },
-  pp_host_page: { en: 'Hold', ko: '주최하기' },
+  pp_host_page: { en: 'Create Poll', ko: '주최하기' },
   pp_connect_wallet: { en: 'Connect Wallet', ko: '지갑 연결' },
   pp_connect_wallet_loading: { en: 'Connecting…', ko: '연결 중…' },
   pp_disconnect: { en: 'Disconnect Wallet', ko: '지갑 연결 해제' },

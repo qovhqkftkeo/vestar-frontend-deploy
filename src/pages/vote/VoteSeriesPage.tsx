@@ -82,7 +82,22 @@ export function VoteSeriesPage() {
 
   return (
     <div className="bg-[#FFFFFF] min-h-screen">
-      <div className="px-5 pt-[calc(56px+20px)] pb-6 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
+      <div className="relative px-5 pt-[calc(56px+20px)] pb-8 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB] overflow-hidden">
+        {/* Decorative: large circle ring — top-right */}
+        <svg aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 opacity-[0.08]" width="200" height="200" viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="92" stroke="#7140FF" strokeWidth="10" />
+        </svg>
+        {/* Decorative: dotted arc — bottom-left */}
+        <svg aria-hidden="true" className="pointer-events-none absolute -bottom-6 -left-6 opacity-[0.06]" width="120" height="120" viewBox="0 0 120 120" fill="none">
+          <circle cx="60" cy="60" r="52" stroke="#7140FF" strokeWidth="5" strokeDasharray="4 8" />
+        </svg>
+        {/* Decorative: sparkle star */}
+        <svg aria-hidden="true" className="pointer-events-none absolute right-8 top-[calc(56px+16px)] opacity-[0.18] animate-pulse" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 0L8.3 5.7L14 7L8.3 8.3L7 14L5.7 8.3L0 7L5.7 5.7Z" fill="#7140FF" />
+        </svg>
+        {/* Bottom separator */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF]/25 to-transparent" />
+
         <button
           type="button"
           onClick={() => navigate('/vote')}
@@ -90,10 +105,13 @@ export function VoteSeriesPage() {
         >
           목록으로 돌아가기
         </button>
-        <div className="mt-4 text-[10px] font-semibold text-violet-600 tracking-[1.2px] uppercase font-mono">
-          Series
+        <div className="relative mt-4">
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#7140FF]/20 bg-[rgba(113,64,255,0.07)] px-3 py-[5px]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7140FF]" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[1.2px] text-[#7140FF]">Series</span>
+          </span>
+          <h1 className="mt-1 bg-gradient-to-r from-[#7140FF] to-[#22d3ee] bg-clip-text text-[26px] font-bold tracking-tight leading-tight text-transparent">{seriesTitle}</h1>
         </div>
-        <div className="mt-1 text-[24px] font-semibold text-[#090A0B]">{seriesTitle}</div>
         <div className="mt-2 flex items-center gap-2 text-[12px] text-[#707070]">
           <span>{seriesGroup ? `${seriesGroup.items.length}개의 투표` : '투표를 찾는 중'}</span>
           {seriesHost ? (

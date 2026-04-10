@@ -1,118 +1,133 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import completeVoteIcon from '../../assets/complete_vote.svg'
-import verifiedIcon from '../../assets/verified.svg'
-import { HotCardSkeleton } from '../../components/shared/HotCardSkeleton'
-import { InfiniteScrollSentinel } from '../../components/shared/InfiniteScrollSentinel'
-import { VoteCardSkeleton } from '../../components/shared/VoteCardSkeleton'
-import { useVotedVotes } from '../../hooks/useVotedVotes'
-import { useInfiniteVotes, type VoteFilter } from '../../hooks/vote/useInfiniteVotes'
-import { useVoteList } from '../../hooks/vote/useVoteList'
-import { useLanguage } from '../../providers/LanguageProvider'
-import type { BadgeVariant, HotVote } from '../../types/vote'
-import { resolveIpfsUrl } from '../../utils/ipfs'
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import completeVoteIcon from "../../assets/complete_vote.svg";
+import verifiedIcon from "../../assets/verified.svg";
+import { HotCardSkeleton } from "../../components/shared/HotCardSkeleton";
+import { InfiniteScrollSentinel } from "../../components/shared/InfiniteScrollSentinel";
+import { VoteCardSkeleton } from "../../components/shared/VoteCardSkeleton";
+import { useVotedVotes } from "../../hooks/useVotedVotes";
+import {
+  useInfiniteVotes,
+  type VoteFilter,
+} from "../../hooks/vote/useInfiniteVotes";
+import { useVoteList } from "../../hooks/vote/useVoteList";
+import { useLanguage } from "../../providers/LanguageProvider";
+import type { BadgeVariant, HotVote } from "../../types/vote";
+import { resolveIpfsUrl } from "../../utils/ipfs";
 import {
   buildVoteSeriesTargetPath,
   groupVoteItemsBySeries,
   isVoteSeriesEnded,
   type VoteSeriesGroup,
-} from '../../utils/voteSeries'
+} from "../../utils/voteSeries";
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
-  live: 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]',
-  hot: 'bg-[rgba(239,68,68,0.10)] text-[#dc2626]',
-  new: 'bg-[rgba(113,64,255,0.09)] text-[#7140FF]',
-  end: 'bg-black/5 text-[#707070]',
-}
+  live: "bg-[rgba(34,197,94,0.12)] text-[#16a34a]",
+  hot: "bg-[rgba(239,68,68,0.10)] text-[#dc2626]",
+  new: "bg-[rgba(113,64,255,0.09)] text-[#7140FF]",
+  end: "bg-black/5 text-[#707070]",
+};
 
 const BADGE_LABEL: Record<BadgeVariant, string> = {
-  live: '● LIVE',
-  hot: 'HOT',
-  new: 'NEW',
-  end: 'END',
-}
+  live: "● LIVE",
+  hot: "HOT",
+  new: "NEW",
+  end: "END",
+};
 
 type FilterChip = {
-  labelKey: 'filter_all' | 'filter_music' | 'filter_awards' | 'filter_fan' | 'filter_popular'
-  filter: VoteFilter
-}
+  labelKey:
+    | "filter_all"
+    | "filter_music"
+    | "filter_awards"
+    | "filter_fan"
+    | "filter_popular";
+  filter: VoteFilter;
+};
 
 const FILTER_CHIPS: FilterChip[] = [
-  { labelKey: 'filter_all', filter: 'all' },
-  { labelKey: 'filter_music', filter: 'live' },
-  { labelKey: 'filter_awards', filter: 'hot' },
-  { labelKey: 'filter_fan', filter: 'new' },
-  { labelKey: 'filter_popular', filter: 'popular' },
-]
+  { labelKey: "filter_all", filter: "all" },
+  { labelKey: "filter_music", filter: "live" },
+  { labelKey: "filter_awards", filter: "hot" },
+  { labelKey: "filter_fan", filter: "new" },
+  { labelKey: "filter_popular", filter: "popular" },
+];
 
 function getHeroCopy(filter: VoteFilter, lang: string) {
   switch (filter) {
-    case 'live':
-      return lang === 'ko'
+    case "live":
+      return lang === "ko"
         ? {
-            eyebrow: '진행 중',
-            title: '지금 참여 가능한 투표만 모아봤어요',
-            sub: '지금 바로 참여할 수 있는 투표를 최신 순으로 확인할 수 있어요.',
+            eyebrow: "진행 중",
+            title: "지금 참여 가능한 투표만 모아봤어요",
+            sub: "지금 바로 참여할 수 있는 투표를 최신 순으로 확인할 수 있어요.",
           }
         : {
-            eyebrow: 'Live Now',
-            title: 'See active votes you can join right now',
-            sub: 'Browse currently open votes in the newest order.',
-          }
-    case 'hot':
-      return lang === 'ko'
+            eyebrow: "Live Now",
+            title: "See active votes you can join right now",
+            sub: "Browse currently open votes in the newest order.",
+          };
+    case "hot":
+      return lang === "ko"
         ? {
-            eyebrow: 'HOT',
-            title: '참여가 몰린 투표부터 보여드려요',
-            sub: '1명 이상 참여한 진행 중 투표를 참여 수가 많은 순서로 정렬했어요.',
+            eyebrow: "HOT",
+            title: "참여가 몰린 투표부터 보여드려요",
+            sub: "1명 이상 참여한 진행 중 투표를 참여 수가 많은 순서로 정렬했어요.",
           }
         : {
-            eyebrow: 'Hot Now',
-            title: 'Most-participated active votes first',
-            sub: 'Active votes with at least one participant are sorted by participation count.',
-          }
-    case 'new':
-      return lang === 'ko'
+            eyebrow: "Hot Now",
+            title: "Most-participated active votes first",
+            sub: "Active votes with at least one participant are sorted by participation count.",
+          };
+    case "new":
+      return lang === "ko"
         ? {
-            eyebrow: '예정된 투표',
-            title: '곧 열릴 투표를 먼저 확인해보세요',
-            sub: '아직 시작 전인 투표를 모아보고 미리 준비할 수 있어요.',
+            eyebrow: "예정된 투표",
+            title: "곧 열릴 투표를 먼저 확인해보세요",
+            sub: "아직 시작 전인 투표를 모아보고 미리 준비할 수 있어요.",
           }
         : {
-            eyebrow: 'Coming Soon',
-            title: 'Preview scheduled votes before they open',
-            sub: 'Check upcoming votes that have not started yet.',
-          }
-    case 'popular':
-      return lang === 'ko'
+            eyebrow: "Coming Soon",
+            title: "Preview scheduled votes before they open",
+            sub: "Check upcoming votes that have not started yet.",
+          };
+    case "popular":
+      return lang === "ko"
         ? {
-            eyebrow: '인기순',
-            title: '참여가 많은 투표부터 둘러보세요',
-            sub: '전체 투표를 참여 수 기준으로 정렬해서 빠르게 살펴볼 수 있어요.',
+            eyebrow: "인기순",
+            title: "참여가 많은 투표부터 둘러보세요",
+            sub: "전체 투표를 참여 수 기준으로 정렬해서 빠르게 살펴볼 수 있어요.",
           }
         : {
-            eyebrow: 'Popular',
-            title: 'Browse votes ranked by participation',
-            sub: 'See all votes ordered by total participation.',
-          }
+            eyebrow: "Popular",
+            title: "Browse votes ranked by participation",
+            sub: "See all votes ordered by total participation.",
+          };
     default:
-      return lang === 'ko'
+      return lang === "ko"
         ? {
-            eyebrow: '전체 보기',
-            title: '지금 열려 있는 시리즈를 한눈에 볼 수 있어요',
-            sub: '진행 중이거나 마감된 시리즈를 모아서 빠르게 둘러보세요.',
+            eyebrow: "전체 보기",
+            title: "지금 열려 있는 시리즈를 한눈에 볼 수 있어요",
+            sub: "진행 중이거나 마감된 시리즈를 모아서 빠르게 둘러보세요.",
           }
         : {
-            eyebrow: 'All Votes',
-            title: 'See every vote series at a glance',
-            sub: 'Browse active and ended series in one place.',
-          }
+            eyebrow: "All Votes",
+            title: "See every vote series at a glance",
+            sub: "Browse active and ended series in one place.",
+          };
   }
 }
 
-function HotVoteCard({ vote, onNavigate }: { vote: HotVote; onNavigate: (vote: HotVote) => void }) {
-  const { t, lang } = useLanguage()
-  const badgeLabel = vote.badge === 'end' ? t('badge_end') : BADGE_LABEL[vote.badge]
+function HotVoteCard({
+  vote,
+  onNavigate,
+}: {
+  vote: HotVote;
+  onNavigate: (vote: HotVote) => void;
+}) {
+  const { t, lang } = useLanguage();
+  const badgeLabel =
+    vote.badge === "end" ? t("badge_end") : BADGE_LABEL[vote.badge];
 
   return (
     <button
@@ -128,27 +143,29 @@ function HotVoteCard({ vote, onNavigate }: { vote: HotVote; onNavigate: (vote: H
         </span>
       </div>
       <div className="px-3 pt-3 pb-[14px]">
-        <div className="text-[10px] text-[#707070] font-mono mb-[3px]">{vote.org}</div>
+        <div className="text-[10px] text-[#707070] font-mono mb-[3px]">
+          {vote.org}
+        </div>
         <div className="text-[13px] font-semibold text-[#090A0B] mb-2 leading-[1.3]">
           {vote.name}
         </div>
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-[#707070]">
-            {lang === 'ko' ? `${vote.count}명 참여` : `${vote.count} votes`}
+            {lang === "ko" ? `${vote.count}명 참여` : `${vote.count} votes`}
           </span>
-          {vote.badge === 'end' ? (
+          {vote.badge === "end" ? (
             <span className="bg-[#E7E9ED] text-[#707070] rounded-lg px-[11px] py-[5px] text-[11px] font-semibold">
-              {t('vl_ended_badge')}
+              {t("vl_ended_badge")}
             </span>
           ) : (
             <span className="bg-[#7140FF] text-white rounded-lg px-[11px] py-[5px] text-[11px] font-semibold">
-              {t('vl_vote_btn')}
+              {t("vl_vote_btn")}
             </span>
           )}
         </div>
       </div>
     </button>
-  )
+  );
 }
 
 function SeriesVoteCard({
@@ -156,77 +173,81 @@ function SeriesVoteCard({
   onNavigate,
   hasVoted,
 }: {
-  group: VoteSeriesGroup
-  onNavigate: (group: VoteSeriesGroup) => void
-  hasVoted: boolean
+  group: VoteSeriesGroup;
+  onNavigate: (group: VoteSeriesGroup) => void;
+  hasVoted: boolean;
 }) {
-  const { lang } = useLanguage()
-  const isEndedSeries = isVoteSeriesEnded(group)
+  const { lang } = useLanguage();
+  const isEndedSeries = isVoteSeriesEnded(group);
   const previewLabel =
     group.items.length === 1
       ? group.items[0].name
       : group.items
           .slice(0, 2)
           .map((item) => item.name)
-          .join(' · ')
+          .join(" · ");
   const descriptionLabel =
     group.items.length === 1
       ? isEndedSeries
-        ? lang === 'ko'
+        ? lang === "ko"
           ? `${group.items[0].count}명 참여`
           : `${group.items[0].count} participated`
-        : lang === 'ko'
+        : lang === "ko"
           ? `${group.items[0].count}명 참여 중`
           : `${group.items[0].count} participating`
       : isEndedSeries
-        ? lang === 'ko'
+        ? lang === "ko"
           ? `${group.items.length}개의 마감된 투표`
           : `${group.items.length} ended votes`
-        : lang === 'ko'
+        : lang === "ko"
           ? `${group.items.length}개의 투표`
-          : `${group.items.length} votes`
+          : `${group.items.length} votes`;
   const ctaLabel = isEndedSeries
     ? group.items.length === 1
-      ? lang === 'ko'
-        ? '결과 보기'
-        : 'View results'
-      : lang === 'ko'
+      ? lang === "ko"
+        ? "결과 보기"
+        : "View results"
+      : lang === "ko"
         ? `${group.items.length}개 보기`
         : `View ${group.items.length}`
     : group.items.length === 1
-      ? lang === 'ko'
-        ? '바로 입장'
-        : 'Open now'
-      : lang === 'ko'
+      ? lang === "ko"
+        ? "바로 입장"
+        : "Open now"
+      : lang === "ko"
         ? `${group.items.length}개 보기`
-        : `View ${group.items.length}`
+        : `View ${group.items.length}`;
   const cardClass = isEndedSeries
-    ? 'w-full overflow-hidden rounded-[26px] border border-[#D8DEE6] bg-[#F4F6F8] text-left transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[#C4CCD6] hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] active:scale-[0.99]'
-    : 'w-full overflow-hidden rounded-[26px] border border-[#E7E9ED] bg-white text-left transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[rgba(113,64,255,0.25)] hover:shadow-[0_10px_30px_rgba(113,64,255,0.12)] active:scale-[0.99]'
+    ? "w-full overflow-hidden rounded-[26px] border border-[#D8DEE6] bg-[#F4F6F8] text-left transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[#C4CCD6] hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)] active:scale-[0.99]"
+    : "w-full overflow-hidden rounded-[26px] border border-[#E7E9ED] bg-white text-left transition-[transform,box-shadow,border-color] duration-[180ms] hover:-translate-y-0.5 hover:border-[rgba(113,64,255,0.25)] hover:shadow-[0_10px_30px_rgba(113,64,255,0.12)] active:scale-[0.99]";
   const bannerClass = isEndedSeries
-    ? 'relative h-[148px] overflow-hidden bg-gradient-to-br from-[#EEF1F4] via-[#E5E7EB] to-[#D3D8DF]'
-    : 'relative h-[148px] overflow-hidden bg-gradient-to-br from-[#EBFBFA] via-[#F2E9FB] to-[#FFF4D6]'
+    ? "relative h-[148px] overflow-hidden bg-gradient-to-br from-[#EEF1F4] via-[#E5E7EB] to-[#D3D8DF]"
+    : "relative h-[148px] overflow-hidden bg-gradient-to-br from-[#EBFBFA] via-[#F2E9FB] to-[#FFF4D6]";
   const bannerFallbackClass = isEndedSeries
-    ? 'absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffff_0%,rgba(255,255,255,0.28)_24%,transparent_52%),linear-gradient(135deg,#EDF1F5_0%,#E3E7ED_55%,#CDD3DB_100%)]'
-    : 'absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffff_0%,rgba(255,255,255,0.18)_28%,transparent_56%),linear-gradient(135deg,#DFF8F5_0%,#EDE9FE_52%,#FDE68A_100%)]'
+    ? "absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffff_0%,rgba(255,255,255,0.28)_24%,transparent_52%),linear-gradient(135deg,#EDF1F5_0%,#E3E7ED_55%,#CDD3DB_100%)]"
+    : "absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffff_0%,rgba(255,255,255,0.18)_28%,transparent_56%),linear-gradient(135deg,#DFF8F5_0%,#EDE9FE_52%,#FDE68A_100%)]";
   const overlayClass = isEndedSeries
-    ? 'absolute inset-0 bg-gradient-to-t from-[#1F2937]/78 via-[#4B5563]/34 to-transparent'
-    : 'absolute inset-0 bg-gradient-to-t from-[#090A0B]/78 via-[#090A0B]/28 to-transparent'
+    ? "absolute inset-0 bg-gradient-to-t from-[#1F2937]/78 via-[#4B5563]/34 to-transparent"
+    : "absolute inset-0 bg-gradient-to-t from-[#090A0B]/78 via-[#090A0B]/28 to-transparent";
   const titleVerifiedFilter = isEndedSeries
-    ? 'grayscale(1) brightness(1.15)'
-    : 'brightness(0) saturate(100%) invert(76%) sepia(13%) saturate(2082%) hue-rotate(90deg) brightness(91%) contrast(89%)'
+    ? "grayscale(1) brightness(1.15)"
+    : "brightness(0) saturate(100%) invert(76%) sepia(13%) saturate(2082%) hue-rotate(90deg) brightness(91%) contrast(89%)";
   const ctaClass = isEndedSeries
-    ? 'inline-flex flex-shrink-0 rounded-full bg-[#E1E5EA] px-3 py-1.5 text-[11px] font-semibold text-[#5B6470]'
-    : 'inline-flex flex-shrink-0 rounded-full bg-[#F0EDFF] px-3 py-1.5 text-[11px] font-semibold text-[#7140FF]'
+    ? "inline-flex flex-shrink-0 rounded-full bg-[#E1E5EA] px-3 py-1.5 text-[11px] font-semibold text-[#5B6470]"
+    : "inline-flex flex-shrink-0 rounded-full bg-[#F0EDFF] px-3 py-1.5 text-[11px] font-semibold text-[#7140FF]";
 
   return (
-    <button type="button" onClick={() => onNavigate(group)} className={cardClass}>
+    <button
+      type="button"
+      onClick={() => onNavigate(group)}
+      className={cardClass}
+    >
       <div className={bannerClass}>
         {group.imageUrl ? (
           <img
             src={resolveIpfsUrl(group.imageUrl)}
             alt=""
-            className={`absolute inset-0 h-full w-full object-cover ${isEndedSeries ? 'grayscale' : ''}`}
+            className={`absolute inset-0 h-full w-full object-cover ${isEndedSeries ? "grayscale" : ""}`}
           />
         ) : (
           <div className={bannerFallbackClass} />
@@ -241,7 +262,7 @@ function SeriesVoteCard({
           {hasVoted ? (
             <span
               className={`inline-flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm ${
-                isEndedSeries ? 'bg-white/16' : 'bg-[rgba(34,197,94,0.14)]'
+                isEndedSeries ? "bg-white/16" : "bg-[rgba(34,197,94,0.14)]"
               }`}
             >
               <img
@@ -250,8 +271,8 @@ function SeriesVoteCard({
                 className="h-4 w-4"
                 style={{
                   filter: isEndedSeries
-                    ? 'grayscale(1) brightness(1.2)'
-                    : 'brightness(0) saturate(100%) invert(33%) sepia(98%) saturate(400%) hue-rotate(93deg) brightness(95%) contrast(97%)',
+                    ? "grayscale(1) brightness(1.2)"
+                    : "brightness(0) saturate(100%) invert(33%) sepia(98%) saturate(400%) hue-rotate(93deg) brightness(95%) contrast(97%)",
                 }}
               />
             </span>
@@ -295,12 +316,12 @@ function SeriesVoteCard({
       <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
           <div
-            className={`truncate text-[14px] font-medium ${isEndedSeries ? 'text-[#3F4752]' : 'text-[#090A0B]'}`}
+            className={`truncate text-[14px] font-medium ${isEndedSeries ? "text-[#3F4752]" : "text-[#090A0B]"}`}
           >
             {previewLabel}
           </div>
           <div
-            className={`mt-1 text-[12px] ${isEndedSeries ? 'text-[#6B7280]' : 'text-[#707070]'}`}
+            className={`mt-1 text-[12px] ${isEndedSeries ? "text-[#6B7280]" : "text-[#707070]"}`}
           >
             {descriptionLabel}
           </div>
@@ -308,15 +329,15 @@ function SeriesVoteCard({
         <span className={ctaClass}>{ctaLabel}</span>
       </div>
     </button>
-  )
+  );
 }
 
 export function VoteListPage() {
-  const [activeFilter, setActiveFilter] = useState(0)
-  const [seriesTab, setSeriesTab] = useState<'active' | 'ended'>('active')
-  const navigate = useNavigate()
-  const { isVoted } = useVotedVotes()
-  const { isLoading: isHotLoading, hotVotes } = useVoteList()
+  const [activeFilter, setActiveFilter] = useState(0);
+  const [seriesTab, setSeriesTab] = useState<"active" | "ended">("active");
+  const navigate = useNavigate();
+  const { isVoted } = useVotedVotes();
+  const { isLoading: isHotLoading, hotVotes } = useVoteList();
   const {
     allItems,
     items,
@@ -324,21 +345,23 @@ export function VoteListPage() {
     hasMore,
     isLoadingMore,
     loadMore,
-  } = useInfiniteVotes(FILTER_CHIPS[activeFilter].filter)
-  const { t, lang } = useLanguage()
-  const currentFilter = FILTER_CHIPS[activeFilter].filter
-  const heroCopy = getHeroCopy(currentFilter, lang)
+  } = useInfiniteVotes(FILTER_CHIPS[activeFilter].filter);
+  const { t, lang } = useLanguage();
+  const currentFilter = FILTER_CHIPS[activeFilter].filter;
+  const heroCopy = getHeroCopy(currentFilter, lang);
 
   const handleHotNavigate = (vote: HotVote) => {
-    navigate(vote.badge === 'end' ? `/vote/${vote.id}/result` : `/vote/${vote.id}`)
-  }
+    navigate(
+      vote.badge === "end" ? `/vote/${vote.id}/result` : `/vote/${vote.id}`,
+    );
+  };
 
   const handleSeriesNavigate = (group: VoteSeriesGroup) => {
-    const targetPath = buildVoteSeriesTargetPath(group)
+    const targetPath = buildVoteSeriesTargetPath(group);
 
     if (group.items.length === 1) {
-      navigate(targetPath)
-      return
+      navigate(targetPath);
+      return;
     }
 
     navigate(targetPath, {
@@ -348,30 +371,104 @@ export function VoteListPage() {
         verified: group.verified,
         imageUrl: group.imageUrl,
       },
-    })
-  }
+    });
+  };
 
-  const visibleGroupedItems = groupVoteItemsBySeries(items)
-  const visibleActiveGroups = visibleGroupedItems.filter((group) => !isVoteSeriesEnded(group))
-  const visibleEndedGroups = visibleGroupedItems.filter((group) => isVoteSeriesEnded(group))
-  const allGroupedItems = groupVoteItemsBySeries(allItems)
-  const allActiveGroups = allGroupedItems.filter((group) => !isVoteSeriesEnded(group))
-  const allEndedGroups = allGroupedItems.filter((group) => isVoteSeriesEnded(group))
-  const totalGroups = seriesTab === 'active' ? allActiveGroups : allEndedGroups
-  const groupedItems = seriesTab === 'active' ? visibleActiveGroups : visibleEndedGroups
-  const hasMoreSeries = groupedItems.length < totalGroups.length
-  const shouldShowHotSection = isHotLoading || hotVotes.length > 0
-  const shouldShowEmptyState = !isItemsLoading && groupedItems.length === 0 && !hasMoreSeries
+  const visibleGroupedItems = groupVoteItemsBySeries(items);
+  const visibleActiveGroups = visibleGroupedItems.filter(
+    (group) => !isVoteSeriesEnded(group),
+  );
+  const visibleEndedGroups = visibleGroupedItems.filter((group) =>
+    isVoteSeriesEnded(group),
+  );
+  const allGroupedItems = groupVoteItemsBySeries(allItems);
+  const allActiveGroups = allGroupedItems.filter(
+    (group) => !isVoteSeriesEnded(group),
+  );
+  const allEndedGroups = allGroupedItems.filter((group) =>
+    isVoteSeriesEnded(group),
+  );
+  const totalGroups = seriesTab === "active" ? allActiveGroups : allEndedGroups;
+  const groupedItems =
+    seriesTab === "active" ? visibleActiveGroups : visibleEndedGroups;
+  const hasMoreSeries = groupedItems.length < totalGroups.length;
+  const shouldShowHotSection = isHotLoading || hotVotes.length > 0;
+  const shouldShowEmptyState =
+    !isItemsLoading && groupedItems.length === 0 && !hasMoreSeries;
 
   return (
     <>
-      <div className="h-80 relative px-5 pb-6 pt-[calc(56px+20px)] -mt-14 bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
-        <div className="text-[10px] font-semibold text-violet-600 tracking-[1.2px] uppercase font-mono mb-1.5">
-          {heroCopy.eyebrow}
+      {/* Hero Banner */}
+      <div className="h-80 relative -mt-14 overflow-hidden px-5 pb-8 pt-[calc(56px+24px)] bg-gradient-to-r from-[#EBFBFA] to-[#F2E9FB]">
+        {/* Decorative: large faint circle ring — top-right, partially clipped */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-12 -top-12 opacity-[0.08]"
+          width="200"
+          height="200"
+          viewBox="0 0 200 200"
+          fill="none"
+        >
+          <circle cx="100" cy="100" r="92" stroke="#7140FF" strokeWidth="10" />
+        </svg>
+
+        {/* Decorative: dotted arc — bottom-left, partially clipped */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-6 -left-6 opacity-[0.06]"
+          width="120"
+          height="120"
+          viewBox="0 0 120 120"
+          fill="none"
+        >
+          <circle
+            cx="60"
+            cy="60"
+            r="52"
+            stroke="#7140FF"
+            strokeWidth="5"
+            strokeDasharray="4 8"
+          />
+        </svg>
+
+        {/* Decorative: sparkle star — right of content area */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute right-8 top-[calc(56px+30px)] opacity-[0.18] animate-pulse"
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+        >
+          <path
+            d="M7 0L8.3 5.7L14 7L8.3 8.3L7 14L5.7 8.3L0 7L5.7 5.7Z"
+            fill="#7140FF"
+          />
+        </svg>
+
+        {/* Bottom separator */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF]/25 to-transparent" />
+
+        {/* Content */}
+        <div className="relative mt-20">
+          {/* Eyebrow badge */}
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#7140FF]/20 bg-[rgba(113,64,255,0.07)] px-3 py-[5px]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7140FF]" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[1.2px] text-[#7140FF]">
+              {heroCopy.eyebrow}
+            </span>
+          </span>
+
+          {/* Title — gradient text */}
+          <h1 className="mb-2 bg-gradient-to-r from-[#7140FF] to-[#22d3ee] bg-clip-text text-[26px] font-bold tracking-tight leading-tight text-transparent">
+            {heroCopy.title}
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-[13px] leading-relaxed text-violet-600/60">
+            {heroCopy.sub}
+          </p>
         </div>
-        <div className="text-[22px] font-semibold text-violet-600 leading-tight mb-1">{heroCopy.title}</div>
-        <div className="text-[13px] text-violet-600/60">{heroCopy.sub}</div>
       </div>
 
       <div className="bg-[#FFFFFF]">
@@ -383,8 +480,8 @@ export function VoteListPage() {
               onClick={() => setActiveFilter(idx)}
               className={`inline-flex items-center px-[14px] py-[6px] rounded-[20px] text-[13px] font-medium whitespace-nowrap cursor-pointer transition-all flex-shrink-0 border ${
                 activeFilter === idx
-                  ? 'bg-[#7140FF] text-white border-[#7140FF]'
-                  : 'bg-white text-[#707070] border-[#E7E9ED] hover:border-[#7140FF] hover:text-[#7140FF] hover:bg-[#F0EDFF]'
+                  ? "bg-[#7140FF] text-white border-[#7140FF]"
+                  : "bg-white text-[#707070] border-[#E7E9ED] hover:border-[#7140FF] hover:text-[#7140FF] hover:bg-[#F0EDFF]"
               }`}
             >
               {t(labelKey)}
@@ -395,8 +492,12 @@ export function VoteListPage() {
         {shouldShowHotSection ? (
           <>
             <div className="flex items-center justify-between px-5 pt-4 pb-[10px]">
-              <span className="text-[15px] font-semibold text-[#090A0B]">{t('vl_hot_section')}</span>
-              <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_see_all')}</span>
+              <span className="text-[15px] font-semibold text-[#090A0B]">
+                {t("vl_hot_section")}
+              </span>
+              <span className="text-[12px] text-[#7140FF] cursor-pointer">
+                {t("vl_see_all")}
+              </span>
             </div>
             <div className="px-5 pb-1 flex gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {isHotLoading
@@ -405,7 +506,11 @@ export function VoteListPage() {
                     <HotCardSkeleton key={i} />
                   ))
                 : hotVotes.map((vote) => (
-                    <HotVoteCard key={vote.id} vote={vote} onNavigate={handleHotNavigate} />
+                    <HotVoteCard
+                      key={vote.id}
+                      vote={vote}
+                      onNavigate={handleHotNavigate}
+                    />
                   ))}
             </div>
 
@@ -417,28 +522,30 @@ export function VoteListPage() {
           <div className="inline-flex rounded-full bg-[#F4F5F7] p-1">
             <button
               type="button"
-              onClick={() => setSeriesTab('active')}
+              onClick={() => setSeriesTab("active")}
               className={`rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors ${
-                seriesTab === 'active'
-                  ? 'bg-white text-[#090A0B] shadow-[0_4px_12px_rgba(15,23,42,0.08)]'
-                  : 'text-[#707070]'
+                seriesTab === "active"
+                  ? "bg-white text-[#090A0B] shadow-[0_4px_12px_rgba(15,23,42,0.08)]"
+                  : "text-[#707070]"
               }`}
             >
-              {t('vl_active_section')}
+              {t("vl_active_section")}
             </button>
             <button
               type="button"
-              onClick={() => setSeriesTab('ended')}
+              onClick={() => setSeriesTab("ended")}
               className={`rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors ${
-                seriesTab === 'ended'
-                  ? 'bg-white text-[#090A0B] shadow-[0_4px_12px_rgba(15,23,42,0.08)]'
-                  : 'text-[#707070]'
+                seriesTab === "ended"
+                  ? "bg-white text-[#090A0B] shadow-[0_4px_12px_rgba(15,23,42,0.08)]"
+                  : "text-[#707070]"
               }`}
             >
-              {t('vl_ended_section')}
+              {t("vl_ended_section")}
             </button>
           </div>
-          <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_sort_latest')}</span>
+          <span className="text-[12px] text-[#7140FF] cursor-pointer">
+            {t("vl_sort_latest")}
+          </span>
         </div>
         <div className="px-5 flex flex-col gap-4 pb-2">
           {isItemsLoading ? (
@@ -457,7 +564,7 @@ export function VoteListPage() {
             ))
           ) : shouldShowEmptyState ? (
             <div className="rounded-2xl border border-[#E7E9ED] bg-white px-4 py-5 text-[14px] text-[#707070]">
-              {t(seriesTab === 'active' ? 'vl_empty_active' : 'vl_empty_ended')}
+              {t(seriesTab === "active" ? "vl_empty_active" : "vl_empty_ended")}
             </div>
           ) : null}
         </div>
@@ -471,5 +578,5 @@ export function VoteListPage() {
         )}
       </div>
     </>
-  )
+  );
 }

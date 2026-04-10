@@ -140,6 +140,7 @@ function buildSeriesGroups(
 
 function App() {
   const { lang } = useLanguage()
+  const homePath = import.meta.env.BASE_URL
   const initialCache = readCachedVerificationElectionSummaries()
   const [elections, setElections] = useState<VerificationElectionSummary[]>(initialCache.elections)
   const [viewTab, setViewTab] = useState<ViewTab>('current')
@@ -385,22 +386,32 @@ function App() {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF] to-transparent" />
 
         <div className="flex items-start justify-between gap-3">
-          <span className="font-mono text-[20px] font-semibold tracking-[1.8px] text-white uppercase">
+          <span className="font-mono text-base font-medium tracking-[1.5px] text-white flex-shrink-0">
             VEST<span className="text-[#7140FF]">A</span>r
           </span>
-          <PortalButton
-            variant="header"
-            disabled={isLoading || isRefreshing}
-            onClick={() => setRefreshKey((current) => current + 1)}
-          >
-            {isLoading || isRefreshing
-              ? lang === 'ko'
-                ? '불러오는 중'
-                : 'Loading'
-              : lang === 'ko'
-                ? '새로고침'
-                : 'Refresh'}
-          </PortalButton>
+          <div className="flex items-center gap-2">
+            <PortalButton
+              variant="header"
+              onClick={() => {
+                globalThis.location.assign(homePath)
+              }}
+            >
+              {lang === 'ko' ? '홈으로' : 'Home'}
+            </PortalButton>
+            <PortalButton
+              variant="header"
+              disabled={isLoading || isRefreshing}
+              onClick={() => setRefreshKey((current) => current + 1)}
+            >
+              {isLoading || isRefreshing
+                ? lang === 'ko'
+                  ? '불러오는 중'
+                  : 'Loading'
+                : lang === 'ko'
+                  ? '새로고침'
+                  : 'Refresh'}
+            </PortalButton>
+          </div>
         </div>
 
         <div className="mt-5 text-[10px] font-semibold uppercase tracking-[1.2px] text-[#7140FF] font-mono">

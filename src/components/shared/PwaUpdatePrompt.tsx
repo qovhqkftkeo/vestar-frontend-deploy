@@ -30,6 +30,10 @@ export function PwaUpdatePrompt() {
       })
     }
 
+    const skipWaiting = (worker: ServiceWorker) => {
+      worker.postMessage({ type: 'SKIP_WAITING' })
+    }
+
     const registerServiceWorker = async () => {
       try {
         // sungje : PWA service worker는 배포 base(/vote/) 아래에서 등록되어야 standalone 진입과 내부 라우팅이 깨지지 않는다.
@@ -37,8 +41,9 @@ export function PwaUpdatePrompt() {
           scope: serviceWorkerScope,
         })
 
+        // New SW already waiting on page load → apply silently (user just opened the page)
         if (registration.waiting && navigator.serviceWorker.controller) {
-          setNeedRefresh(true)
+          skipWaiting(registration.waiting)
         }
 
         watchInstallingWorker(registration.installing)

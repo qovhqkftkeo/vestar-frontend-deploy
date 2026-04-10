@@ -100,14 +100,7 @@ export function VoteSeriesPage() {
         {/* Bottom separator */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF]/25 to-transparent" />
 
-        <button
-          type="button"
-          onClick={() => navigate('/vote')}
-          className="text-[12px] font-semibold text-[#7140FF]"
-        >
-          {t('vs_back_to_list')}
-        </button>
-        <div className="relative mt-4">
+        <div className="relative">
           <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#7140FF]/20 bg-[rgba(113,64,255,0.07)] px-3 py-[5px]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7140FF]" />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[1.2px] text-[#7140FF]">

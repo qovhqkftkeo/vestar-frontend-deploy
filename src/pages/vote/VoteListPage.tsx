@@ -453,29 +453,13 @@ export function VoteListPage() {
     });
   };
 
-  const visibleVoteItems = items.filter((item) => {
-    const matchesCategory = matchesHomeCategory(item.category, activeCategory)
-    const matchesVisibility =
-      activeVisibilityFilter === 'all' || item.visibilityMode === activeVisibilityFilter
-    const matchesPayment = activePaymentFilter === 'all' || item.paymentMode === activePaymentFilter
-    return matchesCategory && matchesVisibility && matchesPayment
-  })
-  const allVoteItems = allItems.filter((item) => {
-    const matchesCategory = matchesHomeCategory(item.category, activeCategory)
-    const matchesVisibility =
-      activeVisibilityFilter === 'all' || item.visibilityMode === activeVisibilityFilter
-    const matchesPayment = activePaymentFilter === 'all' || item.paymentMode === activePaymentFilter
-    return matchesCategory && matchesVisibility && matchesPayment
-  })
   const visibleHotVotes = hotVotes.filter((vote) => matchesHomeCategory(vote.category, activeCategory))
-  const visibleGroupedItems = groupVoteItemsBySeries(visibleVoteItems)
-  const visibleActiveGroups = visibleGroupedItems.filter((group) => !isVoteSeriesEnded(group))
-  const visibleEndedGroups = visibleGroupedItems.filter((group) => isVoteSeriesEnded(group))
-  const allGroupedItems = groupVoteItemsBySeries(allVoteItems)
-  const allActiveGroups = allGroupedItems.filter((group) => !isVoteSeriesEnded(group))
-  const allEndedGroups = allGroupedItems.filter((group) => isVoteSeriesEnded(group))
-  const totalGroups = seriesTab === 'active' ? allActiveGroups : allEndedGroups
-  const groupedItems = seriesTab === 'active' ? visibleActiveGroups : visibleEndedGroups
+  const groupedItems = groupVoteItemsBySeries(
+    items.filter((item) => matchesHomeCategory(item.category, activeCategory)),
+  )
+  const totalGroups = groupVoteItemsBySeries(
+    allItems.filter((item) => matchesHomeCategory(item.category, activeCategory)),
+  )
   const hasMoreSeries = groupedItems.length < totalGroups.length
   const shouldShowHotSection = isHotLoading || visibleHotVotes.length > 0
   const shouldShowEmptyState = !isItemsLoading && groupedItems.length === 0 && !hasMoreSeries
@@ -674,7 +658,7 @@ export function VoteListPage() {
             </div>
           </div>
           <span className="text-[12px] text-[#7140FF]">
-            {lang === 'ko' ? '최신순' : 'Latest series first'}
+            {lang === 'ko' ? '최신순' : 'Latest'}
           </span>
         </div>
         <div className="px-5 flex flex-col gap-4 pb-2">
@@ -694,7 +678,7 @@ export function VoteListPage() {
             ))
           ) : shouldShowEmptyState ? (
             <div className="rounded-2xl border border-[#E7E9ED] bg-white px-4 py-5 text-[14px] text-[#707070]">
-              {t(seriesTab === "active" ? "vl_empty_active" : "vl_empty_ended")}
+              {t("vl_empty_active")}
             </div>
           ) : null}
         </div>

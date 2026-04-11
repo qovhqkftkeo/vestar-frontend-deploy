@@ -179,13 +179,10 @@ export interface ApiVoteSubmissionStatus {
     onchainElectionId: string
     onchainElectionAddress: `0x${string}`
     onchainState: ApiElectionState
+    candidateManifestHash: string | null
+    candidateManifestUri: string | null
     draft: {
       id: string
-      title: string
-      series: {
-        id: string
-        seriesPreimage: string
-      } | null
     } | null
   }
   decryptedBallot: {
@@ -216,20 +213,33 @@ export interface ApiVoteHistoryItem {
     onchainElectionId: string
     onchainElectionAddress: `0x${string}` | null
     onchainState: ApiElectionState
+    candidateManifestHash: string | null
+    candidateManifestUri: string | null
     draft: {
       id: string
-      title: string
-      series: {
-        id: string
-        seriesPreimage: string
-      } | null
     } | null
   } | null
   selection: {
     candidateKeys: string[]
     isPending: boolean
     isValid: boolean | null
+    invalidReason: {
+      reasonCode: string
+      reasonDetail: string | null
+    } | null
   }
+}
+
+export interface ApiVoteHistoryCursor {
+  cursorTimestamp: string
+  cursorBlockNumber: number
+  cursorId: string
+}
+
+export interface ApiVoteHistoryResponse {
+  items: ApiVoteHistoryItem[]
+  nextCursor: ApiVoteHistoryCursor | null
+  hasMore: boolean
 }
 
 export interface PreparePrivateElectionRequest {

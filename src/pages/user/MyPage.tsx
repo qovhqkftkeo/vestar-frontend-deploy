@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useAccount } from 'wagmi'
 import completeVoteIcon from '../../assets/complete_vote.svg'
 import karmaIcon from '../../assets/karma.svg'
+import { InfiniteScrollSentinel } from '../../components/shared/InfiniteScrollSentinel'
 import { useMyKarma } from '../../hooks/user/useMyKarma'
 import { useMyVotes } from '../../hooks/user/useMyVotes'
 import { useSmartBackNavigation } from '../../hooks/useSmartBackNavigation'
@@ -26,7 +27,19 @@ const KARMA_TYPE_STYLES: Record<KarmaEventType, { bg: string; text: string }> = 
   streak: { bg: '#E8F0FF', text: '#2563eb' },
 }
 
-function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading: boolean }) {
+function VoteHistoryList({
+  votes,
+  isLoading,
+  isLoadingMore,
+  hasMore,
+  onLoadMore,
+}: {
+  votes: MyVoteItem[]
+  isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  onLoadMore: () => void
+}) {
   const { t, lang } = useLanguage()
   const navigate = useNavigate()
   const badgeLabel: Record<BadgeVariant, string> = {
@@ -66,6 +79,7 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
                 // sungje : 마이페이지 투표내역에서 들어오면 당시 제출한 선택값을 그대로 보여주는 읽기 전용 뷰로 연다.
                 historySelectionCandidateKeys: item.selectedCandidateKeys,
                 historySelectionLabel: item.choice,
+                historyInvalidReason: item.invalidReason,
               },
             })
           }
@@ -102,6 +116,11 @@ function VoteHistoryList({ votes, isLoading }: { votes: MyVoteItem[]; isLoading:
           </div>
         </button>
       ))}
+      <InfiniteScrollSentinel
+        onVisible={onLoadMore}
+        isLoading={isLoadingMore}
+        hasMore={hasMore}
+      />
     </div>
   )
 }
@@ -171,7 +190,13 @@ export function MyPage() {
   const tab = searchParams.get('tab') === 'karma' ? 'karma' : 'votes'
   const { t } = useLanguage()
 
-  const { votes, isLoading: isVotesLoading } = useMyVotes()
+  const {
+    votes,
+    isLoading: isVotesLoading,
+    isLoadingMore: isVotesLoadingMore,
+    hasMore: hasMoreVotes,
+    loadMore: loadMoreVotes,
+  } = useMyVotes()
   const { events, total, tier } = useMyKarma()
 
   return (
@@ -275,7 +300,13 @@ export function MyPage() {
 
       <div className="bg-[#ffffff] min-h-screen">
         {tab === 'votes' ? (
-          <VoteHistoryList votes={votes} isLoading={isVotesLoading} />
+          <VoteHistoryList
+            votes={votes}
+            isLoading={isVotesLoading}
+            isLoadingMore={isVotesLoadingMore}
+            hasMore={hasMoreVotes}
+            onLoadMore={loadMoreVotes}
+          />
         ) : (
           <KarmaHistoryList events={events} total={total} />
         )}

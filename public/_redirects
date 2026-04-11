@@ -1,3 +1,4 @@
 /vote/verification/* /vote/verification/index.html  200
-/vote/* /vote/index.html  200
-/  /vote  301
+/vote/assets/*       /vote/assets/:splat           200
+/vote/*              /vote/index.html               200
+/                    /vote                          301

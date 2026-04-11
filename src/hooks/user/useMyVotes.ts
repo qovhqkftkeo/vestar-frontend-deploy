@@ -1,13 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { fetchVoteHistory } from '../../api/elections'
-import type { ApiElectionState, ApiVoteHistoryItem } from '../../api/types'
+import { fetchCandidateManifest } from '../../api/candidateManifest'
+import { fetchMoreVoteHistory, fetchVoteHistory } from '../../api/elections'
+import type {
+  ApiElectionState,
+  ApiVoteHistoryCursor,
+  ApiVoteHistoryItem,
+} from '../../api/types'
 import { useLanguage } from '../../providers/LanguageProvider'
 import type { MyVoteItem } from '../../types/user'
+import {
+  getCandidateManifestSeriesPreimage,
+  getCandidateManifestTitle,
+} from '../../utils/candidateManifest'
 
 export interface UseMyVotesResult {
   votes: MyVoteItem[]
   isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  loadMore: () => void
 }
 
 function formatDate(dateValue: string): string {
@@ -57,15 +69,29 @@ function mapChoiceLabel(item: ApiVoteHistoryItem, lang: 'en' | 'ko'): string {
   return item.selection.candidateKeys.join(', ')
 }
 
-function mapToMyVoteItem(item: ApiVoteHistoryItem, lang: 'en' | 'ko'): MyVoteItem {
+async function mapToMyVoteItem(
+  item: ApiVoteHistoryItem,
+  lang: 'en' | 'ko',
+): Promise<MyVoteItem> {
+  const manifest = await fetchCandidateManifest(
+    item.onchainElection?.candidateManifestUri,
+    item.onchainElection?.candidateManifestHash,
+  )
+
   return {
     id: item.id,
     voteId: item.onchainElection?.id ?? item.id,
-    title: item.onchainElection?.draft?.title ?? 'Untitled vote',
-    org: item.onchainElection?.draft?.series?.seriesPreimage ?? 'Unknown series',
+    title: getCandidateManifestTitle(manifest) || 'Untitled vote',
+    org: getCandidateManifestSeriesPreimage(manifest) || 'Unknown series',
     date: formatDate(item.blockTimestamp),
     karmaEarned: 0,
     choice: mapChoiceLabel(item, lang),
+    invalidReason:
+      item.selection.isValid === false
+        ? item.selection.invalidReason?.reasonDetail ||
+          item.selection.invalidReason?.reasonCode ||
+          null
+        : null,
     selectedCandidateKeys: item.selection.candidateKeys,
     badge: mapBadge(item.onchainElection?.onchainState ?? 'FINALIZED'),
   }
@@ -76,11 +102,17 @@ export function useMyVotes(): UseMyVotesResult {
   const { lang } = useLanguage()
   const [votes, setVotes] = useState<MyVoteItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [nextCursor, setNextCursor] = useState<ApiVoteHistoryCursor | null>(null)
 
   useEffect(() => {
     if (!isConnected || !address) {
       setVotes([])
       setIsLoading(false)
+      setIsLoadingMore(false)
+      setHasMore(false)
+      setNextCursor(null)
       return
     }
 
@@ -88,13 +120,19 @@ export function useMyVotes(): UseMyVotesResult {
     setIsLoading(true)
 
     fetchVoteHistory(address)
-      .then((history) => {
+      .then(async (history) => {
         if (cancelled) return
-        setVotes(history.map((item) => mapToMyVoteItem(item, lang)))
+        const mapped = await Promise.all(history.items.map((item) => mapToMyVoteItem(item, lang)))
+        if (cancelled) return
+        setVotes(mapped)
+        setHasMore(history.hasMore)
+        setNextCursor(history.nextCursor)
       })
       .catch(() => {
         if (cancelled) return
         setVotes([])
+        setHasMore(false)
+        setNextCursor(null)
       })
       .finally(() => {
         if (!cancelled) {
@@ -107,5 +145,27 @@ export function useMyVotes(): UseMyVotesResult {
     }
   }, [address, isConnected, lang])
 
-  return { votes, isLoading }
+  const loadMore = useCallback(() => {
+    if (!address || !isConnected || !nextCursor || !hasMore || isLoadingMore) {
+      return
+    }
+
+    setIsLoadingMore(true)
+
+    fetchMoreVoteHistory(address, nextCursor)
+      .then(async (history) => {
+        const mapped = await Promise.all(history.items.map((item) => mapToMyVoteItem(item, lang)))
+        setVotes((current) => [...current, ...mapped])
+        setHasMore(history.hasMore)
+        setNextCursor(history.nextCursor)
+      })
+      .catch(() => {
+        setHasMore(false)
+      })
+      .finally(() => {
+        setIsLoadingMore(false)
+      })
+  }, [address, hasMore, isConnected, isLoadingMore, lang, nextCursor])
+
+  return { votes, isLoading, isLoadingMore, hasMore, loadMore }
 }

@@ -5,7 +5,8 @@ import type {
   ApiElectionResultSummary,
   ApiFinalizedTallyRow,
   ApiLiveTallyRow,
-  ApiVoteHistoryItem,
+  ApiVoteHistoryCursor,
+  ApiVoteHistoryResponse,
   ApiVoteSubmissionStatus,
   ApiVisibilityMode,
   PreparePrivateElectionRequest,
@@ -90,8 +91,28 @@ export function fetchVoteSubmissionByTxHash(
   )
 }
 
-export function fetchVoteHistory(voterAddress: string): Promise<ApiVoteHistoryItem[]> {
-  return apiFetch<ApiVoteHistoryItem[]>(`/vote-submissions/history${buildQuery({ voterAddress })}`)
+export function fetchVoteHistory(voterAddress: string): Promise<ApiVoteHistoryResponse> {
+  return apiFetch<ApiVoteHistoryResponse>(
+    `/vote-submissions/history${buildQuery({
+      voterAddress,
+      limit: '20',
+    })}`,
+  )
+}
+
+export function fetchMoreVoteHistory(
+  voterAddress: string,
+  cursor: ApiVoteHistoryCursor,
+): Promise<ApiVoteHistoryResponse> {
+  return apiFetch<ApiVoteHistoryResponse>(
+    `/vote-submissions/history${buildQuery({
+      voterAddress,
+      limit: '20',
+      cursorTimestamp: cursor.cursorTimestamp,
+      cursorBlockNumber: String(cursor.cursorBlockNumber),
+      cursorId: cursor.cursorId,
+    })}`,
+  )
 }
 
 export function preparePrivateElection(

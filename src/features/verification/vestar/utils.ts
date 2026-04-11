@@ -298,6 +298,9 @@ export function isMatchingBallotPayload(
   electionAddress: Address,
   voterAddress: Address,
 ) {
+  const normalizedElectionAddress = getAddress(electionAddress)
+  const normalizedVoterAddress = getAddress(voterAddress)
+
   if (payload.schemaVersion !== undefined && payload.schemaVersion !== 1) {
     return false
   }
@@ -312,7 +315,7 @@ export function isMatchingBallotPayload(
 
   if (payload.electionAddress) {
     try {
-      if (getAddress(payload.electionAddress) !== electionAddress) {
+      if (getAddress(payload.electionAddress) !== normalizedElectionAddress) {
         return false
       }
     } catch {
@@ -322,7 +325,7 @@ export function isMatchingBallotPayload(
 
   if (payload.voterAddress) {
     try {
-      if (getAddress(payload.voterAddress) !== voterAddress) {
+      if (getAddress(payload.voterAddress) !== normalizedVoterAddress) {
         return false
       }
     } catch {

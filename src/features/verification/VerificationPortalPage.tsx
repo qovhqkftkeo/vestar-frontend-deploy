@@ -481,8 +481,8 @@ function App() {
           <div className="mt-4 flex items-center justify-between gap-3 text-[12px] text-white/55">
             <span>
               {lang === 'ko'
-                ? '투표 기록에서 결과까지 같은 흐름으로 다시 읽고 있어요'
-                : 'Reading the same trail again from receipts to results'}
+                ? '제출 기록이 1건 이상 쌓인 투표부터 결과를 검증해요'
+                : 'We verify results starting with votes that already have at least one submission'}
             </span>
             <span className="shrink-0 font-mono">
               {syncedLabel
@@ -1627,11 +1627,11 @@ function EmptyView({ viewTab }: { viewTab: ViewTab }) {
       <p className="mt-2 text-[14px] leading-[1.7] text-[#707070]">
         {viewTab === 'finished'
           ? lang === 'ko'
-            ? '투표가 종료되면 투표 기록과 결과 흐름을 이 포털에서 이어서 확인할 수 있어요.'
-            : 'Once votes are finished, you can review their receipts and result flow here.'
+            ? '종료된 투표 중에서도 제출 기록이 1건 이상 있는 투표부터 여기서 다시 검증할 수 있어요.'
+            : 'For ended votes, this portal starts verifying the ones that already have at least one submission.'
           : lang === 'ko'
-            ? '체인에서 Active 상태가 된 투표만 여기에 보여줘요. 시작 전이거나 이미 종료된 투표는 다른 탭에서 볼 수 있어요.'
-            : 'Only votes in the Active on-chain state appear here. Scheduled or ended votes are shown in the other tab.'}
+            ? '체인에서 Active 상태이고 제출 기록이 1건 이상 있는 투표만 여기에 보여줘요. 시작 전이거나 기록이 아직 없는 투표는 조금 더 기다려야 해요.'
+            : 'This tab shows votes that are Active on chain and already have at least one submission. Scheduled votes or ones without records will appear later.'}
       </p>
     </PortalPanel>
   )

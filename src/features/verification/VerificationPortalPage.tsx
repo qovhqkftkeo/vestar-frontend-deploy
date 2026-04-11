@@ -1476,15 +1476,6 @@ function ProofTab({
         />
       ) : null}
 
-      {election.resultManifestURI ? (
-        <ValueCard
-          label={lang === 'ko' ? '결과 메타데이터 IPFS 링크' : 'Result metadata IPFS link'}
-          value={election.resultManifestURI}
-          actionHref={resolvePublicIpfsUrl(election.resultManifestURI)}
-          actionLabel={lang === 'ko' ? 'IPFS 링크 열기' : 'Open IPFS link'}
-        />
-      ) : null}
-
       {election.mode === 'PRIVATE' ? (
         <>
           <ValueCard

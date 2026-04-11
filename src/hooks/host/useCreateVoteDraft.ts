@@ -13,6 +13,7 @@ import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { preparePrivateElection } from '../../api/elections'
 import type { PreparePrivateElectionResponse } from '../../api/types'
 import { fetchVerifiedOrganizerByWallet } from '../../api/verifiedOrganizers'
+import { getKarmaTier, getOrganizerCreationStatus } from '../../contracts/vestar/actions'
 import { vestarStatusTestnetChain } from '../../contracts/vestar/chain'
 import { vestarFactory, vestarUtils } from '../../contracts/vestar/client'
 import { vestarContractAddresses } from '../../contracts/vestar/generated'
@@ -100,6 +101,7 @@ type SubmissionProgressState = {
 const PRIVATE_ELECTION_KEY_SCHEME_VERSION = 1
 const SUBMISSION_PREFLIGHT_DEBOUNCE_MS = 700
 const MAX_PREPARED_SUBMISSION_CACHE_ENTRIES = 3
+const ORGANIZER_CREATION_STATUS_UNVERIFIED_INELIGIBLE = 2
 
 let counter = 3
 
@@ -632,6 +634,67 @@ function shouldRefreshPreparedSubmission(prepared: PreparedSubmissionArtifacts) 
   return prepared.elections.some((election) => election.candidateManifestURI.startsWith('data:'))
 }
 
+function getCreateVoteErrorMessage(
+  error: unknown,
+  lang: 'ko' | 'en',
+): string {
+  const walletMessage = getWalletActionErrorMessage(error, {
+    lang,
+    defaultMessage: lang === 'ko' ? '투표 생성에 실패했습니다.' : 'Failed to create the vote.',
+  })
+
+  const text =
+    error instanceof Error
+      ? `${error.name}\n${error.message}\n${walletMessage}`.toLowerCase()
+      : String(walletMessage).toLowerCase()
+
+  if (
+    /카르마.*부족|karma.*insufficient|insufficient.*karma|unverified_ineligible|creation status/i.test(
+      text,
+    )
+  ) {
+    return lang === 'ko'
+      ? '카르마가 부족해서 투표를 생성할 수 없습니다. 카르마 1 이상이 필요합니다.'
+      : 'You need at least Karma tier 1 to create a vote.'
+  }
+
+  if (/후보.*최소 2명|at least 2 candidates/i.test(text)) {
+    return lang === 'ko'
+      ? '후보는 최소 2명 이상 등록해야 합니다.'
+      : 'Add at least 2 candidates before creating the vote.'
+  }
+
+  if (/후보명.*중복|duplicate/i.test(text)) {
+    return lang === 'ko'
+      ? '같은 투표 안에서 후보 이름은 중복될 수 없습니다.'
+      : 'Candidate names must be unique within the same vote.'
+  }
+
+  if (/투표권 갱신 주기|reset interval/i.test(text)) {
+    return lang === 'ko'
+      ? '투표권 갱신 주기를 다시 확인해주세요.'
+      : 'Check the ballot reset interval and try again.'
+  }
+
+  if (
+    /prepareprivateelection|manifest|pinata|ipfs|upload|json artifact|publickey|private election/i.test(
+      text,
+    )
+  ) {
+    return lang === 'ko'
+      ? '투표 준비 파일 생성에 실패했습니다. 이미지나 후보 정보를 확인한 뒤 다시 시도해주세요.'
+      : 'Failed to prepare vote artifacts. Check the images and candidate data, then try again.'
+  }
+
+  if (/invalid state|revert|execution reverted|createelection/i.test(text)) {
+    return lang === 'ko'
+      ? '투표 설정이 온체인 조건과 맞지 않습니다. 일정, 공개 방식, 결제 설정을 다시 확인해주세요.'
+      : 'The vote settings do not satisfy the on-chain rules. Check the schedule, visibility, and payment settings.'
+  }
+
+  return walletMessage
+}
+
 async function parseElectionAddress(txHash: Hash): Promise<Address> {
   const receipt = await vestarUtils.waitForReceipt(txHash)
 
@@ -1019,6 +1082,17 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         await switchChainAsync({ chainId: vestarStatusTestnetChain.id })
       }
 
+      const karmaTier = await getKarmaTier(organizerAddress)
+      const creationStatus = await getOrganizerCreationStatus(organizerAddress, karmaTier)
+
+      if (creationStatus === ORGANIZER_CREATION_STATUS_UNVERIFIED_INELIGIBLE) {
+        throw new Error(
+          lang === 'ko'
+            ? '카르마가 부족해서 투표를 생성할 수 없습니다. 카르마 1 이상이 필요합니다.'
+            : 'You need at least Karma tier 1 to create a vote.',
+        )
+      }
+
       const draftPreparationSignature = buildDraftPreparationSignature(draft)
       let preparedSubmission = await ensurePreparedSubmission(draftPreparationSignature, draft)
 
@@ -1158,13 +1232,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
         elections,
       }
     } catch (error) {
-      throw new Error(
-        getWalletActionErrorMessage(error, {
-          lang,
-          defaultMessage:
-            lang === 'ko' ? '투표 생성에 실패했습니다.' : 'Failed to create the vote.',
-        }),
-      )
+      throw new Error(getCreateVoteErrorMessage(error, lang))
     } finally {
       setIsSubmitting(false)
       setSubmissionProgress({

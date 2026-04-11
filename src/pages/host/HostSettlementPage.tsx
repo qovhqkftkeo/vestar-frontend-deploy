@@ -185,60 +185,99 @@ export function HostSettlementPage() {
   return (
     <>
       <VoteHero vote={vote} />
-      <VoteInfoSection vote={vote} />
+      <div className="pb-8">
+        <VoteInfoSection vote={vote} />
 
-      <div className="h-2 bg-[#F7F8FA]" />
+        <div className="h-2 bg-[#F7F8FA] my-3" />
 
-      <div className="mx-5 mt-5 rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[1px] text-[#7140FF] font-mono">
-          Settlement
-        </div>
-        <div className="mt-2 text-[15px] font-semibold text-[#090A0B]">
-          {isSettled ? '정산 결과' : '정산 실행'}
-        </div>
-        <div className="mt-1 text-[13px] text-[#707070]">
-          {isSettled
-            ? '온체인 정산이 완료되었고, 아래에서 정산 결과를 확인할 수 있습니다.'
-            : 'finalize 이후 정산 가능한 수익을 온체인에서 처리합니다.'}
-        </div>
-      </div>
-
-      <div className="mx-5 mt-4 grid grid-cols-1 gap-3">
-        <div className="rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">
-          <div className="text-[12px] text-[#707070]">정산 상태</div>
-          <div
-            className={`mt-2 text-[16px] font-semibold ${isSettled ? 'text-[#16a34a]' : 'text-[#090A0B]'}`}
-          >
-            {isSettled ? '정산 완료' : '정산 대기'}
+        <div className="mx-5 rounded-[28px] border border-[#E7E9ED] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBF9FF_100%)] px-5 py-5 shadow-[0_10px_30px_rgba(113,64,255,0.06)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[1px] text-[#7140FF] font-mono">
+                Settlement
+              </div>
+              <div className="mt-2 text-[19px] font-semibold text-[#090A0B]">
+                {isSettled ? '정산 결과' : '정산 실행'}
+              </div>
+              <div className="mt-2 text-[13px] leading-relaxed text-[#707070]">
+                {isSettled
+                  ? '온체인 정산이 완료되었습니다. 아래 카드에서 수익 배분 결과를 확인할 수 있습니다.'
+                  : 'finalize 이후 확정된 수익을 체인 기준으로 정산합니다.'}
+              </div>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold ${
+                isSettled
+                  ? 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]'
+                  : 'bg-[#F3F4F6] text-[#5B6470]'
+              }`}
+            >
+              {isSettled ? '정산 완료' : '정산 대기'}
+            </span>
           </div>
-        </div>
 
-        {cards.map((card) => (
-          <div key={card.label} className="rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">
-            <div className="text-[12px] text-[#707070]">{card.label}</div>
-            <div className="mt-2 text-[18px] font-semibold text-[#090A0B] font-mono">
-              {card.value}
+          <div className="mt-4 rounded-2xl border border-[#E9DDFC] bg-[rgba(113,64,255,0.05)] px-4 py-3">
+            <div className="text-[11px] font-mono uppercase tracking-[1px] text-[#7140FF]">
+              Settlement Guide
+            </div>
+            <div className="mt-2 text-[13px] leading-relaxed text-[#5B6470]">
+              {isSettled
+                ? '정산 트랜잭션까지 완료된 상태입니다. 추가 실행은 필요하지 않습니다.'
+                : '아직 정산 전 상태입니다. finalize가 끝난 뒤 주최자 지갑으로 정산 트랜잭션을 실행하세요.'}
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="px-5 py-6 bg-[#F7F8FA] flex flex-col gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(`/host/manage/${id}`)}
-          className="w-full bg-white text-[#090A0B] border border-[#E7E9ED] rounded-2xl py-4 text-[15px] font-bold hover:border-[#d9ddf3] transition-colors active:scale-[0.99]"
-        >
-          관리 페이지로 돌아가기
-        </button>
-        <button
-          type="button"
-          disabled={!canSettle || isSettling}
-          onClick={handleSettle}
-          className="w-full bg-[#090A0B] text-white rounded-2xl py-4 text-[15px] font-bold disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-85 transition-opacity active:enabled:scale-[0.99]"
-        >
-          {isSettling ? '정산 진행 중...' : isSettled ? '정산 결과 확인 완료' : '정산 실행'}
-        </button>
+        <div className="mx-5 mt-4 grid grid-cols-1 gap-3">
+          {cards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-[24px] border border-[#E7E9ED] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+            >
+              <div className="text-[12px] font-medium text-[#707070]">{card.label}</div>
+              <div className="mt-2 text-[22px] font-semibold text-[#090A0B] font-mono tracking-[-0.02em]">
+                {card.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mx-5 mt-4 rounded-[24px] border border-[#E7E9ED] bg-white px-5 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[12px] text-[#707070]">지급 비율</div>
+              <div className="mt-1 text-[14px] font-semibold text-[#090A0B]">
+                플랫폼 {Number(platformShareBps) / 100}% · 주최자 {Number(organizerShareBps) / 100}%
+              </div>
+            </div>
+            <div className="h-2 w-24 overflow-hidden rounded-full bg-[#EEF0F4]">
+              <div
+                className="h-full rounded-full bg-[#7140FF]"
+                style={{
+                  width: `${Number(organizerShareBps) / 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 pt-6 flex flex-col gap-3">
+          <button
+            type="button"
+            disabled={!canSettle || isSettling}
+            onClick={handleSettle}
+            className="w-full rounded-2xl bg-[#7140FF] py-4 text-[15px] font-bold text-white disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-90 transition-opacity active:enabled:scale-[0.99]"
+          >
+            {isSettling ? '정산 진행 중...' : isSettled ? '정산 결과 확인 완료' : '정산 실행'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/host/manage/${id}`)}
+            className="w-full rounded-2xl border border-[#E7E9ED] bg-white py-4 text-[15px] font-bold text-[#090A0B] hover:border-[#d9ddf3] transition-colors active:scale-[0.99]"
+          >
+            관리 페이지로 돌아가기
+          </button>
+        </div>
       </div>
     </>
   )

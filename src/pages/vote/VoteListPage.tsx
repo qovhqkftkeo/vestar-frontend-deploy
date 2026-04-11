@@ -417,7 +417,7 @@ export function VoteListPage() {
   ]
 
   const handleHotNavigate = (vote: HotVote) => {
-    navigate(vote.badge === 'end' ? `/vote/${vote.id}/result` : `/vote/${vote.id}`)
+    navigate(`/vote/${vote.id}`)
   }
 
   const handleSeriesNavigate = (group: VoteSeriesGroup) => {

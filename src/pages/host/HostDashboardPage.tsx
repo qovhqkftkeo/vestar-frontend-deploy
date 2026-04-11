@@ -1,9 +1,11 @@
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import completeVoteIcon from '../../assets/complete_vote.svg'
 import { useHostVotes } from '../../hooks/host/useHostVotes'
 import { useLanguage } from '../../providers/LanguageProvider'
 
 type BadgeVariant = 'live' | 'hot' | 'new' | 'end'
+type HostVoteFilter = 'all' | 'active' | 'scheduled' | 'completed'
 
 interface HostVoteCard {
   id: string
@@ -69,6 +71,27 @@ export function HostDashboardPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { votes, activeCount, completedCount, isLoading } = useHostVotes()
+  const [statusFilter, setStatusFilter] = useState<HostVoteFilter>('all')
+
+  const filteredVotes = useMemo(() => {
+    switch (statusFilter) {
+      case 'active':
+        return votes.filter((vote) => vote.badge === 'live' || vote.badge === 'hot')
+      case 'scheduled':
+        return votes.filter((vote) => vote.badge === 'new')
+      case 'completed':
+        return votes.filter((vote) => vote.badge === 'end')
+      default:
+        return votes
+    }
+  }, [statusFilter, votes])
+
+  const filterOptions: Array<{ key: HostVoteFilter; label: string; count: number }> = [
+    { key: 'all', label: t('filter_all'), count: votes.length },
+    { key: 'active', label: t('hd_active'), count: votes.filter((vote) => vote.badge === 'live' || vote.badge === 'hot').length },
+    { key: 'scheduled', label: t('hd_scheduled'), count: votes.filter((vote) => vote.badge === 'new').length },
+    { key: 'completed', label: t('hd_completed'), count: completedCount },
+  ]
 
   return (
     <>
@@ -166,18 +189,41 @@ export function HostDashboardPage() {
       <div className="px-5 mt-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[15px] font-semibold text-[#090A0B]">{t('hd_my_votes')}</span>
-          <span className="text-[12px] text-[#707070] font-mono">{votes.length}</span>
+          <span className="text-[12px] text-[#707070] font-mono">{filteredVotes.length}</span>
+        </div>
+        <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+          {filterOptions.map((option) => {
+            const isActive = option.key === statusFilter
+
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setStatusFilter(option.key)}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[12px] font-medium transition-colors ${
+                  isActive
+                    ? 'border-[#7140FF] bg-[#7140FF] text-white'
+                    : 'border-[#E7E9ED] bg-white text-[#505768]'
+                }`}
+              >
+                <span>{option.label}</span>
+                <span className={`font-mono text-[11px] ${isActive ? 'text-white/80' : 'text-[#8B93A7]'}`}>
+                  {option.count}
+                </span>
+              </button>
+            )
+          })}
         </div>
         <div className="flex flex-col gap-3 pb-4">
           {isLoading ? (
             <div className="bg-white border border-[#E7E9ED] rounded-2xl p-6 text-center text-[13px] text-[#707070]">
               불러오는 중...
             </div>
-          ) : votes.length > 0 ? (
-            votes.map((vote) => <VoteCard key={vote.id} vote={vote} onNavigate={navigate} />)
+          ) : filteredVotes.length > 0 ? (
+            filteredVotes.map((vote) => <VoteCard key={vote.id} vote={vote} onNavigate={navigate} />)
           ) : (
             <div className="bg-white border border-[#E7E9ED] rounded-2xl p-6 text-center text-[13px] text-[#707070]">
-              아직 생성한 투표가 없습니다.
+              {statusFilter === 'all' ? '아직 생성한 투표가 없습니다.' : '선택한 상태의 투표가 없습니다.'}
             </div>
           )}
         </div>

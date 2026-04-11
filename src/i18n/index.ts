@@ -241,6 +241,7 @@ const STRINGS = {
     ko: '투표를 만들고 결과를 확인하세요',
   },
   hd_active: { en: 'Active', ko: '진행 중' },
+  hd_scheduled: { en: 'Scheduled', ko: '예정' },
   hd_total_votes: { en: 'Total Votes', ko: '총 참여' },
   hd_completed: { en: 'Completed', ko: '완료된 투표' },
   hd_create_btn: { en: 'Create New Vote', ko: '새 투표 만들기' },

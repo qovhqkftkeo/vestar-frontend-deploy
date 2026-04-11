@@ -139,22 +139,22 @@ export function VoteManagePage() {
       <VoteHero vote={vote} />
 
       {/* Scrollable white content — pb clears the fixed action bar */}
-      <div className="bg-[#FFFFFF] pb-[calc(5rem+var(--safe-bottom))]">
+      <div className="pb-[calc(5rem+var(--safe-bottom))]">
         <VoteInfoSection vote={vote} />
 
         <div className="h-2 bg-[#F7F8FA] my-3" />
 
         {/* Host management panel card */}
-        <div className="mx-5 rounded-2xl border border-[#E7E9ED] bg-white px-4 py-4">
+        <div className="mx-5 rounded-[28px] border border-[#E7E9ED] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBF9FF_100%)] px-5 py-5 shadow-[0_10px_30px_rgba(113,64,255,0.06)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-[11px] font-semibold uppercase tracking-[1px] text-[#7140FF] font-mono mb-1">
                 Host Panel
               </div>
-              <div className="text-[15px] font-semibold text-[#090A0B]">
+              <div className="text-[19px] font-semibold text-[#090A0B]">
                 {lang === 'ko' ? '생성자 전용 관리 화면' : 'Host Management'}
               </div>
-              <div className="mt-1 text-[13px] text-[#707070]">
+              <div className="mt-2 text-[13px] leading-relaxed text-[#707070]">
                 {lang === 'ko'
                   ? '실시간 집계 확인과 finalize를 여기서 처리할 수 있습니다.'
                   : 'Check live tallies and run finalization from here.'}
@@ -167,6 +167,24 @@ export function VoteManagePage() {
                 {onchainStateBadge.label}
               </span>
             ) : null}
+          </div>
+          <div className="mt-4 rounded-2xl border border-[#E9DDFC] bg-[rgba(113,64,255,0.05)] px-4 py-3">
+            <div className="text-[11px] font-mono uppercase tracking-[1px] text-[#7140FF]">
+              Host Flow
+            </div>
+            <div className="mt-2 text-[13px] leading-relaxed text-[#5B6470]">
+              {isSettlementSettled
+                ? lang === 'ko'
+                  ? '정산까지 완료된 상태입니다. 정산 결과 화면으로 바로 이동할 수 있습니다.'
+                  : 'Settlement is already complete. You can jump straight to the settlement summary.'
+                : isFinalized
+                  ? lang === 'ko'
+                    ? 'finalize까지 끝났습니다. 이제 정산 트랜잭션을 실행할 수 있습니다.'
+                    : 'Finalization is complete. You can run settlement next.'
+                  : lang === 'ko'
+                    ? '먼저 실시간 집계와 최종 집계 상태를 확인한 뒤, 종료된 투표는 finalize로 확정하세요.'
+                    : 'Check live and final tally status first, then finalize ended votes.'}
+            </div>
           </div>
           {finalizeBlockingMessage ? (
             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[12px] text-amber-700 leading-relaxed">
@@ -206,7 +224,7 @@ export function VoteManagePage() {
               }
               void handleOpenFinalTally()
             }}
-            className="flex-1 bg-[#090A0B] text-white rounded-2xl py-4 text-[14px] font-bold disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-85 transition-opacity active:enabled:scale-[0.99]"
+            className="flex-1 bg-[#7140FF] text-white rounded-2xl py-4 text-[14px] font-bold disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-90 transition-opacity active:enabled:scale-[0.99]"
           >
             {primaryLabel}
           </button>

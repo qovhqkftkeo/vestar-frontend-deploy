@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAccount } from 'wagmi'
 import completeVoteIcon from '../../assets/complete_vote.svg'
@@ -7,17 +8,16 @@ import { useMyKarma } from '../../hooks/user/useMyKarma'
 import { useMyVotes } from '../../hooks/user/useMyVotes'
 import { useSmartBackNavigation } from '../../hooks/useSmartBackNavigation'
 import { useLanguage } from '../../providers/LanguageProvider'
-import type { BadgeVariant, KarmaEvent, KarmaEventType, MyVoteItem } from '../../types/user'
+import type { KarmaEvent, KarmaEventType, MyVoteItem } from '../../types/user'
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-const BADGE_STYLES: Record<BadgeVariant, string> = {
-  live: 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]',
-  hot: 'bg-[rgba(239,68,68,0.10)] text-[#dc2626]',
-  new: 'bg-[rgba(113,64,255,0.09)] text-[#7140FF]',
-  end: 'bg-black/5 text-[#707070]',
+const SUBMISSION_BADGE_STYLES: Record<MyVoteItem['submissionStatus'], string> = {
+  confirmed: 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]',
+  invalid: 'bg-[rgba(239,68,68,0.10)] text-[#dc2626]',
+  pending: 'bg-[rgba(113,64,255,0.09)] text-[#7140FF]',
 }
 
 const KARMA_TYPE_STYLES: Record<KarmaEventType, { bg: string; text: string }> = {
@@ -42,11 +42,10 @@ function VoteHistoryList({
 }) {
   const { t, lang } = useLanguage()
   const navigate = useNavigate()
-  const badgeLabel: Record<BadgeVariant, string> = {
-    live: '● LIVE',
-    hot: 'HOT',
-    new: 'NEW',
-    end: lang === 'ko' ? '종료' : 'END',
+  const submissionBadgeLabel: Record<MyVoteItem['submissionStatus'], string> = {
+    confirmed: lang === 'ko' ? '정상 반영' : 'Confirmed',
+    invalid: lang === 'ko' ? '무효 처리' : 'Invalid',
+    pending: lang === 'ko' ? '집계 대기' : 'Pending',
   }
 
   if (isLoading) {
@@ -106,9 +105,9 @@ function VoteHistoryList({
           </div>
           <div className="flex flex-col items-end gap-[6px] flex-shrink-0">
             <span
-              className={`text-[9px] font-bold font-mono px-2 py-[3px] rounded-[10px] tracking-[0.4px] uppercase ${BADGE_STYLES[item.badge]}`}
+              className={`text-[10px] font-bold px-2 py-[3px] rounded-[10px] tracking-[0.1px] ${SUBMISSION_BADGE_STYLES[item.submissionStatus]}`}
             >
-              {badgeLabel[item.badge]}
+              {submissionBadgeLabel[item.submissionStatus]}
             </span>
             <span className="text-[12px] font-semibold text-[#7140FF] font-mono">
               +{item.karmaEarned}
@@ -188,6 +187,7 @@ export function MyPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigateBack = useSmartBackNavigation('/vote')
   const tab = searchParams.get('tab') === 'karma' ? 'karma' : 'votes'
+  const [voteFilter, setVoteFilter] = useState<'all' | 'active' | 'ended'>('all')
   const { t } = useLanguage()
 
   const {
@@ -198,6 +198,32 @@ export function MyPage() {
     loadMore: loadMoreVotes,
   } = useMyVotes()
   const { events, total, tier } = useMyKarma()
+
+  const filteredVotes = useMemo(() => {
+    if (voteFilter === 'active') {
+      return votes.filter((vote) => vote.status === 'active')
+    }
+
+    if (voteFilter === 'ended') {
+      return votes.filter((vote) => vote.status === 'ended')
+    }
+
+    return votes
+  }, [voteFilter, votes])
+
+  const voteFilterOptions = [
+    { key: 'all' as const, label: '전체', count: votes.length },
+    {
+      key: 'active' as const,
+      label: '진행중',
+      count: votes.filter((vote) => vote.status === 'active').length,
+    },
+    {
+      key: 'ended' as const,
+      label: '종료된 투표',
+      count: votes.filter((vote) => vote.status === 'ended').length,
+    },
+  ]
 
   return (
     <div className="min-h-screen pb-24">
@@ -300,13 +326,38 @@ export function MyPage() {
 
       <div className="bg-[#ffffff] min-h-screen">
         {tab === 'votes' ? (
-          <VoteHistoryList
-            votes={votes}
-            isLoading={isVotesLoading}
-            isLoadingMore={isVotesLoadingMore}
-            hasMore={hasMoreVotes}
-            onLoadMore={loadMoreVotes}
-          />
+          <>
+            <div className="px-4 pt-4 pb-1 flex gap-2 overflow-x-auto">
+              {voteFilterOptions.map((option) => {
+                const isActive = option.key === voteFilter
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => setVoteFilter(option.key)}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[12px] font-medium transition-colors ${
+                      isActive
+                        ? 'border-[#7140FF] bg-[#7140FF] text-white'
+                        : 'border-[#E7E9ED] bg-white text-[#505768]'
+                    }`}
+                  >
+                    <span>{option.label}</span>
+                    <span className={`font-mono text-[11px] ${isActive ? 'text-white/80' : 'text-[#8B93A7]'}`}>
+                      {option.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <VoteHistoryList
+              votes={filteredVotes}
+              isLoading={isVotesLoading}
+              isLoadingMore={isVotesLoadingMore}
+              hasMore={hasMoreVotes}
+              onLoadMore={loadMoreVotes}
+            />
+          </>
         ) : (
           <KarmaHistoryList events={events} total={total} />
         )}

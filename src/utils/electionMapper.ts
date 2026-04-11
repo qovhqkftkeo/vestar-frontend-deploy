@@ -27,9 +27,24 @@ export function mapContractStateToBadge(state: number): BadgeVariant {
 
 export function formatVoteDate(iso: string): string {
   const date = new Date(iso)
-  const pad = (value: number) => String(value).padStart(2, '0')
 
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  if (Number.isNaN(date.getTime())) {
+    return iso
+  }
+
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+
+  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+
+  return `${valueByType.year}.${valueByType.month}.${valueByType.day} ${valueByType.hour}:${valueByType.minute}`
 }
 
 export function deadlineLabel(endAt: string): string {

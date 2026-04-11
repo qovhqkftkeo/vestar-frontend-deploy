@@ -8,6 +8,8 @@ export interface MyVoteItem {
   title: string
   org: string
   date: string
+  status: 'active' | 'ended'
+  submissionStatus: 'confirmed' | 'invalid' | 'pending'
   karmaEarned: number
   choice: string
   invalidReason: string | null

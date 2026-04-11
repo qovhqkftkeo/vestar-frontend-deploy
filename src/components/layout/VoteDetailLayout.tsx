@@ -1,5 +1,5 @@
 import { createContext, useState } from 'react'
-import { Outlet, useLocation } from 'react-router'
+import { Outlet } from 'react-router'
 import { useScrollDirection } from '../../hooks/useScrollDirection'
 import type { ScrollState } from '../../hooks/useScrollDirection'
 import { Header } from './Header'
@@ -14,16 +14,10 @@ export function VoteDetailLayout() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const { scrollState, onScroll } = useScrollDirection()
-  const { pathname } = useLocation()
-  const isHostRoute = pathname.startsWith('/host/')
 
   return (
     <VoteDetailHeaderContext value={{ scrollState }}>
-      <div
-        className={`relative mx-auto h-screen w-full max-w-[430px] overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.12)] ${
-          isHostRoute ? 'bg-white' : 'bg-[#1C1D22]'
-        }`}
-      >
+      <div className="relative mx-auto h-screen w-full max-w-[430px] overflow-hidden bg-white shadow-[0_0_60px_rgba(0,0,0,0.12)]">
         <Header
           scrollState={scrollState}
           onOpenPanel={() => setPanelOpen(true)}
@@ -31,9 +25,7 @@ export function VoteDetailLayout() {
         />
 
         <main
-          className={`h-screen overflow-y-auto pt-[var(--header-h)] pb-[calc(7rem+var(--safe-bottom))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-            isHostRoute ? 'bg-white' : ''
-          }`}
+          className="h-screen overflow-y-auto bg-white pt-[var(--header-h)] pb-[calc(7rem+var(--safe-bottom))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           onScroll={onScroll}
         >
           <Outlet />

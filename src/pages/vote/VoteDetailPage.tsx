@@ -420,7 +420,7 @@ export function VoteDetailPage() {
         : 'selected candidate'
 
   return (
-    <>
+    <div className="min-h-full bg-white">
       <VoteHero vote={vote} />
 
       <div className="bg-[#FFFFFF]">
@@ -565,6 +565,6 @@ export function VoteDetailPage() {
           />
         </BottomSheet>
       )}
-    </>
+    </div>
   )
 }

@@ -149,26 +149,57 @@ export function HostFinalTallyPage() {
   return (
     <>
       {winner ? <VoteResultWinner result={result} winner={winner} mode="finalized" /> : null}
-      <VoteResultRankings rankedCandidates={result.rankedCandidates} mode="finalized" />
+      <div className="min-h-full pb-8">
+        <div className="mx-5 -mt-4 rounded-[28px] border border-[#E7E9ED] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBF9FF_100%)] px-5 py-5 shadow-[0_10px_30px_rgba(113,64,255,0.06)] relative z-[1]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[1px] text-[#7140FF] font-mono">
+                Final Tally
+              </div>
+              <div className="mt-2 text-[19px] font-semibold text-[#090A0B]">최종 집계 확정</div>
+              <div className="mt-2 text-[13px] leading-relaxed text-[#707070]">
+                현재 집계 결과를 확인하고, 필요하면 finalize로 온체인 최종 결과를 확정합니다.
+              </div>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold ${
+                isSettlementSettled
+                  ? 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]'
+                  : vote.onchainState === 'FINALIZED'
+                    ? 'bg-[rgba(113,64,255,0.12)] text-[#7140FF]'
+                    : 'bg-[#F3F4F6] text-[#5B6470]'
+              }`}
+            >
+              {isSettlementSettled
+                ? '정산 완료'
+                : vote.onchainState === 'FINALIZED'
+                  ? 'Finalize 완료'
+                  : 'Finalize 대기'}
+            </span>
+          </div>
+        </div>
 
-      <div className="px-5 pb-8 flex flex-col gap-3">
-        <button
-          type="button"
-          disabled={isSettlementSettled || !isFinalizeReady || isFinalizing}
-          onClick={handleFinalize}
-          className="w-full rounded-2xl bg-[#090A0B] py-4 text-[15px] font-bold text-white disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default"
-        >
-          {isFinalizing ? 'Finalize 진행 중...' : 'Finalize 실행'}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            navigate(isSettlementSettled ? `/host/${id}/settlement` : `/host/manage/${id}`)
-          }
-          className="w-full rounded-2xl border border-[#E7E9ED] bg-white py-4 text-[15px] font-bold text-[#090A0B] transition-colors hover:border-[#d9ddf3]"
-        >
-          {isSettlementSettled ? '정산 결과 보기' : '관리 화면으로 돌아가기'}
-        </button>
+        <VoteResultRankings rankedCandidates={result.rankedCandidates} mode="finalized" />
+
+        <div className="px-5 pt-2 flex flex-col gap-3">
+          <button
+            type="button"
+            disabled={isSettlementSettled || !isFinalizeReady || isFinalizing}
+            onClick={handleFinalize}
+            className="w-full rounded-2xl bg-[#7140FF] py-4 text-[15px] font-bold text-white disabled:bg-[#E7E9ED] disabled:text-[#707070] disabled:cursor-default hover:enabled:opacity-90 transition-opacity active:enabled:scale-[0.99]"
+          >
+            {isFinalizing ? 'Finalize 진행 중...' : 'Finalize 실행'}
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(isSettlementSettled ? `/host/${id}/settlement` : `/host/manage/${id}`)
+            }
+            className="w-full rounded-2xl border border-[#E7E9ED] bg-white py-4 text-[15px] font-bold text-[#090A0B] transition-colors hover:border-[#d9ddf3] active:scale-[0.99]"
+          >
+            {isSettlementSettled ? '정산 결과 보기' : '관리 화면으로 돌아가기'}
+          </button>
+        </div>
       </div>
     </>
   )

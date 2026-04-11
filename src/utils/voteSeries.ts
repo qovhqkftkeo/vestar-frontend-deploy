@@ -10,7 +10,7 @@ export interface VoteSeriesGroup {
 }
 
 export function buildVoteTargetPath(item: VoteListItem): string {
-  return item.badge === 'end' ? `/vote/${item.id}/result` : `/vote/${item.id}`
+  return `/vote/${item.id}`
 }
 
 export function buildVoteSeriesTargetPath(group: VoteSeriesGroup): string {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { fetchCandidateManifest } from '../../api/candidateManifest'
-import { fetchMoreVoteHistory, fetchVoteHistory } from '../../api/elections'
+import { fetchElectionDetail, fetchMoreVoteHistory, fetchVoteHistory } from '../../api/elections'
 import type {
   ApiElectionState,
   ApiVoteHistoryCursor,
@@ -22,6 +22,11 @@ export interface UseMyVotesResult {
   loadMore: () => void
 }
 
+const electionDetailRequestCache = new Map<
+  string,
+  Promise<Awaited<ReturnType<typeof fetchElectionDetail>> | null>
+>();
+
 function formatDate(dateValue: string): string {
   const date = new Date(dateValue)
 
@@ -29,28 +34,74 @@ function formatDate(dateValue: string): string {
     return ''
   }
 
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
 
-  return `${year}.${month}.${day}`
+  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+
+  return `${valueByType.year}.${valueByType.month}.${valueByType.day} ${valueByType.hour}:${valueByType.minute}`
 }
 
-function mapBadge(state: ApiElectionState): MyVoteItem['badge'] {
+function resolveVoteBadge(params: {
+  status: MyVoteItem['status']
+  latestState: ApiElectionState
+}): MyVoteItem['badge'] {
+  if (params.status === 'ended') {
+    return 'end'
+  }
+
+  if (params.latestState === 'SCHEDULED') {
+    return 'new'
+  }
+
+  return 'live'
+}
+
+function mapStatus(state: ApiElectionState): MyVoteItem['status'] {
   switch (state) {
     case 'ACTIVE':
-      return 'live'
+    case 'SCHEDULED':
+      return 'active'
     case 'FINALIZED':
     case 'CLOSED':
     case 'KEY_REVEAL_PENDING':
     case 'KEY_REVEALED':
     case 'CANCELLED':
-      return 'end'
-    case 'SCHEDULED':
-      return 'new'
     default:
-      return 'hot'
+      return 'ended'
   }
+}
+
+function getLatestElectionDetail(electionId: string) {
+  const cached = electionDetailRequestCache.get(electionId)
+  if (cached) {
+    return cached
+  }
+
+  const request = fetchElectionDetail(electionId).catch(() => null)
+  electionDetailRequestCache.set(electionId, request)
+  return request
+}
+
+function resolveVoteStatus(params: {
+  latestEndAt?: string | null
+  fallbackState: ApiElectionState
+}): MyVoteItem['status'] {
+  if (params.latestEndAt) {
+    const endTime = Date.parse(params.latestEndAt)
+    if (Number.isFinite(endTime)) {
+      return endTime <= Date.now() ? 'ended' : 'active'
+    }
+  }
+
+  return mapStatus(params.fallbackState)
 }
 
 function mapChoiceLabel(item: ApiVoteHistoryItem, lang: 'en' | 'ko'): string {
@@ -69,14 +120,36 @@ function mapChoiceLabel(item: ApiVoteHistoryItem, lang: 'en' | 'ko'): string {
   return item.selection.candidateKeys.join(', ')
 }
 
+function mapSubmissionStatus(item: ApiVoteHistoryItem): MyVoteItem['submissionStatus'] {
+  if (item.selection.isPending) {
+    return 'pending'
+  }
+
+  if (item.selection.isValid === false) {
+    return 'invalid'
+  }
+
+  return 'confirmed'
+}
+
 async function mapToMyVoteItem(
   item: ApiVoteHistoryItem,
   lang: 'en' | 'ko',
 ): Promise<MyVoteItem> {
+  const latestElection =
+    item.onchainElection?.id
+      ? await getLatestElectionDetail(item.onchainElection.id)
+      : null
+  const latestState = latestElection?.onchainState ?? item.onchainElection?.onchainState ?? 'FINALIZED'
+  const status = resolveVoteStatus({
+    latestEndAt: latestElection?.endAt ?? null,
+    fallbackState: latestState,
+  })
   const manifest = await fetchCandidateManifest(
     item.onchainElection?.candidateManifestUri,
     item.onchainElection?.candidateManifestHash,
   )
+  const submissionStatus = mapSubmissionStatus(item)
 
   return {
     id: item.id,
@@ -84,6 +157,8 @@ async function mapToMyVoteItem(
     title: getCandidateManifestTitle(manifest) || 'Untitled vote',
     org: getCandidateManifestSeriesPreimage(manifest) || 'Unknown series',
     date: formatDate(item.blockTimestamp),
+    status,
+    submissionStatus,
     karmaEarned: 0,
     choice: mapChoiceLabel(item, lang),
     invalidReason:
@@ -93,7 +168,7 @@ async function mapToMyVoteItem(
           null
         : null,
     selectedCandidateKeys: item.selection.candidateKeys,
-    badge: mapBadge(item.onchainElection?.onchainState ?? 'FINALIZED'),
+    badge: resolveVoteBadge({ status, latestState }),
   }
 }
 

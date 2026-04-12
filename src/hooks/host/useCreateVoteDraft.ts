@@ -11,7 +11,7 @@ import {
 } from 'viem'
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { preparePrivateElection } from '../../api/elections'
-import type { PreparePrivateElectionResponse } from '../../api/types'
+import type { ApiElection, ApiElectionState, PreparePrivateElectionResponse } from '../../api/types'
 import { fetchVerifiedOrganizerByWallet } from '../../api/verifiedOrganizers'
 import { getKarmaTier, getOrganizerCreationStatus } from '../../contracts/vestar/actions'
 import { vestarStatusTestnetChain } from '../../contracts/vestar/chain'
@@ -35,6 +35,7 @@ import type {
 } from '../../types/host'
 import {
   buildCandidateManifest,
+  type CandidateManifest,
   type CandidateManifestCandidate,
 } from '../../utils/candidateManifest'
 import {
@@ -46,6 +47,9 @@ import {
   uploadFileToPinata,
   uploadJsonArtifactToPinata,
 } from '../../utils/ipfs'
+import { saveLocalOpenElectionMetadata } from '../../utils/localOpenElectionMetadata'
+import { saveOptimisticElection } from '../../utils/optimisticVotes'
+import { invalidateViewCache } from '../../utils/viewCache'
 import { getWalletActionErrorMessage } from '../../utils/walletErrors'
 
 type SubmitVoteResult = {
@@ -53,6 +57,7 @@ type SubmitVoteResult = {
   electionAddress: Address
   elections: Array<{
     txHash: Hash
+    electionId: Hex
     electionAddress: Address
     title: string
   }>
@@ -75,6 +80,7 @@ type PreparedSubmissionElection = {
   title: string
   normalizedSettings: ElectionSettingsDraft
   candidates: FlattenedCandidate[]
+  manifest: CandidateManifest
   candidateManifestURI: string
   candidateManifestHash: Hex
   titleHash: Hex
@@ -96,6 +102,12 @@ type SubmissionProgressState = {
   current: number
   total: number
   currentTitle: string | null
+}
+
+type CreatedElectionDetails = {
+  electionId: Hex
+  electionAddress: Address
+  organizerVerifiedSnapshot: boolean
 }
 
 const PRIVATE_ELECTION_KEY_SCHEME_VERSION = 1
@@ -772,6 +784,7 @@ async function prepareSubmissionArtifacts(
         title: election.title,
         normalizedSettings,
         candidates: election.candidates,
+        manifest,
         candidateManifestURI,
         candidateManifestHash: localManifestArtifact.hash,
         titleHash: keccak256(toHex(election.title)),
@@ -868,7 +881,143 @@ function getCreateVoteErrorMessage(
   return walletMessage
 }
 
-async function parseElectionAddress(txHash: Hash): Promise<Address> {
+function resolveOptimisticElectionState(
+  startAt: string,
+  endAt: string,
+  resultRevealAt: string,
+  visibilityMode: ElectionSettingsDraft['visibilityMode'],
+): ApiElectionState {
+  const now = Date.now()
+  const startTime = Date.parse(startAt)
+  const endTime = Date.parse(endAt)
+  const resultRevealTime = Date.parse(resultRevealAt)
+
+  if (Number.isFinite(startTime) && now < startTime) {
+    return 'SCHEDULED'
+  }
+
+  if (Number.isFinite(endTime) && now < endTime) {
+    return 'ACTIVE'
+  }
+
+  if (visibilityMode === 'PRIVATE' && Number.isFinite(resultRevealTime) && now < resultRevealTime) {
+    return 'KEY_REVEAL_PENDING'
+  }
+
+  return 'FINALIZED'
+}
+
+function buildOptimisticElectionId(baseTimestamp: number, index: number) {
+  return String(baseTimestamp * 100 + index)
+}
+
+function buildOptimisticElection(params: {
+  id: string
+  organizerAddress: Address
+  organizationName: string
+  seriesId: Hex
+  bannerImageUrl: string | null
+  createdElection: CreatedElectionDetails
+  preparedElection: PreparedSubmissionElection
+  draft: VoteCreateDraft
+}): ApiElection {
+  const now = new Date().toISOString()
+  const effectiveResultRevealAt = getEffectiveResultRevealAt(params.preparedElection.normalizedSettings)
+  const organizer =
+    params.createdElection.organizerVerifiedSnapshot
+      ? {
+          walletAddress: params.organizerAddress,
+          organizationName: params.organizationName || params.organizerAddress,
+        }
+      : null
+
+  return {
+    id: params.id,
+    draftId: null,
+    onchainSeriesId: params.seriesId,
+    onchainElectionId: params.createdElection.electionId,
+    onchainElectionAddress: params.createdElection.electionAddress,
+    candidateManifestHash: params.preparedElection.candidateManifestHash,
+    candidateManifestUri: params.preparedElection.candidateManifestURI,
+    organizerWalletAddress: params.organizerAddress,
+    organizerVerifiedSnapshot: params.createdElection.organizerVerifiedSnapshot,
+    organizer,
+    visibilityMode: params.preparedElection.normalizedSettings.visibilityMode,
+    paymentMode: params.preparedElection.normalizedSettings.paymentMode,
+    ballotPolicy: params.preparedElection.normalizedSettings.ballotPolicy,
+    startAt: params.preparedElection.normalizedSettings.startDate,
+    endAt: params.preparedElection.normalizedSettings.endDate,
+    resultRevealAt: effectiveResultRevealAt,
+    minKarmaTier: Number(params.preparedElection.normalizedSettings.minKarmaTier),
+    resetIntervalSeconds:
+      params.preparedElection.normalizedSettings.ballotPolicy === 'ONE_PER_INTERVAL'
+        ? convertResetIntervalToSeconds(
+            params.preparedElection.normalizedSettings.resetIntervalValue,
+            params.preparedElection.normalizedSettings.resetIntervalUnit,
+          )
+        : 0,
+    allowMultipleChoice:
+      params.preparedElection.normalizedSettings.ballotPolicy === 'UNLIMITED_PAID'
+        ? false
+        : params.preparedElection.normalizedSettings.maxChoices > 1,
+    maxSelectionsPerSubmission:
+      params.preparedElection.normalizedSettings.ballotPolicy === 'UNLIMITED_PAID'
+        ? 1
+        : Math.max(
+            params.preparedElection.normalizedSettings.maxChoices > 1 ? 2 : 1,
+            params.preparedElection.normalizedSettings.maxChoices,
+          ),
+    timezoneWindowOffset: -new Date().getTimezoneOffset() * 60,
+    paymentToken:
+      params.preparedElection.normalizedSettings.paymentMode === 'PAID'
+        ? vestarContractAddresses.mockUsdt
+        : null,
+    costPerBallot:
+      params.preparedElection.normalizedSettings.paymentMode === 'PAID'
+        ? params.preparedElection.normalizedSettings.costPerBallotEth || '0'
+        : '0',
+    onchainState: resolveOptimisticElectionState(
+      params.preparedElection.normalizedSettings.startDate,
+      params.preparedElection.normalizedSettings.endDate,
+      effectiveResultRevealAt,
+      params.preparedElection.normalizedSettings.visibilityMode,
+    ),
+    title: params.preparedElection.title,
+    category: params.draft.category || null,
+    coverImageUrl: params.preparedElection.electionCoverImageUrl,
+    syncState: 'PREPARED',
+    series: {
+      id: `optimistic-series-${params.seriesId}`,
+      onchainSeriesId: params.seriesId,
+      seriesPreimage: params.draft.title,
+      coverImageUrl: params.bannerImageUrl,
+    },
+    electionKey: params.preparedElection.privatePrepare
+      ? {
+          publicKey: params.preparedElection.privatePrepare.publicKey.value,
+        }
+      : null,
+    electionCandidates: params.preparedElection.manifest.candidates.map((candidate, index) => ({
+      id: `${params.createdElection.electionId}-${index + 1}`,
+      candidateKey: candidate.candidateKey,
+      imageUrl: candidate.imageUrl ?? null,
+      displayOrder: candidate.displayOrder,
+    })),
+    validDecryptedBallotCount: 0,
+    resultSummary: {
+      id: `optimistic-summary-${params.createdElection.electionId}`,
+      electionRefId: params.id,
+      totalSubmissions: 0,
+      totalDecryptedBallots: 0,
+      totalValidVotes: 0,
+      totalInvalidVotes: 0,
+      createdAt: now,
+      updatedAt: now,
+    },
+  }
+}
+
+async function parseCreatedElection(txHash: Hash): Promise<CreatedElectionDetails> {
   const receipt = await vestarUtils.waitForReceipt(txHash)
 
   for (const log of receipt.logs) {
@@ -883,12 +1032,16 @@ async function parseElectionAddress(txHash: Hash): Promise<Address> {
       })
 
       if (parsed.eventName === 'ElectionCreated') {
-        return parsed.args.electionAddress as Address
+        return {
+          electionId: parsed.args.electionId as Hex,
+          electionAddress: parsed.args.electionAddress as Address,
+          organizerVerifiedSnapshot: Boolean(parsed.args.organizerVerifiedSnapshot),
+        }
       }
     } catch {}
   }
 
-  throw new Error('ElectionCreated 이벤트에서 electionAddress를 찾지 못했습니다.')
+  throw new Error('ElectionCreated 이벤트에서 election 정보를 찾지 못했습니다.')
 }
 
 export interface UseCreateVoteDraftResult {
@@ -1289,6 +1442,7 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
       }
 
       const elections: SubmitVoteResult['elections'] = []
+      const optimisticBaseTimestamp = Date.now()
 
       setSubmissionProgress({
         stage: 'preparing',
@@ -1390,14 +1544,51 @@ export function useCreateVoteDraft(): UseCreateVoteDraftResult {
           config,
           preparedElection.initialCandidateHashes,
         )
-        const electionAddress = await parseElectionAddress(txHash)
+        const createdElection = await parseCreatedElection(txHash)
+
+        const optimisticElection = buildOptimisticElection({
+          id: buildOptimisticElectionId(optimisticBaseTimestamp, index),
+          organizerAddress,
+          organizationName: draft.group.trim(),
+          seriesId,
+          bannerImageUrl: preparedSubmission.bannerImageUrl,
+          createdElection,
+          preparedElection,
+          draft,
+        })
+
+        saveOptimisticElection(optimisticElection)
+        saveLocalOpenElectionMetadata({
+          onchainElectionId: createdElection.electionId,
+          onchainElectionAddress: createdElection.electionAddress,
+          seriesId,
+          title: preparedElection.title,
+          coverImageUrl: preparedElection.electionCoverImageUrl,
+          series: {
+            seriesPreimage: draft.title,
+            coverImageUrl: preparedSubmission.bannerImageUrl,
+          },
+          electionCandidates: preparedElection.manifest.candidates.map((candidate) => ({
+            candidateKey: candidate.candidateKey,
+            displayName: candidate.displayName,
+            imageUrl: candidate.imageUrl ?? null,
+            displayOrder: candidate.displayOrder,
+          })),
+          createdAt: new Date().toISOString(),
+        })
 
         elections.push({
           txHash,
-          electionAddress,
+          electionId: createdElection.electionId,
+          electionAddress: createdElection.electionAddress,
           title: preparedElection.title,
         })
       }
+
+      invalidateViewCache('vote-list:')
+      invalidateViewCache('vote-hot:')
+      invalidateViewCache('vote-detail:')
+      invalidateViewCache('host-votes:')
 
       const lastElection = elections[elections.length - 1]
 

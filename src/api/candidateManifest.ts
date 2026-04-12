@@ -5,6 +5,7 @@ import { resolveReadableIpfsUrls } from '../utils/ipfs'
 const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000' as const
 
 const manifestRequestCache = new Map<string, Promise<CandidateManifest | null>>()
+const manifestResultCache = new Map<string, CandidateManifest | null>()
 
 function parseManifestBody(body: string) {
   try {
@@ -23,6 +24,10 @@ export async function fetchCandidateManifest(
   }
 
   const cacheKey = `${expectedHash ?? ZERO_HASH}:${uri}`
+  if (manifestResultCache.has(cacheKey)) {
+    return manifestResultCache.get(cacheKey) ?? null
+  }
+
   if (manifestRequestCache.has(cacheKey)) {
     return manifestRequestCache.get(cacheKey) ?? null
   }
@@ -61,6 +66,7 @@ export async function fetchCandidateManifest(
           })
         }
 
+        manifestResultCache.set(cacheKey, parsed)
         return parsed
       } catch (error) {
         console.warn('[candidateManifest] request threw', { uri, resolvedUrl, error })

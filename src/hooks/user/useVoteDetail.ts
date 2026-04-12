@@ -8,7 +8,16 @@ import {
   getTotalVotesForCandidate,
 } from '../../contracts/vestar/actions'
 import { mapToVoteDetail, resolveElectionCandidates } from '../../utils/electionMapper'
+import { findOptimisticElection } from '../../utils/optimisticVotes'
+import { getViewCache, setViewCache } from '../../utils/viewCache'
 import type { VoteDetailData } from '../../types/vote'
+
+type VoteDetailCacheValue = {
+  participantCount: number
+  vote: VoteDetailData
+}
+
+const VOTE_DETAIL_CACHE_TTL_MS = 15_000
 
 async function fetchContractState(electionAddress: Address) {
   try {
@@ -52,7 +61,22 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
 
   useEffect(() => {
     let cancelled = false
-    setIsLoading(true)
+    const cacheKey = `vote-detail:${id}`
+    const cached = getViewCache<VoteDetailCacheValue>(cacheKey, VOTE_DETAIL_CACHE_TTL_MS)
+    const optimisticElection = findOptimisticElection(id)
+
+    if (cached) {
+      setVote(cached.vote)
+      setParticipantCount(cached.participantCount)
+      setIsLoading(false)
+    } else if (optimisticElection) {
+      const optimisticVote = mapToVoteDetail(optimisticElection)
+      setVote(optimisticVote)
+      setParticipantCount(optimisticVote.participantCount)
+      setIsLoading(false)
+    } else {
+      setIsLoading(true)
+    }
 
     fetchElectionDetail(id)
       .then(async (election) => {
@@ -101,9 +125,16 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
         )
         setVote(mapped)
         setParticipantCount(mapped.participantCount)
+        setViewCache(cacheKey, {
+          vote: mapped,
+          participantCount: mapped.participantCount,
+        })
       })
       .catch(() => {
         if (cancelled) return
+        if (cached || optimisticElection) {
+          return
+        }
         setVote(null)
         setParticipantCount(0)
       })
@@ -125,7 +156,14 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
 
     const refresh = () => {
       getElectionResultSummary(vote.electionAddress as Address)
-        .then((summary) => setParticipantCount(Number(summary.totalSubmissions)))
+        .then((summary) => {
+          const nextParticipantCount = Number(summary.totalSubmissions)
+          setParticipantCount(nextParticipantCount)
+          setViewCache(`vote-detail:${vote.id}`, {
+            vote,
+            participantCount: nextParticipantCount,
+          })
+        })
         .catch(() => {})
     }
 

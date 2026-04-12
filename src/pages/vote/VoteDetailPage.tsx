@@ -17,6 +17,8 @@ import { useLanguage } from '../../providers/LanguageProvider'
 import { useToast } from '../../providers/ToastProvider'
 import { withKoreanParticle } from '../../utils/korean'
 import { formatBallotCostLabel } from '../../utils/paymentDisplay'
+import { saveOptimisticVoteHistoryEntry } from '../../utils/optimisticVotes'
+import { invalidateViewCache } from '../../utils/viewCache'
 import { getWalletActionErrorMessage } from '../../utils/walletErrors'
 import { CandidateSection, GroupedCandidateSection } from '../user/CandidateSection'
 import { VoteBottomSheetContent } from '../user/VoteBottomSheetContent'
@@ -307,12 +309,30 @@ export function VoteDetailPage() {
   }, [addToast, errorMessage, reset])
 
   useEffect(() => {
-    if (state !== 'success' || !vote) return
+    if (state !== 'success' || !vote || !address || !txHash) return
     const candidateIds = isGrouped
       ? sectionSelection.selectedSections.map((s) => s.candidateId)
       : Array.from(selectedIds)
+    const submissionTimestamp = new Date().toISOString()
     setHasVoted(true)
     markVoted(vote.id, candidateIds)
+    saveOptimisticVoteHistoryEntry({
+      id: `optimistic-vote-${txHash}`,
+      walletAddress: address as `0x${string}`,
+      txHash,
+      voteId: vote.id,
+      title: vote.title,
+      org: vote.org,
+      imageUrl: vote.imageUrl ?? null,
+      submittedAt: submissionTimestamp,
+      status: vote.badge === 'end' ? 'ended' : 'active',
+      paymentMode: vote.paymentMode === 'PAID' ? 'PAID' : 'FREE',
+      costPerBallot: vote.costPerBallot ?? null,
+      selectedCandidateKeys: candidateIds,
+      invalidReason: null,
+      badge: vote.badge,
+    })
+    invalidateViewCache('my-votes:')
     if (isGrouped) {
       addToast({
         type: 'success',
@@ -335,8 +355,10 @@ export function VoteDetailPage() {
     sectionSelection,
     selectedIds,
     selectedCandidate,
+    txHash,
     markVoted,
     addToast,
+    address,
     lang,
   ])
 

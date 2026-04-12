@@ -26,7 +26,7 @@ function EmptyState() {
 export function HostLiveTallyPage() {
   const { id = '1' } = useParams()
   const navigate = useNavigate()
-  const { vote, rankedCandidates, totalVotes, isLoading } = useHostLiveTally(id)
+  const { vote, rankedCandidates, totalSubmissions, isLoading } = useHostLiveTally(id)
 
   if (isLoading || !vote) {
     return <LoadingSkeleton />
@@ -34,7 +34,7 @@ export function HostLiveTallyPage() {
 
   return (
     <>
-      <VoteHero vote={{ ...vote, participantCount: totalVotes }} />
+      <VoteHero vote={{ ...vote, participantCount: totalSubmissions }} />
       <VoteInfoSection vote={vote} />
 
       <div className="mx-5 mt-5 rounded-3xl border border-[#E7E9ED] bg-white px-5 py-4">

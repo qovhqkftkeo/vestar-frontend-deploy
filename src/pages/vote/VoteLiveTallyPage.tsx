@@ -27,7 +27,7 @@ function EmptyState() {
 export function VoteLiveTallyPage() {
   const { id = '1' } = useParams()
   const navigate = useNavigate()
-  const { result, isLoading } = useVoteLiveTally(id)
+  const { result, isLoading, totalSubmissions } = useVoteLiveTally(id)
 
   if (isLoading) return <LoadingSkeleton />
   if (!result || result.rankedCandidates.length === 0) return <EmptyState />
@@ -37,7 +37,13 @@ export function VoteLiveTallyPage() {
 
   return (
     <>
-      <VoteResultWinner result={result} winner={winner} mode="live" />
+      <VoteResultWinner
+        result={result}
+        winner={winner}
+        mode="live"
+        summaryCount={totalSubmissions}
+        summaryKind="participants"
+      />
       <VoteResultRankings rankedCandidates={result.rankedCandidates} mode="live" />
 
       <div className="px-5 pb-8">

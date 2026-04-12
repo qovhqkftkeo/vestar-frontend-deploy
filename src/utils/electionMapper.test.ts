@@ -113,4 +113,25 @@ describe('electionMapper', () => {
     })
     expect(applied.coverImageUrl).toBe('ipfs://vote-cover')
   })
+
+  it('keeps the higher backend submission count when the contract summary is stale', () => {
+    const mapped = mapToVoteDetail(
+      createElection({
+        resultSummary: {
+          id: 'summary-378',
+          electionRefId: '378',
+          totalSubmissions: 3,
+          totalDecryptedBallots: 0,
+          totalValidVotes: 0,
+          totalInvalidVotes: 0,
+          createdAt: '2026-04-09T00:00:00.000Z',
+          updatedAt: '2026-04-09T00:00:00.000Z',
+        },
+      }),
+      undefined,
+      0n,
+    )
+
+    expect(mapped.participantCount).toBe(3)
+  })
 })

@@ -4,7 +4,10 @@ import { VoteHero } from './VoteHero'
 import type { VoteDetailData } from '../../types/vote'
 
 vi.mock('../../providers/LanguageProvider', () => ({
-  useLanguage: () => ({ t: (key: string) => key }),
+  useLanguage: () => ({
+    lang: 'ko',
+    t: (key: string) => ({ badge_end: '종료' })[key] ?? key,
+  }),
 }))
 
 vi.mock('../../utils/ipfs', () => ({
@@ -48,5 +51,10 @@ describe('VoteHero – notch-aware offsets', () => {
     const root = container.firstElementChild as HTMLElement
     expect(root.className).not.toContain('pt-[calc(56px')
     expect(root.className).toMatch(/var\(--header-h\)/)
+  })
+
+  it('uses the active participation copy for live votes', () => {
+    const { container } = render(<VoteHero vote={baseVote} />)
+    expect(container.textContent).toContain('1,000 명 참여 중')
   })
 })

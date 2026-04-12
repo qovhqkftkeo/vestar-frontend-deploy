@@ -22,7 +22,15 @@ interface VoteHeroProps {
 }
 
 export function VoteHero({ vote }: VoteHeroProps) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
+  const participantLabel =
+    vote.badge === 'end'
+      ? lang === 'ko'
+        ? '명 참여'
+        : 'participants'
+      : lang === 'ko'
+        ? '명 참여 중'
+        : 'participating'
 
   return (
     <div className="relative min-h-[360px] overflow-hidden bg-[#1C1D22] px-5 pb-7 pt-[calc(var(--header-h)+24px)] [margin-top:calc(var(--header-h)*-1)]">
@@ -66,7 +74,7 @@ export function VoteHero({ vote }: VoteHeroProps) {
 
         <div className="mb-3 flex flex-wrap items-center gap-0 text-[12px] text-white/74">
           <span className="font-mono font-semibold text-white">
-            {vote.participantCount.toLocaleString()} {t('vh_participants')}
+            {vote.participantCount.toLocaleString()} {participantLabel}
           </span>
           <span className="mx-2">·</span>
           <span>{vote.voteFrequency}</span>

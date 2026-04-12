@@ -6,10 +6,28 @@ interface VoteResultWinnerProps {
   result: VoteResultData
   winner: RankedCandidate
   mode?: 'live' | 'finalized'
+  summaryCount?: number
+  summaryKind?: 'votes' | 'participants'
 }
 
-export function VoteResultWinner({ result, winner, mode = 'finalized' }: VoteResultWinnerProps) {
+export function VoteResultWinner({
+  result,
+  winner,
+  mode = 'finalized',
+  summaryCount,
+  summaryKind = 'votes',
+}: VoteResultWinnerProps) {
   const { t, lang } = useLanguage()
+  const footerCount = summaryCount ?? result.totalVotes
+  const footerLabel =
+    summaryKind === 'participants'
+      ? lang === 'en'
+        ? 'participating'
+        : '명 참여 중'
+      : lang === 'en'
+        ? 'total votes'
+        : '총 표 수'
+
   return (
     <div className="bg-[linear-gradient(180deg,#1a1035_0%,#0f0a24_60%,#090A0B_100%)] px-5 pt-6 pb-8 relative overflow-hidden">
       {/* Bottom accent */}
@@ -69,8 +87,8 @@ export function VoteResultWinner({ result, winner, mode = 'finalized' }: VoteRes
 
       {/* Total votes */}
       <div className="mt-4 flex items-center justify-center gap-1.5 text-[12px] text-white/35 font-mono">
-        <span className="text-white/60 font-semibold">{result.totalVotes.toLocaleString()}</span>{' '}
-        {lang === 'en' ? 'total votes' : '명 참여'}
+        <span className="text-white/60 font-semibold">{footerCount.toLocaleString()}</span>{' '}
+        {footerLabel}
       </div>
     </div>
   )

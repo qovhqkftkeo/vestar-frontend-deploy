@@ -12,6 +12,10 @@ import type {
   PreparePrivateElectionRequest,
   PreparePrivateElectionResponse,
 } from './types'
+import {
+  findOptimisticElection,
+  mergeOptimisticElections,
+} from '../utils/optimisticVotes'
 
 export interface FetchElectionsParams {
   seriesId?: string
@@ -38,18 +42,27 @@ function buildQuery(params: Record<string, string | undefined>): string {
 }
 
 export function fetchElections(params: FetchElectionsParams = {}): Promise<ApiElection[]> {
-  return apiFetch<ApiElection[]>(
-    `/elections${buildQuery({
-      seriesId: params.seriesId,
-      onchainElectionId: params.onchainElectionId,
-      onchainElectionAddress: params.onchainElectionAddress,
-      organizerWalletAddress: params.organizerWalletAddress,
-      syncState: params.syncState,
-      onchainState: params.onchainState,
-      visibilityMode: params.visibilityMode,
-      sortBy: params.sortBy,
-    })}`,
-  )
+  const path = `/elections${buildQuery({
+    seriesId: params.seriesId,
+    onchainElectionId: params.onchainElectionId,
+    onchainElectionAddress: params.onchainElectionAddress,
+    organizerWalletAddress: params.organizerWalletAddress,
+    syncState: params.syncState,
+    onchainState: params.onchainState,
+    visibilityMode: params.visibilityMode,
+    sortBy: params.sortBy,
+  })}`
+
+  return apiFetch<ApiElection[]>(path)
+    .then((elections) => mergeOptimisticElections(elections, params))
+    .catch((error) => {
+      const optimisticOnly = mergeOptimisticElections([], params)
+      if (optimisticOnly.length > 0) {
+        return optimisticOnly
+      }
+
+      throw error
+    })
 }
 
 export function fetchElectionMetadata(
@@ -68,6 +81,11 @@ export function fetchElectionMetadata(
 }
 
 export function fetchElectionDetail(id: string): Promise<ApiElection> {
+  const optimisticElection = findOptimisticElection(id)
+  if (optimisticElection) {
+    return Promise.resolve(optimisticElection)
+  }
+
   return apiFetch<ApiElection>(`/elections/${id}`)
 }
 

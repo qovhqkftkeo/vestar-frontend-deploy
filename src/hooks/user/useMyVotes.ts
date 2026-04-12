@@ -14,7 +14,12 @@ import {
   getCandidateManifestSeriesPreimage,
   getCandidateManifestTitle,
 } from '../../utils/candidateManifest'
+import {
+  formatVoteHistoryDate,
+  mergeOptimisticVoteHistory,
+} from '../../utils/optimisticVotes'
 import { formatBallotCostLabel } from '../../utils/paymentDisplay'
+import { getViewCache, setViewCache } from '../../utils/viewCache'
 
 export interface UseMyVotesResult {
   votes: MyVoteItem[]
@@ -24,32 +29,18 @@ export interface UseMyVotesResult {
   loadMore: () => void
 }
 
+type MyVotesCacheValue = {
+  hasMore: boolean
+  nextCursor: ApiVoteHistoryCursor | null
+  votes: MyVoteItem[]
+}
+
+const MY_VOTES_CACHE_TTL_MS = 15_000
+
 const electionDetailRequestCache = new Map<
   string,
   Promise<Awaited<ReturnType<typeof fetchElectionDetail>> | null>
 >();
-
-function formatDate(dateValue: string): string {
-  const date = new Date(dateValue)
-
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-
-  const parts = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date)
-
-  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-
-  return `${valueByType.year}.${valueByType.month}.${valueByType.day} ${valueByType.hour}:${valueByType.minute}`
-}
 
 function resolveVoteBadge(params: {
   status: MyVoteItem['status']
@@ -168,11 +159,12 @@ async function mapToMyVoteItem(
 
   return {
     id: item.id,
+    txHash: item.onchainTxHash,
     voteId: item.onchainElection?.id ?? item.id,
     title: getCandidateManifestTitle(manifest) || 'Untitled vote',
     org: getCandidateManifestSeriesPreimage(manifest) || 'Unknown series',
     imageUrl: getCandidateManifestCoverImageUrl(manifest),
-    date: formatDate(item.blockTimestamp),
+    date: formatVoteHistoryDate(item.blockTimestamp),
     status,
     submissionStatus,
     spentLabel: resolveSpentLabel(lang, latestElection?.paymentMode, latestElection?.costPerBallot),
@@ -196,6 +188,7 @@ export function useMyVotes(): UseMyVotesResult {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [nextCursor, setNextCursor] = useState<ApiVoteHistoryCursor | null>(null)
+  const cacheKey = address ? `my-votes:${address.toLowerCase()}:${lang}` : null
 
   useEffect(() => {
     if (!isConnected || !address) {
@@ -208,20 +201,38 @@ export function useMyVotes(): UseMyVotesResult {
     }
 
     let cancelled = false
-    setIsLoading(true)
+    const cached = cacheKey ? getViewCache<MyVotesCacheValue>(cacheKey, MY_VOTES_CACHE_TTL_MS) : null
+    const optimisticVotes = mergeOptimisticVoteHistory(address, cached?.votes ?? [], lang)
+
+    if (optimisticVotes.length > 0 || cached) {
+      setVotes(optimisticVotes)
+      setHasMore(cached?.hasMore ?? false)
+      setNextCursor(cached?.nextCursor ?? null)
+      setIsLoading(false)
+    } else {
+      setIsLoading(true)
+    }
 
     fetchVoteHistory(address)
       .then(async (history) => {
         if (cancelled) return
         const mapped = await Promise.all(history.items.map((item) => mapToMyVoteItem(item, lang)))
         if (cancelled) return
-        setVotes(mapped)
+        const merged = mergeOptimisticVoteHistory(address, mapped, lang)
+        setVotes(merged)
         setHasMore(history.hasMore)
         setNextCursor(history.nextCursor)
+        if (cacheKey) {
+          setViewCache(cacheKey, {
+            votes: mapped,
+            hasMore: history.hasMore,
+            nextCursor: history.nextCursor,
+          })
+        }
       })
       .catch(() => {
         if (cancelled) return
-        setVotes([])
+        setVotes(mergeOptimisticVoteHistory(address, [], lang))
         setHasMore(false)
         setNextCursor(null)
       })
@@ -234,7 +245,7 @@ export function useMyVotes(): UseMyVotesResult {
     return () => {
       cancelled = true
     }
-  }, [address, isConnected, lang])
+  }, [address, cacheKey, isConnected, lang])
 
   const loadMore = useCallback(() => {
     if (!address || !isConnected || !nextCursor || !hasMore || isLoadingMore) {
@@ -246,7 +257,31 @@ export function useMyVotes(): UseMyVotesResult {
     fetchMoreVoteHistory(address, nextCursor)
       .then(async (history) => {
         const mapped = await Promise.all(history.items.map((item) => mapToMyVoteItem(item, lang)))
-        setVotes((current) => [...current, ...mapped])
+        setVotes((current) => {
+          const currentByTxHash = new Set(
+            current
+              .map((vote) => vote.txHash?.toLowerCase())
+              .filter((txHash): txHash is string => Boolean(txHash)),
+          )
+          const nextVotes = [
+            ...current,
+            ...mapped.filter((vote) => {
+              if (!vote.txHash) {
+                return true
+              }
+
+              const normalizedTxHash = vote.txHash.toLowerCase()
+              if (currentByTxHash.has(normalizedTxHash)) {
+                return false
+              }
+
+              currentByTxHash.add(normalizedTxHash)
+              return true
+            }),
+          ]
+
+          return nextVotes
+        })
         setHasMore(history.hasMore)
         setNextCursor(history.nextCursor)
       })

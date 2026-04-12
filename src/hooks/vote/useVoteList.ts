@@ -4,7 +4,10 @@ import { fetchElections } from '../../api/elections'
 import type { ApiElection } from '../../api/types'
 import { HOT_VOTES } from '../../data/mockVotes'
 import { applyManifestToElection, mapToHotVote } from '../../utils/electionMapper'
+import { getViewCache, setViewCache } from '../../utils/viewCache'
 import type { HotVote } from '../../types/vote'
+
+const HOT_VOTES_CACHE_TTL_MS = 15_000
 
 function parseVoteCount(value: string): number {
   const normalized = value.replace(/,/g, '').trim().toUpperCase()
@@ -52,6 +55,13 @@ export function useVoteList(): UseVoteListResult {
 
   useEffect(() => {
     let cancelled = false
+    const cacheKey = 'vote-hot'
+    const cachedHotVotes = getViewCache<HotVote[]>(cacheKey, HOT_VOTES_CACHE_TTL_MS)
+
+    if (cachedHotVotes) {
+      setHotVotes(cachedHotVotes)
+      setIsLoading(false)
+    }
 
     fetchElections({ onchainState: 'ACTIVE', sortBy: 'HOT' })
       .then((elections) => {
@@ -77,9 +87,14 @@ export function useVoteList(): UseVoteListResult {
           .slice(0, 4)
           .map(mapToHotVote)
         setHotVotes(hot)
+        setViewCache(cacheKey, hot)
       })
       .catch(() => {
         if (cancelled) return
+        if (cachedHotVotes) {
+          setHotVotes(cachedHotVotes)
+          return
+        }
         setHotVotes(hotMockFallback())
       })
       .finally(() => {

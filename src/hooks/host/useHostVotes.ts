@@ -7,6 +7,8 @@ import {
   formatVoteDate,
   mapApiStateToBadge,
 } from '../../utils/electionMapper'
+import { mergeOptimisticElections } from '../../utils/optimisticVotes'
+import { getViewCache, setViewCache } from '../../utils/viewCache'
 
 export interface HostVoteCardData {
   id: string
@@ -25,6 +27,8 @@ export interface UseHostVotesResult {
   isLoading: boolean
 }
 
+const HOST_VOTES_CACHE_TTL_MS = 15_000
+
 export function useHostVotes(): UseHostVotesResult {
   const { address, isConnected } = useAccount()
   const [votes, setVotes] = useState<HostVoteCardData[]>([])
@@ -38,7 +42,31 @@ export function useHostVotes(): UseHostVotesResult {
     }
 
     let cancelled = false
-    setIsLoading(true)
+    const cacheKey = `host-votes:${address.toLowerCase()}`
+    const cachedVotes = getViewCache<HostVoteCardData[]>(cacheKey, HOST_VOTES_CACHE_TTL_MS)
+    const optimisticVotes = mergeOptimisticElections([], {
+      organizerWalletAddress: address,
+    }).map(
+      (election) =>
+        ({
+          id: election.id,
+          title: election.title ?? 'Untitled election',
+          badge: mapApiStateToBadge(election.onchainState),
+          participantCount: election.resultSummary?.totalSubmissions ?? 0,
+          endDate: formatVoteDate(election.endAt),
+          emoji: '',
+        }) satisfies HostVoteCardData,
+    )
+
+    if (cachedVotes) {
+      setVotes(cachedVotes)
+      setIsLoading(false)
+    } else if (optimisticVotes.length > 0) {
+      setVotes(optimisticVotes)
+      setIsLoading(false)
+    } else {
+      setIsLoading(true)
+    }
 
     fetchElections({ organizerWalletAddress: address })
       .then(async (elections) => {
@@ -70,10 +98,11 @@ export function useHostVotes(): UseHostVotesResult {
         )
 
         setVotes(mappedWithManifest)
+        setViewCache(cacheKey, mappedWithManifest)
       })
       .catch(() => {
         if (cancelled) return
-        setVotes([])
+        setVotes(optimisticVotes)
       })
       .finally(() => {
         if (!cancelled) {

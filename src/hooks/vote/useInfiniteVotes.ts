@@ -3,10 +3,13 @@ import { fetchCandidateManifest } from '../../api/candidateManifest'
 import { fetchElections } from '../../api/elections'
 import { VOTE_ITEMS } from '../../data/mockVotes'
 import { applyManifestToElection, mapToVoteListItem } from '../../utils/electionMapper'
+import { mergeOptimisticElections } from '../../utils/optimisticVotes'
+import { getViewCache, setViewCache } from '../../utils/viewCache'
 import type { ApiElection } from '../../api/types'
 import type { VoteListItem } from '../../types/vote'
 
 const PAGE_SIZE = 6
+const VOTE_LIST_CACHE_TTL_MS = 15_000
 
 export type VoteFilter = 'all' | 'live' | 'hot' | 'new' | 'popular'
 
@@ -96,8 +99,21 @@ export function useInfiniteVotes(filter: VoteFilter = 'all'): UseInfiniteVotesRe
   useEffect(() => {
     let cancelled = false
     const onchainState = filterToApiState(filter)
+    const cacheKey = `vote-list:${filter}`
+    const cachedItems = getViewCache<VoteListItem[]>(cacheKey, VOTE_LIST_CACHE_TTL_MS)
+    const optimisticItems = sortElections(mergeOptimisticElections([], { onchainState }), filter).map(
+      (election, index) => mapToVoteListItem(election, index),
+    )
 
-    setIsLoading(true)
+    if (cachedItems) {
+      setAllItems(cachedItems)
+      setIsLoading(false)
+    } else if (optimisticItems.length > 0) {
+      setAllItems(optimisticItems)
+      setIsLoading(false)
+    } else {
+      setIsLoading(true)
+    }
     fetchElections({ onchainState })
       .then((elections) =>
         Promise.all(
@@ -115,11 +131,18 @@ export function useInfiniteVotes(filter: VoteFilter = 'all'): UseInfiniteVotesRe
       .then((elections) => {
         if (cancelled) return
         const sorted = sortElections(elections, filter)
-        setAllItems(sorted.map((e, i) => mapToVoteListItem(e, i)))
+        const nextItems = sorted.map((e, i) => mapToVoteListItem(e, i))
+        setAllItems(nextItems)
+        setViewCache(cacheKey, nextItems)
       })
       .catch(() => {
         if (cancelled) return
-        const mockFiltered = applyMockFilter(VOTE_ITEMS, filter)
+        if (cachedItems) {
+          setAllItems(cachedItems)
+          return
+        }
+        const mockFiltered =
+          optimisticItems.length > 0 ? optimisticItems : applyMockFilter(VOTE_ITEMS, filter)
         setAllItems(mockFiltered)
       })
       .finally(() => {

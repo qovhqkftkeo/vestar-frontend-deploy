@@ -4,6 +4,7 @@ export type BadgeVariant = 'live' | 'hot' | 'new' | 'end'
 
 export interface MyVoteItem {
   id: string
+  txHash: string | null
   voteId: string
   title: string
   org: string

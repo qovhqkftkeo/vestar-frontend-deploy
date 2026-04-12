@@ -31,7 +31,7 @@ export function useHostLiveTally(id: string): HostLiveTallyData {
         const tallyMap = new Map(rows.map((row) => [row.candidateKey, row.count]))
         const nextTotalVotes =
           summaries[0]?.totalValidVotes ?? rows.reduce((sum, row) => sum + row.count, 0)
-        const nextTotalSubmissions = summaries[0]?.totalSubmissions ?? nextTotalVotes
+        const nextTotalSubmissions = summaries[0]?.totalSubmissions ?? vote?.participantCount ?? nextTotalVotes
         const nextTotalInvalidVotes = summaries[0]?.totalInvalidVotes ?? 0
 
         const nextRankedCandidates = (vote?.candidates ?? [])

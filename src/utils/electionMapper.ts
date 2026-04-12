@@ -246,10 +246,11 @@ export function mapToVoteDetail(
       ? mapContractStateToBadge(contractState)
       : mapApiStateToBadge(election.onchainState)
 
+  const backendParticipantCount = election.resultSummary?.totalSubmissions ?? 0
   const participantCount =
     contractTotalSubmissions !== undefined
-      ? Number(contractTotalSubmissions)
-      : (election.resultSummary?.totalSubmissions ?? 0)
+      ? Math.max(Number(contractTotalSubmissions), backendParticipantCount)
+      : backendParticipantCount
 
   const candidates: Candidate[] = election.electionCandidates
     .slice()

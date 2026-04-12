@@ -47,6 +47,14 @@ const FILTER_CHIPS: FilterChip[] = [
   { labelKey: 'filter_other', filter: 'other' },
 ]
 
+function formatParticipationLabel(count: string, lang: string, isEnded: boolean) {
+  if (isEnded) {
+    return lang === 'ko' ? `${count}명 참여` : `${count} participants`
+  }
+
+  return lang === 'ko' ? `${count}명 참여 중` : `${count} participating`
+}
+
 function normalizeHomeCategory(category?: string | null): HomeCategoryFilter {
   const normalized = category?.trim().toLowerCase()
 
@@ -179,7 +187,7 @@ function HotVoteCard({ vote, onNavigate }: { vote: HotVote; onNavigate: (vote: H
         </div>
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-[#707070]">
-            {lang === 'ko' ? `${vote.count}명 참여` : `${vote.count} votes`}
+            {formatParticipationLabel(vote.count, lang, vote.badge === 'end')}
           </span>
           {vote.badge === 'end' ? (
             <span className="bg-[#E7E9ED] text-[#707070] rounded-lg px-[11px] py-[5px] text-[11px] font-semibold">
@@ -216,13 +224,7 @@ function SeriesVoteCard({
           .join(' · ')
   const descriptionLabel =
     group.items.length === 1
-      ? isEndedSeries
-        ? lang === 'ko'
-          ? `${group.items[0].count}명 참여`
-          : `${group.items[0].count} votes`
-        : lang === 'ko'
-          ? `${group.items[0].count}명 참여 중`
-          : `${group.items[0].count} voting`
+      ? formatParticipationLabel(group.items[0].count, lang, isEndedSeries)
       : isEndedSeries
         ? lang === 'ko'
           ? `${group.items.length}개의 마감된 투표`

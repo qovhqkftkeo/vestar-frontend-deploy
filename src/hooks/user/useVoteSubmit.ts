@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Address, Hex } from "viem";
+import { maxUint256, type Address, type Hex } from "viem";
 import { useChainId, useSwitchChain, useWalletClient } from "wagmi";
 import {
   approveErc20Spender,
@@ -32,6 +32,7 @@ import { getWalletActionErrorMessage } from "../../utils/walletErrors";
 const VOTE_SUBMIT_PREFLIGHT_DEBOUNCE_MS = 350;
 const VOTE_SUBMIT_PREFLIGHT_TTL_MS = 15_000;
 const MAX_PREPARED_VOTE_SUBMISSION_CACHE_ENTRIES = 6;
+const MOCK_USDT_MAX_APPROVAL = maxUint256;
 
 export type SubmitState =
   | "idle"
@@ -455,12 +456,13 @@ export function useVoteSubmit(
                 walletClient,
                 vote.paymentToken,
                 vote.electionAddress as Address,
-                quotedPayment,
+                MOCK_USDT_MAX_APPROVAL,
               );
 
               console.info("[useVoteSubmit] approval sent", {
                 tokenAddress: vote.paymentToken,
                 spender: vote.electionAddress,
+                approvalAmount: MOCK_USDT_MAX_APPROVAL.toString(),
                 approvalHash,
               });
 
@@ -469,7 +471,7 @@ export function useVoteSubmit(
                 ...prepared,
                 createdAt: Date.now(),
                 balance,
-                allowance: quotedPayment,
+                allowance: MOCK_USDT_MAX_APPROVAL,
               });
             }
           }

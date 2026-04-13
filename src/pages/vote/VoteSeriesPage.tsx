@@ -1,31 +1,33 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router'
-import verifiedIcon from '../../assets/verified.svg'
-import { fetchCandidateManifest } from '../../api/candidateManifest'
-import { fetchElections, prefetchElectionDetail } from '../../api/elections'
-import { VoteListItemCard } from '../../components/vote/VoteListItemCard'
-import { VoteCardSkeleton } from '../../components/shared/VoteCardSkeleton'
-import { useVotedVotes } from '../../hooks/useVotedVotes'
-import { VOTE_ITEMS } from '../../data/mockVotes'
-import { useLanguage } from '../../providers/LanguageProvider'
-import type { VoteListItem } from '../../types/vote'
+import { useAccount } from 'wagmi'
 import { applyManifestToElection, mapToVoteListItem } from '../../utils/electionMapper'
 import { primeVoteDetailCacheFromElection } from '../../utils/voteDetailCache'
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
+import { fetchCandidateManifest } from "../../api/candidateManifest";
+import { fetchElections, prefetchElectionDetail } from "../../api/elections";
+import { VoteListItemCard } from "../../components/vote/VoteListItemCard";
+import { VoteCardSkeleton } from "../../components/shared/VoteCardSkeleton";
+import { VOTE_ITEMS } from "../../data/mockVotes";
+import { useVotedVotes } from "../../hooks/useVotedVotes";
+import { useLanguage } from "../../providers/LanguageProvider";
+import type { VoteListItem } from "../../types/vote";
+import verifiedIcon from "../../assets/verified.svg";
 import {
   buildVoteTargetPath,
   groupVoteItemsBySeries,
   type VoteSeriesGroup,
-} from '../../utils/voteSeries'
+} from "../../utils/voteSeries";
 
 type SeriesLocationState = {
-  title?: string
-  host?: string
-  verified?: boolean
-}
+  title?: string;
+  host?: string;
+  verified?: boolean;
+};
 
 export function VoteSeriesPage() {
   const { seriesKey } = useParams()
   const navigate = useNavigate()
+  const { address } = useAccount()
   const location = useLocation()
   const { isVoted } = useVotedVotes()
   const { t, lang } = useLanguage()
@@ -35,7 +37,7 @@ export function VoteSeriesPage() {
   const locationState = (location.state ?? {}) as SeriesLocationState
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     fetchElections()
       .then((elections) =>
@@ -44,51 +46,57 @@ export function VoteSeriesPage() {
             const manifest = await fetchCandidateManifest(
               election.candidateManifestUri,
               election.candidateManifestHash,
-            )
-            const hydratedElection = applyManifestToElection(election, manifest)
-            primeVoteDetailCacheFromElection(hydratedElection, manifest)
-            return hydratedElection
+            );
+            const hydratedElection = applyManifestToElection(
+              election,
+              manifest,
+            );
+            primeVoteDetailCacheFromElection(hydratedElection, manifest);
+            return hydratedElection;
           }),
         ),
       )
       .then((elections) => {
-        if (cancelled) return
-        setItems(elections.map((election, index) => mapToVoteListItem(election, index)))
+        if (cancelled) return;
+        setItems(
+          elections.map((election, index) =>
+            mapToVoteListItem(election, index),
+          ),
+        );
       })
       .catch(() => {
-        if (cancelled) return
-        setItems(VOTE_ITEMS)
+        if (cancelled) return;
+        setItems(VOTE_ITEMS);
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
+        if (!cancelled) setIsLoading(false);
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [])
+      cancelled = true;
+    };
+  }, []);
 
   const seriesGroup = useMemo<VoteSeriesGroup | null>(() => {
-    const groupedItems = groupVoteItemsBySeries(items)
-    return groupedItems.find((group) => group.key === decodedSeriesKey) ?? null
-  }, [decodedSeriesKey, items])
+    const groupedItems = groupVoteItemsBySeries(items);
+    return groupedItems.find((group) => group.key === decodedSeriesKey) ?? null;
+  }, [decodedSeriesKey, items]);
 
   useEffect(() => {
-    if (isLoading || !seriesGroup || seriesGroup.items.length !== 1) return
+    if (isLoading || !seriesGroup || seriesGroup.items.length !== 1) return;
 
-    navigate(buildVoteTargetPath(seriesGroup.items[0]), { replace: true })
-  }, [isLoading, navigate, seriesGroup])
+    navigate(buildVoteTargetPath(seriesGroup.items[0]), { replace: true });
+  }, [isLoading, navigate, seriesGroup]);
 
   const seriesTitle = seriesGroup?.title ?? locationState.title ?? t('vs_label')
   const seriesHost = seriesGroup?.host ?? locationState.host
   const seriesVerified = seriesGroup?.verified ?? locationState.verified
-  const handleVotePrefetch = (voteId: string) => {
-    const target = seriesGroup?.items.find((candidate) => candidate.id === voteId)
-    if (!target || target.badge === 'end') {
+  const handleVotePrefetch = (item: VoteListItem) => {
+    if (item.badge === 'end') {
       return
     }
 
-    prefetchElectionDetail(voteId)
+    prefetchElectionDetail(item.id, { voterAddress: address })
   }
 
   return (
@@ -114,7 +122,14 @@ export function VoteSeriesPage() {
           viewBox="0 0 120 120"
           fill="none"
         >
-          <circle cx="60" cy="60" r="52" stroke="#7140FF" strokeWidth="5" strokeDasharray="4 8" />
+          <circle
+            cx="60"
+            cy="60"
+            r="52"
+            stroke="#7140FF"
+            strokeWidth="5"
+            strokeDasharray="4 8"
+          />
         </svg>
         {/* Decorative: sparkle star */}
         <svg
@@ -125,7 +140,10 @@ export function VoteSeriesPage() {
           viewBox="0 0 14 14"
           fill="none"
         >
-          <path d="M7 0L8.3 5.7L14 7L8.3 8.3L7 14L5.7 8.3L0 7L5.7 5.7Z" fill="#7140FF" />
+          <path
+            d="M7 0L8.3 5.7L14 7L8.3 8.3L7 14L5.7 8.3L0 7L5.7 5.7Z"
+            fill="#7140FF"
+          />
         </svg>
         {/* Bottom separator */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7140FF]/25 to-transparent" />
@@ -134,7 +152,7 @@ export function VoteSeriesPage() {
           <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#7140FF]/20 bg-[rgba(113,64,255,0.07)] px-3 py-[5px]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7140FF]" />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[1.2px] text-[#7140FF]">
-              {t('vs_label')}
+              {t("vs_label")}
             </span>
           </span>
           <h1 className="mt-1 bg-gradient-to-r from-[#7140FF] to-[#22d3ee] bg-clip-text text-[26px] font-bold tracking-tight leading-tight text-transparent">
@@ -144,10 +162,10 @@ export function VoteSeriesPage() {
         <div className="mt-2 flex items-center gap-2 text-[12px] text-[#707070]">
           <span>
             {seriesGroup
-              ? lang === 'ko'
+              ? lang === "ko"
                 ? `${seriesGroup.items.length}개의 투표`
-                : `${seriesGroup.items.length} vote${seriesGroup.items.length === 1 ? '' : 's'}`
-              : t('vs_loading')}
+                : `${seriesGroup.items.length} vote${seriesGroup.items.length === 1 ? "" : "s"}`
+              : t("vs_loading")}
           </span>
           {seriesHost ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-[#E7E9ED] bg-white px-2.5 py-1">
@@ -158,7 +176,7 @@ export function VoteSeriesPage() {
                   className="w-4 h-4"
                   style={{
                     filter:
-                      'brightness(0) saturate(100%) invert(48%) sepia(76%) saturate(566%) hue-rotate(88deg) brightness(95%) contrast(93%)',
+                      "brightness(0) saturate(100%) invert(48%) sepia(76%) saturate(566%) hue-rotate(88deg) brightness(95%) contrast(93%)",
                   }}
                 />
               ) : null}
@@ -183,6 +201,7 @@ export function VoteSeriesPage() {
               onNavigate={(id) => {
                 const target = seriesGroup.items.find((candidate) => candidate.id === id)
                 if (!target) return
+                handleVotePrefetch(target)
                 navigate(buildVoteTargetPath(target))
               }}
               isVoted={isVoted(item.id)}
@@ -190,10 +209,10 @@ export function VoteSeriesPage() {
           ))
         ) : (
           <div className="rounded-2xl border border-[#E7E9ED] bg-white px-4 py-5 text-[14px] text-[#707070]">
-            {t('vs_empty')}
+            {t("vs_empty")}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

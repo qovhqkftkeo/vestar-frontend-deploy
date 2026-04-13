@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
+import { useAccount } from 'wagmi'
 import verifiedIcon from '../../assets/verified.svg'
 import { fetchCandidateManifest } from '../../api/candidateManifest'
 import { fetchElections, prefetchElectionDetail } from '../../api/elections'
@@ -26,6 +27,7 @@ type SeriesLocationState = {
 export function VoteSeriesPage() {
   const { seriesKey } = useParams()
   const navigate = useNavigate()
+  const { address } = useAccount()
   const location = useLocation()
   const { isVoted } = useVotedVotes()
   const { t, lang } = useLanguage()
@@ -82,13 +84,12 @@ export function VoteSeriesPage() {
   const seriesTitle = seriesGroup?.title ?? locationState.title ?? t('vs_label')
   const seriesHost = seriesGroup?.host ?? locationState.host
   const seriesVerified = seriesGroup?.verified ?? locationState.verified
-  const handleVotePrefetch = (voteId: string) => {
-    const target = seriesGroup?.items.find((candidate) => candidate.id === voteId)
-    if (!target || target.badge === 'end') {
+  const handleVotePrefetch = (item: VoteListItem) => {
+    if (item.badge === 'end') {
       return
     }
 
-    prefetchElectionDetail(voteId)
+    prefetchElectionDetail(item.id, { voterAddress: address })
   }
 
   return (
@@ -183,6 +184,7 @@ export function VoteSeriesPage() {
               onNavigate={(id) => {
                 const target = seriesGroup.items.find((candidate) => candidate.id === id)
                 if (!target) return
+                handleVotePrefetch(target)
                 navigate(buildVoteTargetPath(target))
               }}
               isVoted={isVoted(item.id)}

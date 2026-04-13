@@ -68,7 +68,7 @@ describe('vote eligibility messages', () => {
     expect(getVoteSubmissionBlockButtonLabel('tier', 'ko')).toBe(
       '티어가 낮아서 참여할 수 없어요.',
     )
-    expect(getVoteSubmissionBlockButtonLabel('ballots', 'ko')).toBe(
+    expect(getVoteSubmissionBlockButtonLabel('ballots', 'ko', baseVote)).toBe(
       '투표권을 모두 사용했어요.',
     )
   })

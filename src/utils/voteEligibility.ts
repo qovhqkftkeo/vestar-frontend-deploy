@@ -1,4 +1,5 @@
 import type { VoteDetailData } from '../types/vote'
+import { getBallotRefreshExhaustedLabel } from './ballotRefresh'
 import { getKarmaTierDisplay } from './karmaTier'
 
 export type VoteSubmissionBlockReason = 'none' | 'tier' | 'ballots' | 'unavailable'
@@ -38,14 +39,22 @@ export function resolveVoteSubmissionBlockReason({
 export function getVoteSubmissionBlockButtonLabel(
   reason: VoteSubmissionBlockReason,
   lang: 'ko' | 'en',
+  vote?: VoteDetailData | null,
+  nowMs = Date.now(),
 ) {
   switch (reason) {
     case 'tier':
       return lang === 'ko' ? '티어가 낮아서 참여할 수 없어요.' : 'Your tier is too low to join.'
-    case 'ballots':
+    case 'ballots': {
+      const refreshLabel = vote ? getBallotRefreshExhaustedLabel(vote, lang, nowMs) : null
+      if (refreshLabel) {
+        return refreshLabel
+      }
+
       return lang === 'ko'
         ? '투표권을 모두 사용했어요.'
         : 'This address has used all available ballots.'
+    }
     case 'unavailable':
       return lang === 'ko' ? '현재 제출 가능한 투표권이 없습니다.' : 'No ballot available right now.'
     case 'none':
@@ -57,7 +66,11 @@ export function getVoteSubmissionBlockButtonLabel(
 export function getVoteSubmissionBlockErrorMessage(
   reason: VoteSubmissionBlockReason,
   lang: 'ko' | 'en',
-  vote?: Pick<VoteDetailData, 'minKarmaTier'> | null,
+  vote?: Pick<
+    VoteDetailData,
+    'minKarmaTier' | 'ballotPolicy' | 'resetIntervalSeconds' | 'timezoneWindowOffset' | 'endDateISO' | 'badge'
+  > | null,
+  nowMs = Date.now(),
 ) {
   switch (reason) {
     case 'tier': {
@@ -73,6 +86,12 @@ export function getVoteSubmissionBlockErrorMessage(
         : `This vote requires Tier ${minimumTier.id} · ${minimumTier.label} or higher.`
     }
     case 'ballots':
+      if (vote) {
+        const refreshLabel = getBallotRefreshExhaustedLabel(vote, lang, nowMs)
+        if (refreshLabel) {
+          return refreshLabel
+        }
+      }
       return lang === 'ko'
         ? '이 주소로 사용할 수 있는 투표권을 모두 사용했습니다.'
         : 'This address has already used all available ballots.'

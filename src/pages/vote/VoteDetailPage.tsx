@@ -448,7 +448,7 @@ export function VoteDetailPage() {
         ? groupedSelectionLabel
         : canSubmitByEligibility
           ? t('vd_select_section')
-          : getVoteSubmissionBlockButtonLabel(eligibilityBlockReason, lang) ??
+          : getVoteSubmissionBlockButtonLabel(eligibilityBlockReason, lang, vote) ??
             (lang === 'ko'
               ? '현재 제출 가능한 투표권이 없습니다.'
               : 'No ballot available right now.')
@@ -460,7 +460,7 @@ export function VoteDetailPage() {
           }`
         : canSubmitByEligibility
           ? t('vd_select_candidate')
-          : getVoteSubmissionBlockButtonLabel(eligibilityBlockReason, lang) ??
+          : getVoteSubmissionBlockButtonLabel(eligibilityBlockReason, lang, vote) ??
             (lang === 'ko'
               ? '현재 제출 가능한 투표권이 없습니다.'
               : 'No ballot available right now.')

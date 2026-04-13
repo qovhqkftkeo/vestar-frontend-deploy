@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import type { Address } from 'viem'
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
@@ -190,6 +190,7 @@ export function VoteDetailPage() {
     canSubmitBallot: null,
     remainingBallots: undefined,
   })
+  const handledSuccessTxHashRef = useRef<string | null>(null)
 
   const { scrollState } = useContext(VoteDetailHeaderContext)
   const chainId = useChainId()
@@ -398,6 +399,10 @@ export function VoteDetailPage() {
 
   useEffect(() => {
     if (state !== 'success' || !vote || !address || !txHash) return
+    if (handledSuccessTxHashRef.current === txHash) return
+
+    handledSuccessTxHashRef.current = txHash
+
     const candidateIds = isGrouped
       ? sectionSelection.selectedSections.map((s) => s.candidateId)
       : Array.from(selectedIds)
@@ -421,33 +426,15 @@ export function VoteDetailPage() {
       badge: vote.badge,
     })
     invalidateViewCache('my-votes:')
-    if (isGrouped) {
-      addToast({
-        type: 'success',
-        message: `${sectionSelection.selectedCount} ${lang === 'ko' ? '섹션 투표 완료!' : 'sections voted!'}`,
-      })
-    } else {
-      const selectedCandidateName = selectedCandidate?.name ?? '후보'
-      addToast({
-        type: 'success',
-        message:
-          lang === 'ko'
-            ? `${withKoreanParticle(selectedCandidateName, '을/를')} 선택했어요!`
-            : `Voted for "${selectedCandidate?.name}"!`,
-      })
-    }
   }, [
-    state,
-    vote,
-    isGrouped,
-    sectionSelection,
-    selectedIds,
-    selectedCandidate,
-    txHash,
-    markVoted,
-    addToast,
     address,
-    lang,
+    isGrouped,
+    markVoted,
+    sectionSelection.selectedSections,
+    selectedIds,
+    state,
+    txHash,
+    vote,
   ])
 
   // Open danger modal when user taps the vote button

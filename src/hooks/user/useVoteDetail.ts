@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { fetchCandidateManifest } from "../../api/candidateManifest";
 import { fetchElectionDetail } from "../../api/elections";
@@ -9,6 +9,7 @@ import {
 } from "../../contracts/vestar/actions";
 import {
   mapToVoteDetail,
+  resolveDisplayedParticipantCount,
   resolveElectionCandidates,
 } from "../../utils/electionMapper";
 import { findOptimisticElection } from "../../utils/optimisticVotes";
@@ -55,6 +56,75 @@ export interface UseVoteDetailResult {
   vote: VoteDetailData | null;
   isLoading: boolean;
   participantCount: number;
+  applyOptimisticSubmission: (candidateKeys: string[]) => void;
+}
+
+function collectVoteCandidateKeys(vote: VoteDetailData) {
+  const directCandidateKeys = vote.candidates.map((candidate) => candidate.id);
+  const sectionCandidateKeys =
+    vote.sections?.flatMap((section) =>
+      section.candidates.map((candidate) => candidate.id),
+    ) ?? [];
+
+  return Array.from(new Set([...directCandidateKeys, ...sectionCandidateKeys]));
+}
+
+function applyCandidateVoteMap(
+  vote: VoteDetailData,
+  candidateVotes?: Map<string, bigint>,
+): VoteDetailData {
+  if (!candidateVotes || candidateVotes.size === 0) {
+    return vote;
+  }
+
+  const applyVotes = <T extends { id: string; votes?: number }>(candidate: T): T => {
+    if (!candidateVotes.has(candidate.id)) {
+      return candidate;
+    }
+
+    return {
+      ...candidate,
+      votes: Number(candidateVotes.get(candidate.id)),
+    };
+  };
+
+  return {
+    ...vote,
+    candidates: vote.candidates.map((candidate) => applyVotes(candidate)),
+    sections: vote.sections?.map((section) => ({
+      ...section,
+      candidates: section.candidates.map((candidate) => applyVotes(candidate)),
+    })),
+  };
+}
+
+export function applyOptimisticVoteSubmission(
+  vote: VoteDetailData,
+  candidateKeys: string[],
+): VoteDetailData {
+  const selectedCandidateKeys = new Set(candidateKeys);
+  const nextParticipantCount = vote.participantCount + 1;
+
+  const incrementVotes = <T extends { id: string; votes?: number }>(candidate: T): T => {
+    if (!selectedCandidateKeys.has(candidate.id) || typeof candidate.votes !== "number") {
+      return candidate;
+    }
+
+    return {
+      ...candidate,
+      votes: candidate.votes + 1,
+    };
+  };
+
+  return {
+    ...vote,
+    participantCount: nextParticipantCount,
+    candidates: vote.candidates.map((candidate) => incrementVotes(candidate)),
+    sections: vote.sections?.map((section) => ({
+      ...section,
+      candidates: section.candidates.map((candidate) => incrementVotes(candidate)),
+    })),
+  };
 }
 
 export function useVoteDetail(id: string): UseVoteDetailResult {
@@ -173,19 +243,66 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
     };
   }, [id]);
 
+  const applyOptimisticSubmission = useCallback((candidateKeys: string[]) => {
+    setVote((currentVote) => {
+      if (!currentVote) {
+        return currentVote;
+      }
+
+      const nextVote = applyOptimisticVoteSubmission(currentVote, candidateKeys);
+      setParticipantCount(nextVote.participantCount);
+      setCachedVoteDetail(id, {
+        vote: nextVote,
+        participantCount: nextVote.participantCount,
+      });
+      return nextVote;
+    });
+  }, [id]);
+
   useEffect(() => {
     if (!vote || vote.badge === "end" || !vote.electionAddress) {
       return;
     }
 
     const refresh = () => {
-      getElectionResultSummary(vote.electionAddress as Address)
-        .then((summary) => {
-          const nextParticipantCount = Number(summary.totalSubmissions);
+      const candidateKeys = vote.resultPublic ? collectVoteCandidateKeys(vote) : [];
+
+      Promise.all([
+        getElectionResultSummary(vote.electionAddress as Address),
+        candidateKeys.length > 0
+          ? fetchCandidateVotes(vote.electionAddress as Address, candidateKeys).catch(
+              () => undefined,
+            )
+          : Promise.resolve(undefined),
+      ])
+        .then(([summary, candidateVotes]) => {
+          const nextParticipantCount = resolveDisplayedParticipantCount({
+            backendParticipantCount: 0,
+            contractTotalSubmissions: summary.totalSubmissions,
+            candidateVotes,
+            fallbackParticipantCount: vote.participantCount,
+          });
           setParticipantCount(nextParticipantCount);
-          setCachedVoteDetail(vote.id, {
-            vote,
-            participantCount: nextParticipantCount,
+
+          setVote((currentVote) => {
+            if (!currentVote) {
+              return currentVote;
+            }
+
+            const nextVote = applyCandidateVoteMap(
+              {
+                ...currentVote,
+                participantCount: nextParticipantCount,
+              },
+              candidateVotes,
+            );
+
+            setCachedVoteDetail(vote.id, {
+              vote: nextVote,
+              participantCount: nextParticipantCount,
+            });
+
+            return nextVote;
           });
         })
         .catch(() => {});
@@ -200,5 +317,5 @@ export function useVoteDetail(id: string): UseVoteDetailResult {
     };
   }, [vote]);
 
-  return { vote, isLoading, participantCount };
+  return { vote, isLoading, participantCount, applyOptimisticSubmission };
 }

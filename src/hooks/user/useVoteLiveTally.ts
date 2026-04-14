@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchLiveTally, fetchResultSummaries } from '../../api/elections'
 import type { RankedCandidate, VoteResultData } from '../../types/vote'
 import { assignCompetitionRanks } from '../../utils/ranking'
+import { resolveDisplayedParticipantCount } from '../../utils/electionMapper'
 import { useVoteDetail } from './useVoteDetail'
 
 export interface UseVoteLiveTallyResult {
@@ -77,7 +78,16 @@ export function useVoteLiveTally(id: string): UseVoteLiveTallyResult {
           rankedCandidates,
           mode: 'live',
         })
-        setTotalSubmissions(summary?.totalSubmissions ?? participantCount ?? nextTotalVotes)
+        setTotalSubmissions(
+          resolveDisplayedParticipantCount({
+            backendParticipantCount: summary?.totalSubmissions ?? 0,
+            fallbackParticipantCount: participantCount ?? 0,
+            candidateVotes:
+              vote.visibilityMode === 'OPEN'
+                ? new Map(nextRankedCandidates.map((candidate) => [candidate.id, BigInt(candidate.votes)]))
+                : undefined,
+          }),
+        )
         setTotalInvalidVotes(summary?.totalInvalidVotes ?? 0)
       })
       .catch(() => {

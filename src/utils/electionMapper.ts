@@ -72,6 +72,29 @@ export function formatCount(value: number): string {
   return value.toLocaleString()
 }
 
+export function resolveDisplayedParticipantCount({
+  backendParticipantCount = 0,
+  contractTotalSubmissions,
+  candidateVotes,
+  fallbackParticipantCount = 0,
+}: {
+  backendParticipantCount?: number
+  contractTotalSubmissions?: bigint
+  candidateVotes?: Map<string, bigint>
+  fallbackParticipantCount?: number
+}) {
+  const visibleCandidateVoteTotal = candidateVotes
+    ? Array.from(candidateVotes.values()).reduce((sum, count) => sum + Number(count), 0)
+    : 0
+
+  return Math.max(
+    backendParticipantCount,
+    contractTotalSubmissions !== undefined ? Number(contractTotalSubmissions) : 0,
+    visibleCandidateVoteTotal,
+    fallbackParticipantCount,
+  )
+}
+
 export function mapBallotPolicyLabel(policy: string): string {
   switch (policy) {
     case 'ONE_PER_ELECTION':
@@ -247,10 +270,11 @@ export function mapToVoteDetail(
       : mapApiStateToBadge(election.onchainState)
 
   const backendParticipantCount = election.resultSummary?.totalSubmissions ?? 0
-  const participantCount =
-    contractTotalSubmissions !== undefined
-      ? Math.max(Number(contractTotalSubmissions), backendParticipantCount)
-      : backendParticipantCount
+  const participantCount = resolveDisplayedParticipantCount({
+    backendParticipantCount,
+    contractTotalSubmissions,
+    candidateVotes,
+  })
 
   const candidates: Candidate[] = election.electionCandidates
     .slice()

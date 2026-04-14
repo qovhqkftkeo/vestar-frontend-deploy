@@ -16,7 +16,10 @@ function trimFormattedAmount(value: string) {
   return value.replace(/\.?0+$/, '')
 }
 
-export function buildStatusFeePreview(estimates: StatusFeeEstimate[]): StatusFeePreview {
+export function buildStatusFeePreview(
+  estimates: StatusFeeEstimate[],
+  transactionCount = estimates.filter(Boolean).length,
+): StatusFeePreview {
   const nextEstimates = estimates.filter(Boolean)
   const totalEstimatedFee = nextEstimates.reduce((sum, estimate) => sum + estimate.estimatedFee, 0n)
 
@@ -24,7 +27,7 @@ export function buildStatusFeePreview(estimates: StatusFeeEstimate[]): StatusFee
     estimates: nextEstimates,
     isGasless: nextEstimates.every((estimate) => estimate.isGasless),
     totalEstimatedFee,
-    transactionCount: nextEstimates.length,
+    transactionCount,
   }
 }
 

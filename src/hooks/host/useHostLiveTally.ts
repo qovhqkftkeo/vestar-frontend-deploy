@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchLiveTally, fetchResultSummaries } from '../../api/elections'
 import type { RankedCandidate, VoteDetailData } from '../../types/vote'
+import { resolveDisplayedParticipantCount } from '../../utils/electionMapper'
 import { assignCompetitionRanks } from '../../utils/ranking'
 import { useVoteDetail } from '../user/useVoteDetail'
 
@@ -32,7 +33,11 @@ export function useHostLiveTally(id: string): HostLiveTallyData {
         const tallyMap = new Map(rows.map((row) => [row.candidateKey, row.count]))
         const nextTotalVotes =
           summaries[0]?.totalValidVotes ?? rows.reduce((sum, row) => sum + row.count, 0)
-        const nextTotalSubmissions = summaries[0]?.totalSubmissions ?? vote?.participantCount ?? nextTotalVotes
+        const nextTotalSubmissions = resolveDisplayedParticipantCount({
+          backendParticipantCount: summaries[0]?.totalSubmissions ?? 0,
+          fallbackParticipantCount: vote?.participantCount ?? 0,
+          candidateVotes: new Map(rows.map((row) => [row.candidateKey, BigInt(row.count)])),
+        })
         const nextTotalInvalidVotes = summaries[0]?.totalInvalidVotes ?? 0
 
         const nextRankedCandidates = (vote?.candidates ?? [])

@@ -1,5 +1,6 @@
 import { useAccount } from 'wagmi'
 import { applyManifestToElection, mapToVoteListItem } from '../../utils/electionMapper'
+import { applyOptimisticParticipantCountToElection } from '../../utils/optimisticVoteCounts'
 import { primeVoteDetailCacheFromElection } from '../../utils/voteDetailCache'
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
@@ -51,8 +52,10 @@ export function VoteSeriesPage() {
               election,
               manifest,
             );
-            primeVoteDetailCacheFromElection(hydratedElection, manifest);
-            return hydratedElection;
+            const optimisticElection =
+              applyOptimisticParticipantCountToElection(hydratedElection);
+            primeVoteDetailCacheFromElection(optimisticElection, manifest);
+            return optimisticElection;
           }),
         ),
       )

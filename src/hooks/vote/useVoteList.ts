@@ -7,6 +7,10 @@ import {
   applyManifestToElection,
   mapToHotVote,
 } from "../../utils/electionMapper";
+import {
+  applyOptimisticParticipantCountToElection,
+  applyOptimisticParticipantCountsToHotVotes,
+} from "../../utils/optimisticVoteCounts";
 import { primeVoteDetailCacheFromElection } from "../../utils/voteDetailCache";
 import { getViewCache, setViewCache } from "../../utils/viewCache";
 import type { HotVote } from "../../types/vote";
@@ -76,7 +80,7 @@ export function useVoteList(): UseVoteListResult {
     );
 
     if (cachedHotVotes) {
-      setHotVotes(cachedHotVotes);
+      setHotVotes(applyOptimisticParticipantCountsToHotVotes(cachedHotVotes));
       setIsLoading(false);
     }
 
@@ -97,8 +101,10 @@ export function useVoteList(): UseVoteListResult {
         if (cancelled || !entries) return;
         const elections = entries.map(({ election, manifest }) => {
           const hydratedElection = applyManifestToElection(election, manifest);
-          primeVoteDetailCacheFromElection(hydratedElection, manifest);
-          return hydratedElection;
+          const optimisticElection =
+            applyOptimisticParticipantCountToElection(hydratedElection);
+          primeVoteDetailCacheFromElection(optimisticElection, manifest);
+          return optimisticElection;
         });
         // sungje : HOT 리스트는 manifest 반영 후 참여자 1명 이상인 투표만 남기고 참여 수 기준으로 정렬한다.
         const hot = [...elections]
@@ -112,7 +118,7 @@ export function useVoteList(): UseVoteListResult {
       .catch(() => {
         if (cancelled) return;
         if (cachedHotVotes) {
-          setHotVotes(cachedHotVotes);
+          setHotVotes(applyOptimisticParticipantCountsToHotVotes(cachedHotVotes));
           return;
         }
         setHotVotes(hotMockFallback());

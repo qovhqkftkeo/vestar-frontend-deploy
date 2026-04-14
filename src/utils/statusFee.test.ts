@@ -47,6 +47,25 @@ describe('buildStatusFeePreview', () => {
     expect(preview.totalEstimatedFee).toBe(63_000n)
     expect(preview.transactionCount).toBe(2)
   })
+
+  it('supports a planned transaction count that is higher than the currently estimable txs', () => {
+    const preview = buildStatusFeePreview(
+      [
+        {
+          gasLimit: 21_000n,
+          baseFeePerGas: 0n,
+          priorityFeePerGas: 0n,
+          maxFeePerGas: 0n,
+          estimatedFee: 0n,
+          isGasless: true,
+        },
+      ],
+      2,
+    )
+
+    expect(preview.transactionCount).toBe(2)
+    expect(preview.totalEstimatedFee).toBe(0n)
+  })
 })
 
 describe('formatStatusFeeAmount', () => {

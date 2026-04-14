@@ -21,6 +21,7 @@ import { useToast } from '../../providers/ToastProvider'
 import { withKoreanParticle } from '../../utils/korean'
 import { formatBallotCostLabel } from '../../utils/paymentDisplay'
 import { saveOptimisticVoteHistoryEntry } from '../../utils/optimisticVotes'
+import { updateCachedVoteCollectionCounts } from '../../utils/optimisticVoteCounts'
 import { isMobileExternalBrowser, openMetaMaskLink } from '../../utils/mobileWallet'
 import {
   getVoteSubmissionBlockButtonLabel,
@@ -162,7 +163,7 @@ export function VoteDetailPage() {
   const { id = '1' } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { vote } = useVoteDetail(id)
+  const { vote, participantCount, applyOptimisticSubmission } = useVoteDetail(id)
   const { address } = useAccount()
 
   const isGrouped = (vote?.sections?.length ?? 0) > 0
@@ -423,6 +424,9 @@ export function VoteDetailPage() {
       ? sectionSelection.selectedSections.map((s) => s.candidateId)
       : Array.from(selectedIds)
     const submissionTimestamp = new Date().toISOString()
+    const nextParticipantCount = participantCount + 1
+    applyOptimisticSubmission(candidateIds)
+    updateCachedVoteCollectionCounts(vote.id, nextParticipantCount)
     setHasVoted(true)
     markVoted(vote.id, candidateIds)
     saveOptimisticVoteHistoryEntry({
@@ -444,8 +448,10 @@ export function VoteDetailPage() {
     invalidateViewCache('my-votes:')
   }, [
     address,
+    applyOptimisticSubmission,
     isGrouped,
     markVoted,
+    participantCount,
     sectionSelection.selectedSections,
     selectedIds,
     state,
@@ -557,7 +563,7 @@ export function VoteDetailPage() {
 
   return (
     <div className="min-h-full bg-white">
-      <VoteHero vote={vote} />
+      <VoteHero vote={{ ...vote, participantCount }} />
 
       <div className="bg-[#FFFFFF]">
         <VoteInfoSection vote={vote} />

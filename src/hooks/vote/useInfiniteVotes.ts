@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchCandidateManifest } from "../../api/candidateManifest";
 import { fetchElections } from "../../api/elections";
 import { mergeOptimisticElections } from "../../utils/optimisticVotes";
+import {
+  applyOptimisticParticipantCountToElection,
+  applyOptimisticParticipantCountToVoteListItem,
+  applyOptimisticParticipantCountsToVoteListItems,
+} from "../../utils/optimisticVoteCounts";
 import { primeVoteDetailCacheFromElection } from "../../utils/voteDetailCache";
 import { getViewCache, setViewCache } from "../../utils/viewCache";
 import type { ApiElection } from "../../api/types";
@@ -126,8 +131,11 @@ async function hydrateElections(elections: ApiElection[]) {
         election.candidateManifestHash,
       );
       const hydratedElection = applyManifestToElection(election, manifest);
-      primeVoteDetailCacheFromElection(hydratedElection, manifest);
-      return hydratedElection;
+      const optimisticElection = applyOptimisticParticipantCountToElection(
+        hydratedElection,
+      );
+      primeVoteDetailCacheFromElection(optimisticElection, manifest);
+      return optimisticElection;
     }),
   );
 }
@@ -168,10 +176,12 @@ export function useInfiniteVotes(
     const optimisticItems = sortElections(
       mergeOptimisticElections([], { onchainState }),
       filter,
-    ).map((election, index) => mapToVoteListItem(election, index));
+    )
+      .map((election, index) => mapToVoteListItem(election, index))
+      .map((item) => applyOptimisticParticipantCountToVoteListItem(item));
 
     if (cachedItems) {
-      setAllItems(cachedItems);
+      setAllItems(applyOptimisticParticipantCountsToVoteListItems(cachedItems));
       setIsLoading(false);
     } else if (optimisticItems.length > 0) {
       setAllItems(optimisticItems);
@@ -216,7 +226,7 @@ export function useInfiniteVotes(
         } catch {
           if (cancelled) return;
           if (cachedItems) {
-            setAllItems(cachedItems);
+            setAllItems(applyOptimisticParticipantCountsToVoteListItems(cachedItems));
           } else {
             const mockFiltered =
               optimisticItems.length > 0
@@ -277,7 +287,7 @@ export function useInfiniteVotes(
         .catch(() => {
           if (cancelled) return;
           if (cachedItems) {
-            setAllItems(cachedItems);
+            setAllItems(applyOptimisticParticipantCountsToVoteListItems(cachedItems));
             return;
           }
           const mockFiltered =

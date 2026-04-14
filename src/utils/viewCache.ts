@@ -26,6 +26,21 @@ export function setViewCache<T>(key: string, value: T) {
   })
 }
 
+export function updateViewCache<T>(
+  key: string,
+  maxAgeMs: number,
+  updater: (value: T) => T,
+) {
+  const cached = getViewCache<T>(key, maxAgeMs)
+  if (!cached) {
+    return null
+  }
+
+  const nextValue = updater(cached)
+  setViewCache(key, nextValue)
+  return nextValue
+}
+
 export function invalidateViewCache(prefix?: string) {
   if (!prefix) {
     viewCache.clear()

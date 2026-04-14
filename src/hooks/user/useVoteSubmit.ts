@@ -286,6 +286,8 @@ export function useVoteSubmit(
         walletClient.account.address,
       )
       const feeEstimates = []
+      let transactionCount = 1
+      let requiresApproval = false
 
       if (
         vote.paymentMode === 'PAID' &&
@@ -293,7 +295,16 @@ export function useVoteSubmit(
         vote.paymentToken !== '0x0000000000000000000000000000000000000000' &&
         prepared.quotedPayment > 0n
       ) {
+        let balance = prepared.balance
         let allowance = prepared.allowance
+
+        if (balance === undefined || balance < prepared.quotedPayment) {
+          balance = await getErc20Balance(vote.paymentToken, walletClient.account.address)
+        }
+
+        if (balance < prepared.quotedPayment) {
+          throw new Error(getInsufficientPaidVoteBalanceMessage(prepared.quotedPayment, lang))
+        }
 
         if (allowance === undefined || allowance < prepared.quotedPayment) {
           allowance = await getErc20Allowance(
@@ -304,6 +315,8 @@ export function useVoteSubmit(
         }
 
         if (allowance < prepared.quotedPayment) {
+          requiresApproval = true
+          transactionCount += 1
           feeEstimates.push(
             await estimateApproveErc20SpenderFee(
               walletClient,
@@ -315,7 +328,7 @@ export function useVoteSubmit(
         }
       }
 
-      if (vote.visibilityMode === 'PRIVATE') {
+      if (!requiresApproval && vote.visibilityMode === 'PRIVATE') {
         if (!prepared.encryptedBallot) {
           throw new Error('Private election payload could not be prepared.')
         }
@@ -327,7 +340,7 @@ export function useVoteSubmit(
             prepared.encryptedBallot,
           ),
         )
-      } else {
+      } else if (!requiresApproval) {
         feeEstimates.push(
           await estimateSubmitOpenVoteFee(
             walletClient,
@@ -337,7 +350,7 @@ export function useVoteSubmit(
         )
       }
 
-      return buildStatusFeePreview(feeEstimates)
+      return buildStatusFeePreview(feeEstimates, transactionCount)
     },
     [ensurePreparedSubmission, lang, walletClient],
   )

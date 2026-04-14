@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { ApiElection } from '../api/types'
 import type { CandidateManifest } from './candidateManifest'
-import { applyManifestToElection, mapToVoteDetail } from './electionMapper'
+import {
+  applyManifestToElection,
+  mapToVoteDetail,
+  resolveDisplayedParticipantCount,
+} from './electionMapper'
 
 function createElection(overrides: Partial<ApiElection> = {}): ApiElection {
   return {
@@ -133,5 +137,17 @@ describe('electionMapper', () => {
     )
 
     expect(mapped.participantCount).toBe(3)
+  })
+
+  it('prefers visible candidate totals when they exceed the summary submission count', () => {
+    expect(
+      resolveDisplayedParticipantCount({
+        backendParticipantCount: 5,
+        candidateVotes: new Map([
+          ['candidate-1', 3n],
+          ['candidate-2', 3n],
+        ]),
+      }),
+    ).toBe(6)
   })
 })

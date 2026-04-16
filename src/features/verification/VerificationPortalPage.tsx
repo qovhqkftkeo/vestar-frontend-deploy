@@ -1,6 +1,7 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useLanguage } from '../../providers/LanguageProvider'
+import { formatDateTimeInKst } from '../../utils/dateTime'
 import { resolvePublicIpfsUrl } from '../../utils/ipfs'
 import { ProofItem } from './components/cards/ProofItem'
 import { ResultCard } from './components/cards/ResultCard'
@@ -381,12 +382,12 @@ function App() {
   const syncedLabel = useMemo(() => {
     if (!lastSyncedAt) return null
 
-    return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
+    return formatDateTimeInKst(lastSyncedAt, lang === 'ko' ? 'ko-KR' : 'en-US', {
       hour: 'numeric',
       minute: '2-digit',
       second: '2-digit',
       hour12: false,
-    }).format(lastSyncedAt)
+    })
   }, [lang, lastSyncedAt])
 
   return (

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getBallotRefreshCountdownLabel,
+  getNextBallotRefreshAt,
   getVoteChoiceSummary,
   getVoteFrequencySummary,
 } from './ballotRefresh'
@@ -43,5 +44,17 @@ describe('ballot refresh helpers', () => {
         Date.parse('2026-04-13T12:02:00.000Z'),
       ),
     ).toBe('다음 투표권 갱신까지 3분 0초')
+  })
+
+  it('treats timezone-less end dates as UTC when computing refresh windows', () => {
+    expect(
+      getNextBallotRefreshAt(
+        'ONE_PER_INTERVAL',
+        86_400,
+        0,
+        '2026-04-20 00:00:00.000',
+        Date.parse('2026-04-13T12:00:00.000Z'),
+      ),
+    ).toBe(Date.parse('2026-04-14T00:00:00.000Z'))
   })
 })

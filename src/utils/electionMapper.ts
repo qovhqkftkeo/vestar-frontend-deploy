@@ -3,6 +3,7 @@ import { VESTAR_ELECTION_STATE } from '../contracts/vestar/types'
 import type { BadgeVariant, Candidate, HotVote, VoteDetailData, VoteListItem } from '../types/vote'
 import type { CandidateManifest } from './candidateManifest'
 import { getCandidateManifestSeriesPreimage, getCandidateManifestTitle } from './candidateManifest'
+import { formatCompactKstDateTime, getUtcDateTimeMs } from './dateTime'
 import {
   findLocalOpenElectionMetadata,
   type LocalOpenElectionMetadata,
@@ -26,29 +27,11 @@ export function mapContractStateToBadge(state: number): BadgeVariant {
 }
 
 export function formatVoteDate(iso: string): string {
-  const date = new Date(iso)
-
-  if (Number.isNaN(date.getTime())) {
-    return iso
-  }
-
-  const parts = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date)
-
-  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-
-  return `${valueByType.year}.${valueByType.month}.${valueByType.day} ${valueByType.hour}:${valueByType.minute}`
+  return formatCompactKstDateTime(iso) ?? iso
 }
 
 export function deadlineLabel(endAt: string): string {
-  const diff = new Date(endAt).getTime() - Date.now()
+  const diff = getUtcDateTimeMs(endAt) - Date.now()
 
   if (diff <= 0) return ''
 
@@ -62,7 +45,7 @@ export function deadlineLabel(endAt: string): string {
 }
 
 export function isUrgent(endAt: string): boolean {
-  const diff = new Date(endAt).getTime() - Date.now()
+  const diff = getUtcDateTimeMs(endAt) - Date.now()
   return diff > 0 && diff < 86_400_000
 }
 

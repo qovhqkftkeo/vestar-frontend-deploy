@@ -1,5 +1,6 @@
 import type { VoteBallotPolicy } from '../types/host'
 import type { VoteDetailData } from '../types/vote'
+import { getUtcDateTimeMs } from './dateTime'
 
 function formatShortDuration(totalSeconds: number, lang: 'ko' | 'en') {
   if (totalSeconds <= 0) {
@@ -99,7 +100,7 @@ export function getNextBallotRefreshAt(
     return null
   }
 
-  const endMs = endDateISO ? new Date(endDateISO).getTime() : Number.NaN
+  const endMs = endDateISO ? getUtcDateTimeMs(endDateISO) : Number.NaN
   if (Number.isFinite(endMs) && nowMs >= endMs) {
     return null
   }

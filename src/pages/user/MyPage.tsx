@@ -216,15 +216,15 @@ export function MyPage() {
   }, [voteFilter, votes])
 
   const voteFilterOptions = [
-    { key: 'all' as const, label: '전체', count: votes.length },
+    { key: 'all' as const, label: t('filter_all'), count: votes.length },
     {
       key: 'active' as const,
-      label: '진행중',
+      label: t('mp_filter_active'),
       count: votes.filter((vote) => vote.status === 'active').length,
     },
     {
       key: 'ended' as const,
-      label: '종료된 투표',
+      label: t('mp_filter_ended'),
       count: votes.filter((vote) => vote.status === 'ended').length,
     },
   ]

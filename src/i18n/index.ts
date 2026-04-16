@@ -206,6 +206,8 @@ const STRINGS = {
   mp_no_karma: { en: 'No Karma earned yet', ko: '아직 획득한 Karma가 없어요' },
   mp_total_karma_stat: { en: 'Total Karma', ko: '총 보유 Karma' },
   mp_voted_label: { en: 'Voted:', ko: '선택:' },
+  mp_filter_active: { en: 'Active', ko: '진행중' },
+  mp_filter_ended: { en: 'Ended', ko: '종료된 투표' },
 
   // ── Vote Result ─────────────────────────────────────────────────────────────
   vr_results: { en: 'Results', ko: '결과 발표' },

@@ -122,7 +122,7 @@ export async function syncVerificationElectionSummaries() {
       hostBadge: formatHostBadge(Boolean(log.args.organizerVerifiedSnapshot), lang),
       address: electionAddress,
       addressExplorerUrl: makeExplorerUrl('address', electionAddress),
-      endedAtLabel: '',
+      resultRevealAtLabel: '',
       finalizeTransactionHash: lang === 'ko' ? '아직 없음' : 'Not available yet',
       finalizeExplorerUrl: STATUS_EXPLORER_URL,
       resultSummaryNote: null,
@@ -443,10 +443,7 @@ async function loadElectionSummary(
         : previous.hostBadge,
     address: electionAddress,
     addressExplorerUrl: makeExplorerUrl('address', electionAddress),
-    endedAtLabel:
-      resolveVerificationLanguage() === 'ko'
-        ? `${formatDate(config.endAt)} 종료`
-        : `Ends ${formatDate(config.endAt)}`,
+    resultRevealAtLabel: formatDate(config.resultRevealAt),
     finalizeTransactionHash: finalizeLog?.transactionHash ?? previous.finalizeTransactionHash,
     finalizeExplorerUrl: finalizeLog?.transactionHash
       ? makeExplorerUrl('tx', finalizeLog.transactionHash)

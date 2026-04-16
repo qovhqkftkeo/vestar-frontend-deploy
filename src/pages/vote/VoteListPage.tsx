@@ -616,7 +616,7 @@ export function VoteListPage() {
               <span className="text-[15px] font-semibold text-[#090A0B]">
                 {t('vl_hot_section')}
               </span>
-              <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_see_all')}</span>
+              {/* <span className="text-[12px] text-[#7140FF] cursor-pointer">{t('vl_see_all')}</span> */}
             </div>
             <div className="px-5 pb-1 flex gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {isHotLoading

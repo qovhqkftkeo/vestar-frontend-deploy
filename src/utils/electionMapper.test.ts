@@ -3,6 +3,7 @@ import type { ApiElection } from '../api/types'
 import type { CandidateManifest } from './candidateManifest'
 import {
   applyManifestToElection,
+  formatVoteDate,
   mapToVoteDetail,
   resolveDisplayedParticipantCount,
 } from './electionMapper'
@@ -137,6 +138,10 @@ describe('electionMapper', () => {
     )
 
     expect(mapped.participantCount).toBe(3)
+  })
+
+  it('formats timezone-less backend timestamps in KST', () => {
+    expect(formatVoteDate('2026-04-16 07:34:00.000')).toBe('2026.04.16 16:34')
   })
 
   it('prefers visible candidate totals when they exceed the summary submission count', () => {

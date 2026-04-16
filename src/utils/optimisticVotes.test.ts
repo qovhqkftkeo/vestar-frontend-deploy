@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { ApiElection } from '../api/types'
 import {
+  formatVoteHistoryDate,
   mergeOptimisticElections,
   mergeOptimisticVoteHistory,
   saveOptimisticElection,
@@ -68,6 +69,10 @@ beforeEach(() => {
 })
 
 describe('optimisticVotes', () => {
+  it('formats vote history timestamps in KST', () => {
+    expect(formatVoteHistoryDate('2026-04-16 07:34:00.000')).toBe('2026.04.16 16:34')
+  })
+
   it('merges optimistic elections ahead of server results', () => {
     saveOptimisticElection(
       createElection({

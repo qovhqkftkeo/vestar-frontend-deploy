@@ -1,6 +1,7 @@
 import type { FetchElectionsParams } from '../api/elections'
 import type { ApiElection, ApiPaymentMode } from '../api/types'
 import type { MyVoteItem } from '../types/user'
+import { formatCompactKstDateTime } from './dateTime'
 import { formatBallotCostLabel } from './paymentDisplay'
 
 type StoredOptimisticElection = {
@@ -226,25 +227,7 @@ function toMyVoteItem(
 }
 
 export function formatVoteHistoryDate(dateValue: string): string {
-  const date = new Date(dateValue)
-
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-
-  const parts = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date)
-
-  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
-
-  return `${valueByType.year}.${valueByType.month}.${valueByType.day} ${valueByType.hour}:${valueByType.minute}`
+  return formatCompactKstDateTime(dateValue) ?? ''
 }
 
 export function saveOptimisticElection(election: ApiElection) {

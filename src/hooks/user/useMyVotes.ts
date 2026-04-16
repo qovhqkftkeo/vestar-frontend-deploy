@@ -10,6 +10,7 @@ import {
   getCandidateManifestSeriesPreimage,
   getCandidateManifestTitle,
 } from '../../utils/candidateManifest'
+import { getUtcDateTimeMs } from '../../utils/dateTime'
 import {
   formatVoteHistoryDate,
   mergeOptimisticVoteHistory,
@@ -84,7 +85,7 @@ function resolveVoteStatus(params: {
   fallbackState: ApiElectionState
 }): MyVoteItem['status'] {
   if (params.latestEndAt) {
-    const endTime = Date.parse(params.latestEndAt)
+    const endTime = getUtcDateTimeMs(params.latestEndAt)
     if (Number.isFinite(endTime)) {
       return endTime <= Date.now() ? 'ended' : 'active'
     }

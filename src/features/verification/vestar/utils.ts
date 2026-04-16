@@ -1,4 +1,5 @@
 import { type Address, getAddress, type Hex, hexToBytes, keccak256 } from 'viem'
+import { formatDateTimeInKst } from '../../../utils/dateTime'
 import { OPEN_EMOJIS, STATUS_CHAIN_ID, STATUS_EXPLORER_URL } from './constants'
 import { resolveVerificationLanguage, type VerificationLang } from './language'
 import type { VerificationElectionSummary, VisibilityMode } from './types'
@@ -262,29 +263,31 @@ export function formatDate(
   timestamp: bigint,
   lang: VerificationLang = resolveVerificationLanguage(),
 ) {
-  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'UTC',
-  }).format(new Date(Number(timestamp) * 1000))
+  return (
+    formatDateTimeInKst(Number(timestamp) * 1000, lang === 'ko' ? 'ko-KR' : 'en-US', {
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: false,
+    }) ?? ''
+  )
 }
 
 export function formatDateTime(
   timestamp: bigint,
   lang: VerificationLang = resolveVerificationLanguage(),
 ) {
-  return new Intl.DateTimeFormat(lang === 'ko' ? 'ko-KR' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZone: 'UTC',
-  }).format(new Date(Number(timestamp) * 1000))
+  return (
+    formatDateTimeInKst(Number(timestamp) * 1000, lang === 'ko' ? 'ko-KR' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }) ?? ''
+  )
 }
 
 export function truncateAddress(address: Address) {

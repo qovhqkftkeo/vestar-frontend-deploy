@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getUtcDateTimeMs } from '../../utils/dateTime'
 
 export interface CountdownResult {
   days: number
@@ -9,7 +10,7 @@ export interface CountdownResult {
 }
 
 function calculate(endDateISO: string): CountdownResult {
-  const diff = new Date(endDateISO).getTime() - Date.now()
+  const diff = getUtcDateTimeMs(endDateISO) - Date.now()
   if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true }
   const totalSeconds = Math.floor(diff / 1000)
   return {

@@ -140,13 +140,13 @@ For open votes, users can inspect the records directly. For private votes, the b
 
 <p align="center">
   <img src="./readme_img/Try Verification 1.png" alt="Verification portal overview" width="31%" />
-  <img src="./readme_img/Try Verification 4.png" alt="Open vote verification" width="31%" />
-  <img src="./readme_img/Try Verification 5.png" alt="Private vote verification" width="31%" />
+  <img src="./readme_img/Try Verification 2.png" alt="Verification portal overview 2" width="31%" />
+  <img src="./readme_img/Try Verification 3.png" alt="Open vote verification" width="31%" />
 </p>
 
 <p align="center">
-  <img src="./readme_img/Try Verification 6.png" alt="Verification proof details" width="31%" />
-  <img src="./readme_img/Try Verification 7.png" alt="Verification result details" width="31%" />
+  <img src="./readme_img/Try Verification 4.png" alt="Private vote verification1" width="31%" />
+  <img src="./readme_img/Try Verification 5.png" alt="Private vote verification2" width="31%" />
 </p>
 
 ## Tech Snapshot

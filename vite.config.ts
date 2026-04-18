@@ -51,10 +51,12 @@ export default defineConfig(({ mode, command }) => {
           ],
         },
         workbox: {
+          clientsClaim: true,
           globPatterns: ['**/*.{js,css,html,svg,woff2}'],
           navigateFallback: `${baseUrl}index.html`,
           navigateFallbackAllowlist: [/^(?!\/__).*/],
           navigateFallbackDenylist: [/^\/api/],
+          skipWaiting: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,

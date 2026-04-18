@@ -12,5 +12,5 @@ export function resolveVerificationLanguage(): VerificationLang {
     return stored
   }
 
-  return window.navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en'
+  return 'en'
 }
